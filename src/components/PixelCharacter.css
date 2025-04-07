@@ -1,0 +1,33 @@
+.pixel-character {
+    position: absolute;
+    width: 64px;
+    height: 64px;
+    background-image: url("/spritesheet.png");
+    background-size: 384px auto;
+    animation: walk 0.6s steps(6) infinite;
+    z-index: 10;
+  }
+
+  style={{
+    position: "absolute",
+    left: position.x,
+    top: groundY,
+    transform: "translateX(-50%)",
+    width: characterWidth,
+    height: characterHeight,
+    objectFit: "contain",
+    imageRendering: "pixelated",
+    pointerEvents: "none",
+    zIndex: 10,
+  }}
+  
+  
+  @keyframes walk {
+    from {
+      background-position: 0 0;
+    }
+    to {
+      background-position: -384px 0;
+    }
+  }
+  
