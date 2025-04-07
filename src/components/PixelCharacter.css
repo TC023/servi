@@ -8,19 +8,7 @@
     z-index: 10;
   }
 
-  style={{
-    position: "absolute",
-    left: position.x,
-    top: groundY,
-    transform: "translateX(-50%)",
-    width: characterWidth,
-    height: characterHeight,
-    objectFit: "contain",
-    imageRendering: "pixelated",
-    pointerEvents: "none",
-    zIndex: 10,
-  }}
-  
+ 
   
   @keyframes walk {
     from {

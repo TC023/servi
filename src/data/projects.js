@@ -1,4 +1,4 @@
-// src/data/projects.js
+
 export const projects = [
     {
       id: 1,

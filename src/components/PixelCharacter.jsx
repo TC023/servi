@@ -23,7 +23,7 @@ const PixelCharacter = () => {
 
   const location = useLocation();
 
-  // Posición y estado
+  //Posicion
   const [position, setPosition] = useState({ x: window.innerWidth / 2 });
   const [targetX, setTargetX] = useState(window.innerWidth / 2);
   const [frame, setFrame] = useState(0);
@@ -49,11 +49,11 @@ const PixelCharacter = () => {
 
 
   // =============================== //
-// OTRA RUTA: comportamiento personalizado (Plantilla)
+// OTRA RUTA: (Plantilla)
 // =============================== //
 useEffect(() => {
   if (location.pathname !== "/tu-ruta") return;
-  // lógica
+  //logica
 }, [location]);
 
 // =============================== //
@@ -66,7 +66,7 @@ useEffect(() => {
 
   let interval = null;
 
-  // Si hay pelota y aún no hay depósito, ir hacia ella
+  //si hay pelota y aan no hay deposito, ir hacia ella
   if (ballPos && ballLanded && !depositPoint && !entregando)
     {
     interval = setInterval(() => {
@@ -75,7 +75,7 @@ useEffect(() => {
         if (Math.abs(dx) < 4) {
           clearInterval(interval);
   
-          // Esperar un poquito antes de empezar a entregar (simula que "la agarra")
+          // Esperar un poqco antes de empezar a entregar  (efecto de recoger)
           setTimeout(() => {
             const tabla = document.querySelector(".respuestas-tabla table");
             if (tabla) {
@@ -85,7 +85,7 @@ useEffect(() => {
               setDepositPoint({ x, y });
               setEntregando(true);
             }
-          }, 300); // pequeño retraso tras “llegar”
+          }, 300); // pequeño retraso tras llegar
   
           return prev;
         }
@@ -101,8 +101,8 @@ useEffect(() => {
   
   
 
-  // Si ya tiene que ir a depositar
-  //  Movimiento hacia el depósito (cuando entregando es true y depositPoint está definido)
+  //Si ya tiene que ir a depositar
+  // Movimiento hacia el deposito (cuando entregando es true y depositPoint está definido)
 if (depositPoint && entregando) {
   interval = setInterval(() => {
     setPosition((prev) => {
@@ -110,15 +110,15 @@ if (depositPoint && entregando) {
       if (Math.abs(dx) < 4) {
         clearInterval(interval);
 
-        // Llegó al punto de entrega → reiniciar todo
+        // Llego al punto de entrega, reiniciar todo
         setEntregando(false);
         setDepositPoint(null);
-        //setBallPos(null); // Ahora sí: desaparece la pelota original
+        //setBallPos(null); //desaparece la pelota original
 
         return prev;
       }
 
-      // Sigue caminando hacia el depósito
+      // Sigue caminando hacia el deposito
       setIsMoving(true);
       const dir = dx > 0 ? 1 : -1;
       setDirection(dir > 0 ? "right" : "left");
@@ -265,7 +265,7 @@ if (depositPoint && entregando) {
   }, [isMoving, location]);
 
  // =============================== //
-// DASHBOARD: seguir tarjetas y caminar/saltar entre filas
+// DASHBOARD: seguir tarjetas y moverse entre filas (jetpac)
 // =============================== //
 useEffect(() => {
   if (location.pathname !== "/dashboard") return;
@@ -299,7 +299,7 @@ useEffect(() => {
   };
 
   const handleMouseLeave = () => {
-    setIsMoving(false); // Deja de moverse
+    setIsMoving(false); //Deja de moverse
   };
 
   cards.forEach((card) => {
@@ -343,7 +343,7 @@ useEffect(() => {
 
 
   // =============================== //
-  // Animación general
+  // Animacion general
   // =============================== //
   useEffect(() => {
     const frames =
@@ -419,9 +419,9 @@ useEffect(() => {
         left: position.x,
         top: groundY,
         transform:   isGoingUpRef.current
-        ? "translateX(-50%) scale(1.1)" // 🛫 escala pequeña para jetpack
+        ? "translateX(-50%) scale(1.1)" //escala pequeña para jetpack
         : isDescendingRef.current
-        ? "translateX(-50%) scale(6)" // 🧗 escala grande para liana
+        ? "translateX(-50%) scale(6)" //escala grande para liana
         : "translateX(-50%)",
         
         width: 64,
@@ -438,8 +438,8 @@ useEffect(() => {
         alt="ball"
         style={{
           position: "absolute",
-          left: position.x + 10, // posición relativa al personaje
-          top: groundY - 12,      // un poco arriba
+          left: position.x + 10, //posicion relativa al personaje
+          top: groundY - 12,      //un poco arriba
           width: 20,
           height: 20,
           transform: "translateX(-50%)",
