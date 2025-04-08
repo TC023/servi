@@ -272,15 +272,6 @@ const Projects = () => {
                         mt: 1,
                       }}
                     >
-                      <AvatarGroup
-                        max={4}
-                        sx={{ "& .MuiAvatar-root": { width: 28, height: 28 } }}
-                      >
-                        <Avatar alt="A" src="https://i.pravatar.cc/30?img=1" />
-                        <Avatar alt="B" src="https://i.pravatar.cc/30?img=2" />
-                        <Avatar alt="C" src="https://i.pravatar.cc/30?img=3" />
-                        <Avatar alt="D" src="https://i.pravatar.cc/30?img=4" />
-                      </AvatarGroup>
 
                       <Box
                         sx={{
@@ -291,8 +282,6 @@ const Projects = () => {
                           fontWeight: 500,
                         }}
                       >
-                        <FaHeart size={12} style={{ marginRight: 4 }} />
-                        {Math.floor(Math.random() * 100) + 20}
                       </Box>
                     </Box>
                   </CardContent>
