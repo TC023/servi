@@ -133,9 +133,8 @@ const Projects = () => {
 
   </Box>
 </Box>
-
-
       {/* contenedor de las tarjetas */}
+      {/* {console.log(projects)} */}
       <CardList entries={projects}></CardList>
     </Box>
   );

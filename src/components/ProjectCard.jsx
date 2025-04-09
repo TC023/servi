@@ -16,6 +16,17 @@ import {
     Fade,
   } from "@mui/material";
 export function ProjectCard({project}){
+    const [carreras, setCarreras] = useState([{}])
+console.log(project.proyecto_id)
+  useEffect(() => {
+    fetch(`http://localhost:5000/proyecto_carrera/`+project.proyecto_id)
+    .then((res)=> res.json())
+    .then((data) => {
+        console.log(data)
+        setCarreras(data)}) 
+  }, [project.proyecto_id]); 
+
+
     return(
       <div className='card'>
       <Box>
@@ -24,8 +35,8 @@ export function ProjectCard({project}){
               <Grid item xs={12} sm={6} md={4} lg={3}>
                 <Card
                 //   onClick={() => navigate(`/projects/${project.id}`)}
-                  onMouseEnter={() => setHoveredId(project.id)}
-                  onMouseLeave={() => setHoveredId(null)}
+                //   onMouseEnter={() => setHoveredId(project.id)}
+                //   onMouseLeave={() => setHoveredId(null)}
                 >
                   <Box sx={{ position: "relative" }}>
                     <img
@@ -85,7 +96,26 @@ export function ProjectCard({project}){
 
                     {/*carreras filtro) */}
                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
-
+                        {carreras.map((carrera, index) => (
+                        <Box
+                        key={index}
+                        sx={{
+                          fontSize: "0.7rem",
+                          px: 1.4,
+                          py: "4px",
+                          borderRadius: "999px",
+                          backgroundColor: "#f3f4f6",
+                          color: "#334155",
+                          fontWeight: 500,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 0.5,
+                        }}
+                      >
+                        <FaUserGraduate size={11} />
+                        {carrera.nombre}
+                      </Box>
+                        ))}                    
                     </Box>
 
                     <Box
@@ -121,7 +151,7 @@ export function ProjectCard({project}){
   
 export function CardList({entries}){
     const cards = entries.map( entry => 
-   <ProjectCard project={entry} ></ProjectCard>)
+   <ProjectCard project={entry} key={entry.id_post}></ProjectCard>)
     return(
     <div className='cardList'>
         {cards}
