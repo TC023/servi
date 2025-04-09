@@ -14,7 +14,8 @@ import {
   Fade,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { projects } from "../data/projects";
+// import { projects } from "../data/projects";
+import { CardList } from "../components/ProjectCard";
 import { FaUserGraduate, FaChalkboardTeacher, FaHeart } from "react-icons/fa";
 import { FaPerson } from "react-icons/fa6";
 
@@ -23,8 +24,16 @@ const Projects = () => {
   const [carreraFilter, setCarreraFilter] = useState("");
   const [hoveredId, setHoveredId] = useState(null);
   const [imageIndexes, setImageIndexes] = useState({});
+  const [projects, setProjects] = useState([{proyecto_id:0, nombre_proyecto:""}])
   const navigate = useNavigate();
 
+
+  useEffect(() => {
+    fetch("http://localhost:5000/proyectos")
+    .then((res)=> res.json())
+    .then((proyectos) => setProjects(proyectos))
+  }, []);
+    
   const handleModalidadChange = (event) => {
     setModalidadFilter(event.target.value);
   };
@@ -126,171 +135,8 @@ const Projects = () => {
 </Box>
 
 
-
       {/* contenedor de las tarjetas */}
-      <Box
-        sx={{
-          backgroundColor: "rgba(255, 255, 255, 0.25)",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-          borderRadius: 5,
-          p: 3,
-          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
-          border: "1px solid rgba(255, 255, 255, 0.2)",
-        }}
-      >
-        <Grid container spacing={4}>
-          {filteredProjects.map((project, index) => (
-            <Fade in={true} timeout={500 + index * 100} key={project.id}>
-              <Grid item xs={12} sm={6} md={4} lg={3}>
-                <Card
-                  onClick={() => navigate(`/projects/${project.id}`)}
-                  onMouseEnter={() => setHoveredId(project.id)}
-                  onMouseLeave={() => setHoveredId(null)}
-                  sx={{
-                    borderRadius: 5,
-                    overflow: "hidden",
-                    cursor: "pointer",
-                    backgroundColor: "rgba(255, 255, 255, 0.6)",
-                    backdropFilter: "blur(8px)",
-                    boxShadow: "0 8px 24px rgba(0,0,0,0.05)",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      boxShadow: "0 16px 30px rgba(0,0,0,0.1)",
-                      transform: "translateY(-5px)",
-                    },
-                    border: "1px solid rgba(255, 255, 255, 0.3)",
-                  }}
-                >
-                  <Box sx={{ position: "relative" }}>
-                    <img
-                      src={
-                        hoveredId === project.id
-                          ? project.images[imageIndexes[project.id] || 0]
-                          : project.images[0]
-                      }
-                      alt={project.title}
-                      style={{
-                        width: "100%",
-                        height: "200px",
-                        objectFit: "cover",
-                      }}
-                    />
-                    {project.nuevo && (
-                      <Box
-                        sx={{
-                          position: "absolute",
-                          top: 10,
-                          right: 10,
-                          backgroundColor: "#ff3b83",
-                          color: "#fff",
-                          px: 1.4,
-                          py: "3px",
-                          fontSize: "0.7rem",
-                          fontWeight: 600,
-                          borderRadius: "999px",
-                          boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-                        }}
-                      >
-                        Nuevo
-                      </Box>
-                    )}
-                  </Box>
-
-                  <CardContent>
-                    {/* icono modalidad */}
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        mb: 1,
-                      }}
-                    >
-                      <Avatar
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          backgroundColor: "#e0f2fe",
-                          color: "#0284c7",
-                          fontSize: "14px",
-                        }}
-                      >
-                        {project.modalidad === "Presencial" ? (
-                          <FaPerson />
-                        ) : (
-                          <FaChalkboardTeacher />
-                        )}
-                      </Avatar>
-                      <Typography variant="body2" sx={{ color: "#64748b" }}>
-                        {project.modalidad}
-                      </Typography>
-                    </Box>
-
-                    {/*title */}
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        fontWeight: 700,
-                        fontSize: "1rem",
-                        mb: 1,
-                        color: "#1e293b",
-                      }}
-                    >
-                      {project.title}
-                    </Typography>
-
-                    {/*carreras filtro) */}
-                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
-                      {project.carreras.map((carrera) => (
-                        <Box
-                          key={carrera}
-                          sx={{
-                            fontSize: "0.7rem",
-                            px: 1.4,
-                            py: "4px",
-                            borderRadius: "999px",
-                            backgroundColor: "#f3f4f6",
-                            color: "#334155",
-                            fontWeight: 500,
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 0.5,
-                          }}
-                        >
-                          <FaUserGraduate size={11} />
-                          {carrera}
-                        </Box>
-                      ))}
-                    </Box>
-
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        mt: 1,
-                      }}
-                    >
-
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          color: "#64748b",
-                          fontSize: "0.8rem",
-                          fontWeight: 500,
-                        }}
-                      >
-                      </Box>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Fade>
-          ))}
-        </Grid>
-      </Box>
+      <CardList entries={projects}></CardList>
     </Box>
   );
 };

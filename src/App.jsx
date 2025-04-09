@@ -9,6 +9,7 @@ import PixelCharacter from "./components/PixelCharacter";
 import RespuestasAlumnos from "./tools/RespuestasAlumnos";
 import { BallProvider } from "./Contexts/BallContext";
 import ProjectDetail from "./pages/ProjectDetail";
+import FormOSF from "./pages/FormOSF";
 import "./App.css";
 import { useLocation as useReactRouterLocation } from "react-router-dom";
 
@@ -40,6 +41,7 @@ function AppWrapper() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/respuesta_alumnos" element={<RespuestasAlumnos />} />
             <Route path="/projects/:id" element={<ProjectDetail />} />
+            <Route path="/FormOSF" element={<FormOSF></FormOSF>}></Route>
           </Routes>
         </div>
       </div>
