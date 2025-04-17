@@ -17,135 +17,56 @@ import {
   } from "@mui/material";
 export function ProjectCard({project}){
     const [carreras, setCarreras] = useState([{}])
-console.log(project.proyecto_id)
-  useEffect(() => {
-    fetch(`http://localhost:5000/proyecto_carrera/`+project.proyecto_id)
-    .then((res)=> res.json())
-    .then((data) => {
-        console.log(data)
-        setCarreras(data)}) 
-  }, [project.proyecto_id]); 
-
+    useEffect(() => {
+      fetch(`http://localhost:5000/proyecto_carrera/`+project.proyecto_id)
+      .then((res)=> res.json())
+      .then((data) => {
+          setCarreras(data)}) 
+    }, [project.proyecto_id]); 
 
     return(
-      <div className='card'>
-      <Box>
-        <Grid container spacing={4}>
-            <Fade in={true} timeout={500} key={project.id}>
-              <Grid item xs={12} sm={6} md={4} lg={3}>
-                <Card
-                //   onClick={() => navigate(`/projects/${project.id}`)}
-                //   onMouseEnter={() => setHoveredId(project.id)}
-                //   onMouseLeave={() => setHoveredId(null)}
-                >
-                  <Box sx={{ position: "relative" }}>
-                    <img
-                      src={"./public/logo.jpg"
-                      }
-                      alt={project.title}
-                      style={{
-                        width: "100%",
-                        height: "200px",
-                        objectFit: "cover",
-                      }}
-                    />
-                  </Box>
+<div className="card">
+  <div className="card-grid">
+    <div className="fade-in">
+        <div className="card-content">
+          <div className="image-container">
+            <img
+              src="./public/logo.jpg"
+              alt={project.title}
+              className="project-image"
+            />
+          </div>
 
-                  <CardContent>
-                    {/* icono modalidad */}
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        mb: 1,
-                      }}
-                    >
-                      <Avatar
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          backgroundColor: "#e0f2fe",
-                          color: "#0284c7",
-                          fontSize: "14px",
-                        }}
-                      >
-                        {project.modalidad === "Presencial" ? (
-                          <FaPerson />
-                        ) : (
-                          <FaChalkboardTeacher />
-                        )}
-                      </Avatar>
-                      <Typography variant="body2" sx={{ color: "#64748b" }}>
-                        {project.modalidad}
-                      </Typography>
-                    </Box>
+          <div className="card-body">
+            <div className="modalidad-info">
+              <div className="avatar">
+                {project.modalidad === "Presencial" ? (
+                  <FaPerson />
+                ) : (
+                  <FaChalkboardTeacher />
+                )}
+              </div>
+              <p className="modalidad-text">{project.modalidad}</p>
+            </div>
+    
+            <h3 className="project-title">{project.nombre_proyecto}</h3>
 
-                    {/*title */}
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        fontWeight: 700,
-                        fontSize: "1rem",
-                        mb: 1,
-                        color: "#1e293b",
-                      }}
-                    >
-                      {project.nombre_proyecto}
-                    </Typography>
+            <div className="carreras-list">
+              {carreras.map((carrera, index) => (
+                <div className="carrera-pill" key={index}>
+                  <FaUserGraduate size={11} />
+                  {carrera.nombre}
+                </div>
+              ))}
+            </div>
 
-                    {/*carreras filtro) */}
-                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
-                        {carreras.map((carrera, index) => (
-                        <Box
-                        key={index}
-                        sx={{
-                          fontSize: "0.7rem",
-                          px: 1.4,
-                          py: "4px",
-                          borderRadius: "999px",
-                          backgroundColor: "#f3f4f6",
-                          color: "#334155",
-                          fontWeight: 500,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 0.5,
-                        }}
-                      >
-                        <FaUserGraduate size={11} />
-                        {carrera.nombre}
-                      </Box>
-                        ))}                    
-                    </Box>
+            <div className="card-footer">{/* EN CASO DE QUE SE NECESITE*/}</div>
+          </div>
+        </div>
 
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        mt: 1,
-                      }}
-                    >
-
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          color: "#64748b",
-                          fontSize: "0.8rem",
-                          fontWeight: 500,
-                        }}
-                      >
-                      </Box>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Fade>
-
-        </Grid>
-      </Box>
     </div>
+  </div>
+</div>
     )
   }
   
@@ -154,7 +75,9 @@ export function CardList({entries}){
    <ProjectCard project={entry} key={entry.id_post}></ProjectCard>)
     return(
     <div className='cardList'>
+      <div className="card-grid">
         {cards}
+      </div>
     </div>
     )
 }

@@ -18,6 +18,7 @@ import { useNavigate } from "react-router-dom";
 import { CardList } from "../components/ProjectCard";
 import { FaUserGraduate, FaChalkboardTeacher, FaHeart } from "react-icons/fa";
 import { FaPerson } from "react-icons/fa6";
+import './Projects.css';
 
 const Projects = () => {
   const [modalidadFilter, setModalidadFilter] = useState("Todos");
@@ -135,7 +136,7 @@ const Projects = () => {
 </Box>
       {/* contenedor de las tarjetas */}
       {/* {console.log(projects)} */}
-      <CardList entries={projects}></CardList>
+        <CardList entries={projects}></CardList>
     </Box>
   );
 };
