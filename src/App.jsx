@@ -25,16 +25,16 @@ function AppWrapper() {
   const location = useReactRouterLocation(); // 👈 aquí
 
   return (
-    <div style={{ display: "flex" }}>
+    <div className="app">
       {showSidebar && <Sidebar />}
-      <div style={{ flex: 1, position: "relative" }}>
+      <div className="content">
         {showCharacter && <PixelCharacter />}
         <Header onMenuClick={toggleSidebar} toggleCharacter={toggleCharacter} />
 
         {/* Video solo aparezca en Projectos */}
         {location.pathname === "/" && <Hero />}
 
-        - <div style={{ position: "relative", height: "100px", zIndex: -1 }} />
+        {/* - <div style={{ position: "relative", height: "100px", zIndex: -1 }} /> */}
         <div style={{ position: "relative", zIndex: 1 }}>
           <Routes>
             <Route path="/" element={<Projects />} />
