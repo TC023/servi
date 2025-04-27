@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useContext } from "react";
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { SessionContext } from "../Contexts/SessionContext";
 
 export default function Login(){
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const { setSessionType } = useContext(SessionContext);
     
     const navigate = useNavigate();
 
@@ -17,7 +19,14 @@ export default function Login(){
     }
 
     function test(){
-        navigate("/dashboard")
+        fetch("http://localhost:5000/session/detail",{
+            method: "GET",
+            credentials: "include"
+        })
+        .then((res) => res.json())
+        .then((data) => {
+            console.log(data.tipo)
+        })
     }
 
     function handleSubmit(){
@@ -34,8 +43,9 @@ export default function Login(){
         .then((data) => {
             console.log(data);
             console.log("succesful")
-            navigate('/dashboard');
-            window.location.reload();
+            setSessionType(data.tipo)
+            navigate('/');
+            // window.location.reload();
         })
         .catch((error) => {console.log(error);})
     }
@@ -48,10 +58,7 @@ export default function Login(){
             <label>Contraseña:</label>
             <input type="password" value={password} onChange={handlePasswordChange} />
             <input type="submit" value="Entrar" onClick={handleSubmit} className="submit"/>
-            <button onClick={test}> press me</button>
-            <Link to='/respuesta_alumnos'>
-                <button> double press me</button>
-            </Link>
+            <button onClick={test}> HOLA </button>
         </div>
     )
     

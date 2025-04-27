@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 
 import {
   Box,
@@ -18,6 +18,7 @@ import { useNavigate } from "react-router-dom";
 import { CardList } from "../components/ProjectCard";
 import { FaUserGraduate, FaChalkboardTeacher, FaHeart } from "react-icons/fa";
 import { FaPerson } from "react-icons/fa6";
+import { SessionContext } from "../Contexts/SessionContext";
 import './Projects.css';
 
 const Projects = () => {
@@ -27,7 +28,7 @@ const Projects = () => {
   const [imageIndexes, setImageIndexes] = useState({});
   const [projects, setProjects] = useState([{proyecto_id:0, nombre_proyecto:""}])
   const navigate = useNavigate();
-
+  const { sessionType } = useContext(SessionContext)
 
   useEffect(() => {
     fetch("http://localhost:5000/proyectos")
@@ -84,7 +85,7 @@ const Projects = () => {
         gutterBottom
         sx={{ fontWeight: 700, color: "#1e293b", mb: 3 }}
       >
-        Proyectos Solidarios
+        Proyectos Solidarios - {"Vista de: "+sessionType}
       </Typography>
 
       {/* Filtros */}
@@ -136,6 +137,8 @@ const Projects = () => {
 </Box>
       {/* contenedor de las tarjetas */}
       {/* {console.log(projects)} */}
+        <CardList entries={projects}></CardList>
+        <CardList entries={projects}></CardList>
         <CardList entries={projects}></CardList>
     </Box>
   );
