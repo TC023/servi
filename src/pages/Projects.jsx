@@ -138,8 +138,6 @@ const Projects = () => {
       {/* contenedor de las tarjetas */}
       {/* {console.log(projects)} */}
         <CardList entries={projects}></CardList>
-        <CardList entries={projects}></CardList>
-        <CardList entries={projects}></CardList>
     </Box>
   );
 };
