@@ -68,7 +68,7 @@ export function ProjectCard({ project }) {
   
 export function CardList({ entries }) {
   const cards = entries.map((entry) => (
-    <ProjectCard project={entry} key={entry.id_post}></ProjectCard>
+    <ProjectCard project={entry} key={entry.proyecto_id}></ProjectCard>
   ));
   return (
     <div className="cardList">

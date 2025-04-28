@@ -18,15 +18,8 @@ export default function Login(){
         setPassword(e.target.value);
     }
 
-    function test(){
-        fetch("http://localhost:5000/session/detail",{
-            method: "GET",
-            credentials: "include"
-        })
-        .then((res) => res.json())
-        .then((data) => {
-            console.log(data.tipo)
-        })
+    function handleSignIn(){
+        navigate("/signin")
     }
 
     function handleSubmit(){
@@ -51,14 +44,18 @@ export default function Login(){
     }
 
     return(
-        <div className="login">
-            <h1>Login</h1>
-            <label>Usuario:</label>
-            <input type="text" value={username} onChange={handleUsernameChange} />
-            <label>Contraseña:</label>
-            <input type="password" value={password} onChange={handlePasswordChange} />
-            <input type="submit" value="Entrar" onClick={handleSubmit} className="submit"/>
-            <button onClick={test}> HOLA </button>
+        <div className="content">
+            <div className="login">
+                <form>
+                <h1>Login</h1>
+                <label>Usuario:</label>
+                <input type="text" value={username} onChange={handleUsernameChange} />
+                <label>Contraseña:</label>
+                <input type="password" value={password} onChange={handlePasswordChange} />
+                </form>
+                <input type="submit" value="Entrar" onClick={handleSubmit} className="submit"/>
+                <button onClick={handleSignIn}> HOLA </button>
+            </div>
         </div>
     )
     
