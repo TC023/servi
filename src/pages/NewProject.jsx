@@ -548,14 +548,14 @@ beneficiadas, cambio esperado en la comunidad, antes y después, etc.)
                     <div className="radio-group">
                         <label>
                             <input type="radio" name="pregunta_select" value={true} onChange={e =>{
-                                setPreguntaSelect(e.target.value)
+                                setPreguntaSelect(true)
                             }} />
                             Sí, busco un perfil muy específico y requiero revisar perfiles
                         </label> <br />
 
                         <label>
                             <input type="radio" name="pregunta_select" value={false} onChange={e =>{
-                                setPreguntaSelect(e.target.value)
+                                setPreguntaSelect(false)
                             }} />
                             No, el proyecto puede recibir diferentes perfiles. No es necesario verificar perfiles
                         </label>
