@@ -144,6 +144,10 @@ app.post('/login', upload.none(), (req, res) => {
   .catch((error) => console.log('ERROR: ', error));
 });
 
+app.post('/projects/newProject', upload.none(), (req, res)  =>{
+  console.log(req.body)
+})
+
 app.post('/users/alumnoNuevo', upload.none(), function(req, res){
   console.log(req.body)
   const {nombre, matricula, carrera, password, numero} = req.body;

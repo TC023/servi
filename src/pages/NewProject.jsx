@@ -5,6 +5,7 @@ import {
   Slider
 } from "@mui/material";
 import { ConstructionOutlined } from "@mui/icons-material";
+import { FaMoneyCheck } from "react-icons/fa";
 
 const NewProject = () => {
     const {sessionType} = useContext(SessionContext)
@@ -171,6 +172,43 @@ const NewProject = () => {
         });
     }
 
+    const handleSubmit = (e) => {
+        e.preventDefault()
+
+        const formInf = new FormData();
+
+        Object.entries(projectForm).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+                if (typeof value === 'object') {
+                    formInf.append(key, JSON.stringify(value));
+                }else formInf.append(key, value);
+            }
+        });
+
+        console.log(formInf)
+
+        fetch('http://localhost:8000/projects/newProject', {
+            method: 'POST',
+            body: formInf
+        })
+        .then((res) => {
+            if (res.ok) {
+                setTimeout(() => {
+                    // navigate("/login"); TO DO!!!!!!!!!!!!!!!
+                }, 3000);
+            } else {
+                res.json().then((error) => {
+                    console.error("Error en el registro:", error);
+                });
+            }
+        })
+        .catch((error) => {
+            console.error("Error en el registro:", error);
+        });
+    }
+
+
+
 
     if (sessionType !== "osf") {
         return (
@@ -206,7 +244,7 @@ const NewProject = () => {
                     </ul>
                 </ul>
             </div>
-            <form className="project-form">
+            <form className="project-form" onSubmit={handleSubmit}>
                 <div className="form-group nombre-coordinador">
                     <label htmlFor="nombre_coordinador">Nombre de la persona que coordinará el Proyecto Solidario.
 (Nombre, correo y puesto)</label>
@@ -406,8 +444,6 @@ beneficiadas, cambio esperado en la comunidad, antes y después, etc.)
                                 }));
                             }}
                         />
-                            {console.log(periodo)}
-                            {/* <input type="text"  /> */}
                             
                         </div>
                     ))}
