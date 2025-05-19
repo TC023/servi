@@ -50,17 +50,19 @@ const NewProject = () => {
     })
 
     const handleFormChange = (e) => {
-        const {name, value} = e.target;
-        if (name === "modalidad" && value === "en linea") {
-            setProjectForm({...projectForm, [name]: value, direccion:"", enlace_maps:"" });
-        }
-        else{
-            setProjectForm({...projectForm, [name]: value});
-        }
-        // console.log(formDataOsf)
-        console.log(name, value)
-        console.log(projectForm)
+        const { name, value } = e.target;
+        setProjectForm({ ...projectForm, [name]: value });
     }
+
+    useEffect(() => {
+        if (projectForm.modalidad === "en linea") {
+            setProjectForm(prev => ({
+                ...prev,
+                direccion: "",
+                enlace_maps: ""
+            }))
+        }
+    }, [projectForm.modalidad])
 
     const handleOdsChange = (e) => {
         const { value, checked } = e.target;
