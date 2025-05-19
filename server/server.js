@@ -88,7 +88,7 @@ app.get('/carreras', (req, res) => {
 // fetch de las carreras asociadas con un proyecto :$
 app.get('/proyecto_carrera/:proyecto_id', (req, res) => {
     db.any('SELECT c.nombre FROM proyecto_carrera pc JOIN carrera c ON pc.carrera_id = c.carrera_id WHERE pc.proyecto_id = $1;', [req.params.proyecto_id])
-    .then((data) => res.json(data))
+    .then((data) => res.json(data)) 
     .catch((error) => console.log('ERROR:', error));
 })
 
@@ -97,6 +97,24 @@ app.get('/ods', (req, res) => {
   db.any('SELECT * FROM objetivos_desarrollo_sostenible')
   .then((data) => res.json(data))
   .catch((error ) => console.log('ERROR:', error))
+})
+
+// fetch a los periodos
+app.get('/periodos', (req, res) => {
+  db.any(`
+SELECT 
+  a.*, 
+  p.nombre,
+  p.img,
+  p.tipo 
+FROM 
+  ejecuciones_periodo a
+JOIN 
+  periodo_academico p ON p.periodo_id = a.periodo_id
+WHERE a.fecha_inicio > NOW()
+`)
+  .then((data) => res.json(data))
+  .catch((error) => console.log('ERROR:', error));
 })
 
 // login
