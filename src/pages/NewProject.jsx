@@ -1,5 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { SessionContext } from "../Contexts/SessionContext";
+import { useNavigate } from 'react-router-dom'; // Importa useNavigate
+
 import React from 'react';
 import {
   Slider
@@ -16,7 +18,8 @@ const NewProject = () => {
     const [carreras, setCarreras] = useState([])
     const [carrerasSelect, setCarrerasSelect] = useState([])
     const [preguntaSelect, setPreguntaSelect] = useState(null)
-
+    const navigate = useNavigate()
+    
     const [ projectForm, setProjectForm ] = useState({
         nombre_coordinador: '',
         numero_coordinador: '',
@@ -37,7 +40,7 @@ const NewProject = () => {
         modalidad_desc: '',
         carreras: [],
         competencias: '',
-        cantidad_alumnos: '',
+        // cantidad_alumnos: '',
         direccion: '',
         enlace_maps: '', 
         valor_promueve: '',
@@ -69,8 +72,8 @@ const NewProject = () => {
         const { value, checked } = e.target;
 
         const updatedOdsSelect = checked
-            ? [...odsSelect, value]
-            : odsSelect.filter((v) => v !== value);
+            ? [...odsSelect, Number(value)]
+            : odsSelect.filter((v) => v !== Number(value));
 
         setOdsSelect(updatedOdsSelect);
         setProjectForm({ ...projectForm, ods: updatedOdsSelect });
@@ -79,15 +82,15 @@ const NewProject = () => {
     const handleMomentosChange = (e) => {
         // console.log(e)
         const { value, checked } = e.target;
-        console.log(value, checked)
+        // console.log(value, checked)
 
         const updatedMomentosSelect = checked
             ? [...momentosSelect, value]
             : momentosSelect.filter((v) => JSON.stringify(v) !== JSON.stringify(value)); // Comparar los valores serializados para evitar problemas con objetos
 
-        console.log(updatedMomentosSelect)
+        // console.log(updatedMomentosSelect)
     
-        const momentosArr = updatedMomentosSelect.map(e => e.momento_id)  
+        // console.log(momentosObj)  
         const periodosObj = {}
         updatedMomentosSelect.forEach(e => {
             console.log(e)
@@ -100,12 +103,11 @@ const NewProject = () => {
         });        
         // const periodosObj
         
-        console.log(momentosArr)
-        console.log(periodosObj)
+        // console.log(momentosArr)
         
         setMomentosSelect(updatedMomentosSelect);
 
-        setProjectForm({ ...projectForm, momentos: momentosArr, periodos: periodosObj });    
+        setProjectForm({ ...projectForm, momentos: updatedMomentosSelect, periodos: periodosObj });    
         
     }
 
@@ -113,17 +115,87 @@ const NewProject = () => {
         const { value, checked } = e.target;
 
         const updatedCarrerasSelect = checked
-            ? [...carrerasSelect, value]
-            : carrerasSelect.filter((v) => v !== value);
-
+            ? [...carrerasSelect, Number(value)]
+            : carrerasSelect.filter((v) => v !== Number(value));
+    
+            
         setCarrerasSelect(updatedCarrerasSelect);
         setProjectForm({ ...projectForm, carreras: updatedCarrerasSelect });    
     }
     
     function test() {
         console.log(projectForm)
-        console.log(odsSelect)
-        console.log(momentosSelect)
+        setProjectForm(
+            {
+    "nombre_coordinador": "yahel alejandro jimenez fernandez",
+    "numero_coordinador": "123123123",
+    "nombre": "Los chicos de scott",
+    "problema_social": "Pagaré la universidad de todos ustedes",
+    "tipo_vulnerabilidad": "educación pobre",
+    "rango_edad": [
+        18,
+        26
+    ],
+    "zona": "Urbana",
+    "num_beneficiarios": "30",
+    "objetivo_general": "objetivo general del proyecto",
+    "ods": [
+        1,
+        5,
+        7,
+        11,
+        14
+    ],
+    "lista_actividades_alumnos": "Descripción de las actividades acá",
+    "producto_a_entregar": "un google docs",
+    "entregable_desc": "otro google docs",
+    "medida_impacto_social": "cantidad de google docs",
+    "modalidad": "presencial",
+    "modalidad_desc": "HORARIO",
+    "carreras": [
+        1,
+        4,
+        10,
+        16
+    ],
+    "competencias": "Para este proyecto se necesitan habilidades para manipular la vida marina",
+    "direccion": "la casa de yahel",
+    "enlace_maps": "https://maps.app.goo.gl/n4XiZzDiiaUdiR936",
+    "valor_promueve": "Compromiso",
+    "surgio_unidad_de_formacion": "sí, SSH",
+    "pregunta_descarte": "qué tanto conoces a yahel?",
+    "notificaciones": "true",
+    "momentos": [
+        {
+            "momento_id": 2,
+            "periodo_id": 2,
+            "periodo_nombre": "Feb-Junio"
+        },
+        {
+            "momento_id": 3,
+            "periodo_id": 2,
+            "periodo_nombre": "Feb-Junio"
+        },
+        {
+            "momento_id": 6,
+            "periodo_id": 3,
+            "periodo_nombre": "Semestre Test"
+        }
+    ],
+    "periodos": {
+        "2": {
+            "num": "20",
+            "nombre": "Feb-Junio",
+            "periodo_id": 2
+        },
+        "3": {
+            "num": "15",
+            "nombre": "Semestre Test",
+            "periodo_id": 3
+        }
+    }
+}
+        )
     }
     
     useEffect(() => {
@@ -189,13 +261,15 @@ const NewProject = () => {
 
         fetch('http://localhost:8000/projects/newProject', {
             method: 'POST',
-            body: formInf
+            credentials: "include",
+            body: formInf,
+            
         })
         .then((res) => {
             if (res.ok) {
-                setTimeout(() => {
-                    // navigate("/login"); TO DO!!!!!!!!!!!!!!!
-                }, 3000);
+                alert("Proyecto registrado!, redirigiendo...")
+                navigate("/");
+
             } else {
                 res.json().then((error) => {
                     console.error("Error en el registro:", error);
@@ -292,8 +366,8 @@ const NewProject = () => {
                 <div className="form-group zona">
                     <label htmlFor="zona">Zona a la que pertenece el proyecto</label> <br />
                     <div className="radio-group">
-                        <input type="radio" name="zona" value="rural" onChange={handleFormChange} /> Rural
-                        <input type="radio" name="zona" value="urbana" onChange={handleFormChange} /> Urbana
+                        <input type="radio" name="zona" value="Rural" onChange={handleFormChange} /> Rural
+                        <input type="radio" name="zona" value="Urbana" onChange={handleFormChange} /> Urbana
                     </div>
                 </div>
 
@@ -370,13 +444,13 @@ beneficiadas, cambio esperado en la comunidad, antes y después, etc.)
                                 <div key={`${periodo}-${momentoClave}`}> {/* Usar una combinación de periodo y momentoClave como key único */}
                                     {/* {console.log(momentoClave, info)} */}
 
-                                    <label htmlFor={`momento-${info.ejecuciones_periodo_id}`}>
+                                    <label htmlFor={`momento-${info.momento_id}`}>
                                         <input
                                             type="checkbox"
-                                            id={`momento-${info.ejecuciones_periodo_id}`} // Asignar un id único
+                                            id={`momento-${info.momento_id}`} // Asignar un id único
                                             name="momento"
                                             value={JSON.stringify({
-                                                momento_id: info.ejecuciones_periodo_id,
+                                                momento_id: info.momento_id,
                                                 periodo_id: info.periodo_id,
                                                 periodo_nombre: info.periodo_nombre
                                             })} // Serializar el objeto a JSON
@@ -617,6 +691,7 @@ beneficiadas, cambio esperado en la comunidad, antes y después, etc.)
 
             <button type="submit" className="submit-btn">Create Project</button>
             </form>
+            <button onClick={test}>test</button>
         </div>
     );
 };
