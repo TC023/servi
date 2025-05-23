@@ -48,8 +48,8 @@ const NewProject = () => {
         pregunta_descarte: '',
         notificaciones: '', // notifiación sobre cuando alguien se postule
 
-        momentos: [],
-        periodos: {},
+        momentos: {},
+        // periodos: {},
         
     })
 
@@ -82,32 +82,15 @@ const NewProject = () => {
     const handleMomentosChange = (e) => {
         // console.log(e)
         const { value, checked } = e.target;
-        // console.log(value, checked)
-
         const updatedMomentosSelect = checked
-            ? [...momentosSelect, value]
-            : momentosSelect.filter((v) => JSON.stringify(v) !== JSON.stringify(value)); // Comparar los valores serializados para evitar problemas con objetos
-
-        // console.log(updatedMomentosSelect)
-    
-        // console.log(momentosObj)  
-        const periodosObj = {}
-        updatedMomentosSelect.forEach(e => {
-            console.log(e)
-            if (!periodosObj[e.periodo_id]) {
-                periodosObj[e.periodo_id] = {}
-                periodosObj[e.periodo_id]["num"] = 0
-                periodosObj[e.periodo_id]["nombre"] = e.periodo_nombre
-                periodosObj[e.periodo_id]["periodo_id"] = e.periodo_id
-            }
-        });        
-        // const periodosObj
-        
-        // console.log(momentosArr)
+            ? { ...momentosSelect, [value.momento_id]: value }
+            : Object.fromEntries(
+                Object.entries(momentosSelect).filter(([k]) => k !== String(value.momento_id))
+            );
         
         setMomentosSelect(updatedMomentosSelect);
 
-        setProjectForm({ ...projectForm, momentos: updatedMomentosSelect, periodos: periodosObj });    
+        setProjectForm({ ...projectForm, momentos: updatedMomentosSelect});    
         
     }
 
@@ -166,36 +149,15 @@ const NewProject = () => {
     "pregunta_descarte": "qué tanto conoces a yahel?",
     "notificaciones": "true",
     "momentos": [
-        {
-            "momento_id": 2,
-            "periodo_id": 2,
-            "periodo_nombre": "Feb-Junio"
-        },
-        {
-            "momento_id": 3,
-            "periodo_id": 2,
-            "periodo_nombre": "Feb-Junio"
-        },
-        {
-            "momento_id": 6,
-            "periodo_id": 3,
-            "periodo_nombre": "Semestre Test"
-        }
     ],
-    "periodos": {
-        "2": {
-            "num": "20",
-            "nombre": "Feb-Junio",
-            "periodo_id": 2
-        },
-        "3": {
-            "num": "15",
-            "nombre": "Semestre Test",
-            "periodo_id": 3
-        }
-    }
+
 }
         )
+    }
+
+    function test2() {
+        console.log(momentosSelect)
+        console.log(projectForm)
     }
     
     useEffect(() => {
@@ -222,6 +184,7 @@ const NewProject = () => {
                 resultado[nombre][`m${momento}`] = {
                     momento,
                     periodo_nombre: nombre,
+                    "num": 0,
                     ...rest,
                 };
                 });
@@ -432,7 +395,7 @@ beneficiadas, cambio esperado en la comunidad, antes y después, etc.)
                     {Object.get}
                     {Object.entries(periodos).map(([periodo, momentos]) => (
                         <div key={periodo}>
-                            {/* {console.log(momentos)} */}
+                            {/* {console.log(periodo, momentos)} */}
                             <p>
                                 Si desea participar en el PERIODO {periodo} (Periodo {momentos.info.tipo}), 
                                 elija la o las las fechas de ejecución del periodo o periodos que más convengan a sus objetivos.
@@ -452,7 +415,8 @@ beneficiadas, cambio esperado en la comunidad, antes y después, etc.)
                                             value={JSON.stringify({
                                                 momento_id: info.momento_id,
                                                 periodo_id: info.periodo_id,
-                                                periodo_nombre: info.periodo_nombre
+                                                periodo_nombre: info.periodo_nombre,
+                                                num: info.num
                                             })} // Serializar el objeto a JSON
                                             onChange={(e) => {
                                                 const parsedValue = JSON.parse(e.target.value); // Deserializar el valor
@@ -463,7 +427,24 @@ beneficiadas, cambio esperado en la comunidad, antes y después, etc.)
                                             }}
                                         />
                                         PERIODO {info.momento} - HASTA {info.horas} Hrs - Del {fechaHumana(info.fecha_inicio)} al {fechaHumana(info.fecha_final)}
-                                    </label>
+                                    </label> <br />
+                                    { projectForm.momentos[info.momento_id] && (
+                                        <div>
+                                            <label htmlFor="cupo">Ingresa el número de estudiantes que pueden participar en este periodo: </label> <br />
+                                            {console.log(projectForm["momentos"])}
+                                            <input type="number" value={projectForm["momentos"][info.momento_id].num} onChange={e => {
+                                                console.log(e)
+                                                const newMomentos = projectForm["momentos"]
+                                                newMomentos[info.momento_id].num = e.target.value
+                                                console.log(newMomentos)
+                                                
+                                                setProjectForm({
+                                                    ...projectForm,
+                                                    momentos: newMomentos
+                                                })
+                                            }} />
+                                        </div>
+                                    ) }
                                 </div>
                             ))}
                         </div>
@@ -489,40 +470,6 @@ beneficiadas, cambio esperado en la comunidad, antes y después, etc.)
                     <label htmlFor="competencias">Habilidades o competencias que el alumno requiere para participar en el proyecto:</label> <br />
                     <textarea value={projectForm.competencias} onChange={handleFormChange} name="competencias"/>
                 </div>
-                
-                {Object.keys(projectForm.periodos).length > 0 && (
-                <div>
-                    {/* {console.log(Object.keys(projectForm.periodos))} */}
-                    <p>Cupo de estudiantes: Colocar el número de estudiantes que pueden participar en la experiencia</p>
-                    {Object.values(projectForm.periodos).map(periodo => (
-                        
-                        <div key={periodo.periodo_id}>
-                        <label htmlFor={`number-${periodo.periodo_id}`}>Ingresa cuántos alumnos pueden inscribirse en el periodo {periodo.nombre} - </label>
-                        {periodo.periodo_id} <br />
-                        <input 
-                            type="number" 
-                            name={`number-${periodo.periodo_id}`} 
-                            value={periodo.num} 
-                            onChange={(e) => {
-                                const value = e.target.value;
-                                console.log(e)
-                                setProjectForm(prev => ({
-                                    ...prev,
-                                    periodos: {
-                                        ...prev.periodos,
-                                        [periodo.periodo_id]: {
-                                            ...prev.periodos[periodo.periodo_id],
-                                            num: value
-                                        }
-                                    }
-                                }));
-                            }}
-                        />
-                            
-                        </div>
-                    ))}
-                </div>                
-            )}
 
             <div className="modalidad-section">
                 <label htmlFor="modalidad">Modalidad en que se llevará a cabo el proyecto solidario: </label> <br />
@@ -691,7 +638,8 @@ beneficiadas, cambio esperado en la comunidad, antes y después, etc.)
 
             <button type="submit" className="submit-btn">Create Project</button>
             </form>
-            <button onClick={test}>test</button>
+            {/* <button onClick={test}>test</button>
+            <button onClick={test2}>test2</button> */}
         </div>
     );
 };

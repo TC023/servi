@@ -190,17 +190,16 @@ app.post('/projects/newProject', upload.none(), async (req, res) => {
       pregunta_descarte: raw.pregunta_descarte,
       notificaciones: raw.notificaciones,
       momentos: JSON.parse(raw.momentos),
-      periodos: JSON.parse(raw.periodos),
+      // periodos: JSON.parse(raw.periodos),
     };
+    console.log(proyecto)
     // Validación básica de datos
-    if (!Array.isArray(proyecto.momentos) || proyecto.momentos.length === 0) {
+    if (Object.entries(proyecto).length < 0) {
       return res.status(400).json({ error: 'No hay momentos para el proyecto' });
     }
     // Ejecutar todos los inserts en paralelo y esperar a que terminen
-    const inserts = proyecto.momentos.map(e => {
-      const p = proyecto.periodos[e.periodo_id];
-      const cupo = Number(p.num);
-      console.log(cupo)
+    const inserts = Object.values(proyecto.momentos).map(e => {
+      const cupo = Number(e.num);
       return db.none(`
         CALL insertar_proyecto(
           $1, $2::TEXT, $3::TEXT, $4::TEXT, $5::TEXT, $6::TEXT, $7::int4range, $8::TEXT, $9,
