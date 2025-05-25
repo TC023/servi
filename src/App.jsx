@@ -18,6 +18,7 @@ import Login from "./pages/Login";
 import Logout from "./components/Logout";
 import SignUp from "./pages/SignUp";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Applications from "./pages/Applications.jsx";
 import { SessionProvider } from "./Contexts/SessionContext";
 // import Test from "./pages/Test.jsx";
 import "./App.css";
@@ -131,6 +132,7 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/logout" element={<Logout />} />
             <Route path="/signup" element={<SignUp></SignUp>}></Route>
+            <Route path="/postulaciones" element={ <MainLayout>  <Applications></Applications>  </MainLayout>   }></Route>
             {/* <Route path="/test" element={<Test></Test>}></Route> */}
           </Routes>
         </Router>
