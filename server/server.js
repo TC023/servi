@@ -80,12 +80,19 @@ app.get('/proyectos', (req, res) => {
       SELECT 
         p.*, 
         array_remove(array_agg(c.nombre), NULL) AS carreras,
-		m.horas
+        m.horas,
+        CASE 
+          WHEN osf.tipo = 'institucional' THEN osf_i.logo
+          ELSE NULL
+        END AS logo
       FROM proyecto p
       LEFT JOIN proyecto_carrera pc ON p.proyecto_id = pc.proyecto_id
       LEFT JOIN carrera c ON pc.carrera_id = c.carrera_id
-	  LEFT JOIN momentos_periodo m ON p.momento_id = m.momento_id 
-      GROUP BY p.proyecto_id, m.horas
+      LEFT JOIN momentos_periodo m ON p.momento_id = m.momento_id 
+      LEFT JOIN osf ON osf.osf_id = p.osf_id
+      LEFT JOIN osf_institucional osf_i ON osf_i.osf_id = osf.osf_id
+      GROUP BY p.proyecto_id, m.horas, osf.tipo, osf_i.logo
+      ORDER BY p.proyecto_id DESC
     `)
     .then((data) => res.json(data))
     .catch((error) => console.log('ERROR:', error));

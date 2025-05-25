@@ -114,7 +114,7 @@ useEffect(() => {
       const adaptados = proyectos.map((p) => ({
         id: p.proyecto_id,
         osf_id: p.osf_id,
-        periodo_id: p.periodo_id,
+        // periodo_id: p.periodo_id,
         nombre_coordinador: p.nombre_coordinador,
         numero_coordinador: p.numero_coordinador,
         title: p.nombre_proyecto,
@@ -138,7 +138,8 @@ useEffect(() => {
         horas: p.horas,
         images: ["/logo.jpg"], // puedes cambiar esto si usaSs una columna de imagen real
         carreras: p.carreras, // cambia esto si tienes relación real con carreras
-        cupo: p.cantidad
+        cupo: p.cantidad,
+        logo: p.logo
       }));
       setProjectsDb(adaptados);
     });
@@ -358,11 +359,14 @@ useEffect(() => {
           {console.log(project)}
                   <Box sx={{ position: "relative" }}>
                     <img
-                      src={
-                        hoveredId === project.id
+                      // src={
+                      //   hoveredId === project.id
                         
-                          ? project.images[imageIndexes[project.id] || 0]
-                          : project.images[0]
+                      //     ? project.images[imageIndexes[project.id] || 0]
+                      //     : `/src/assets/${project.logo}`
+                      // }
+                      src={
+                        `/src/assets/${project.logo}`
                       }
                       alt={project.title}
                       style={{
