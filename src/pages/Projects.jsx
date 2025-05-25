@@ -12,11 +12,52 @@ import "./Projects.css";
 import ProjectModal from "../pages/ProjectModal"; // ajusta la ruta si es necesario
 import Hero from "../components/Hero"; // ajusta la ruta si es necesario
 
+import {
+  FiUser,
+  FiMapPin,
+  FiUsers,
+  FiBox,
+  FiTarget,
+  FiActivity
+} from "react-icons/fi";
+
+
+const getSrcFromIframe = (iframeHtml) => {
+  const match = iframeHtml.match(/src=["']([^"']+)["']/);
+  return match ? match[1] : null;
+};
+
+
+
+
+const getCoordsFromIframe = (iframeHtml) => {
+  const regex = /!2d(-?\d+\.\d+)!3d(-?\d+\.\d+)/;
+  const match = iframeHtml.match(regex);
+  if (match) {
+    const [, lng, lat] = match;
+    return `${lat},${lng}`;
+  }
+  return null;
+};
+
 
 
 
 
 const Projects = () => {
+
+//Carreras random
+const getCarrerasRandom = () => {
+  if (todasCarreras.length === 0) return [];
+  const barajadas = [...todasCarreras].sort(() => 0.5 - Math.random());
+  const cantidad = Math.floor(Math.random() * 2) + 2; // 2 o 3
+  return barajadas.slice(0, cantidad);
+};
+
+  //Carreras random cards temporal
+  const [todasCarreras, setTodasCarreras] = useState([]);
+
+  
   const [projectsDb, setProjectsDb] = useState([]);
   const [modalidadFilter, setModalidadFilter] = useState("Todos");
   const [carreraFilter, setCarreraFilter] = useState("");
@@ -43,10 +84,8 @@ const Projects = () => {
     return () => window.removeEventListener("abrir-proyecto", handler);
   }, []);
   
-
-
-
-  useEffect(() => {
+/*
+ useEffect(() => {
     fetch("http://localhost:8000/proyectos")
       .then((res) => res.json())
       .then((proyectos) => {
@@ -63,6 +102,61 @@ const Projects = () => {
         setProjectsDb(adaptados);
       });
   }, []);
+
+*/
+
+
+
+useEffect(() => {
+  fetch("http://localhost:8000/proyectos")
+    .then((res) => res.json())
+    .then((proyectos) => {
+      const adaptados = proyectos.map((p) => ({
+        id: p.proyecto_id,
+        osf_id: p.osf_id,
+        periodo_id: p.periodo_id,
+        nombre_coordinador: p.nombre_coordinador,
+        numero_coordinador: p.numero_coordinador,
+        title: p.nombre_proyecto,
+        problema_social: p.problema_social,
+        tipo_vulnerabilidad: p.tipo_vulnerabilidad,
+        rango_edad: p.rango_edad?.replace(/\[|\)/g, "").split(",")[1] || "100",
+        zona: p.zona,
+        numero_beneficiarios: p.numero_beneficiarios,
+        lista_actividades_alumno: p.lista_actividades_alumno,
+        producto_a_entregar: p.producto_a_entregar,
+        medida_impacto_social: p.medida_impacto_social,
+        modalidad: p.modalidad,
+        modalidad_desc: p.modalidad_desc,
+        competencias: p.competencias,
+        direccion: p.direccion,
+        enlace_maps: p.enlace_maps,
+        valor_promueve: p.valor_promueve?.trim() || "Sin valor",
+        surgio_unidad_formacion: p.surgio_unidad_formacion,
+        necesita_entrevista: p.necesita_entrevista,
+        notificaciones: p.notificaciones,
+        horas: p.cantidad,
+        images: ["/logo.jpg"], // puedes cambiar esto si usas una columna de imagen real
+        carreras: ["ARQ", "ISC", "MKT"], // cambia esto si tienes relación real con carreras
+      }));
+      setProjectsDb(adaptados);
+    });
+}, []);
+
+//proyectos aleatorios al momento para las cards
+useEffect(() => {
+  fetch("http://localhost:8000/carreras")
+    .then((res) => res.json())
+    .then((data) => {
+      const nombres = data.map((c) => c.nombre); // solo nombres
+      setTodasCarreras(nombres);
+    })
+    .catch((err) => console.error("Error al cargar carreras:", err));
+}, []);
+
+
+
+
 
  
 
@@ -102,7 +196,7 @@ const Projects = () => {
   return (
     <Box className="projects-page">
 
-{ sessionType === "alumno" && <Hero searchText={searchText} setSearchText={setSearchText} /> }
+<Hero searchText={searchText} setSearchText={setSearchText} /> 
 
 
       
@@ -111,48 +205,76 @@ const Projects = () => {
         <Button variant="outlined" startIcon={<FilterList />} onClick={() => setDrawerOpen(true)}>Filtros Avanzados</Button>
       </Box>
 
-      <Box sx={{ display: "flex", justifyContent: "center", mb: 5 }}>
+      
+
   <Box
-    className="notch-elevated" // Clase para filtros bonitos
+  className="notch-elevated"
+  sx={{
+    display: "flex",
+    flexDirection: "column", // para separar por filas
+    alignItems: "center",
+    gap: 1.5, // espacio entre filas
+    px: 2,
+    py: 2,
+    borderRadius: 3,
+    mt: 3,
+    mb: 4,
+    backgroundColor: "rgba(255,255,255,0.4)",
+    backdropFilter: "blur(10px)",
+    border: "1px solid rgba(255,255,255,0.25)",
+    boxShadow: "0 4px 18px rgba(0,0,0,0.06)",
+  }}
+>
+  {/* Fila de carreras */}
+  <Box
     sx={{
       display: "flex",
       flexWrap: "wrap",
       justifyContent: "center",
-      gap: 2,
-      px: 3,
-      py: 2,
-      borderRadius: 4, // 
-      backgroundColor: "rgba(255,255,255,0.5)", // glassy
-      backdropFilter: "blur(12px)", // 🔵 Blur
-      border: "1px solid rgba(255,255,255,0.3)",
-      boxShadow: "0 8px 32px rgba(0,0,0,0.1)", // Elevación bonita
-      
+      gap: 1.5,
     }}
-    
   >
-<Button className={`glass-button-projects ${modalidadFilter === "Todos" ? "active" : ""}`}>
-Todos
-    </Button>
-    <Select value={modalidadFilter} onChange={handleModalidadChange} displayEmpty className="glass-select">
-      <MenuItem value="Todos">Todos</MenuItem>
-      <MenuItem value="Presencial">Presencial</MenuItem>
-      <MenuItem value="En línea">En línea</MenuItem>
-    </Select>
-    {["ARQ", "LAD", "ISC", "MKT", "DER", "PSI"].map((carrera, idx) => (
-      <Button
-      key={carrera}
-      className={`glass-buttonProjects ${carreraFilter === carrera ? "active" : ""}`}
-      onClick={() => handleCarreraClick(carrera)}
-      sx={{ "--hue": idx * 45 }}
-    >
-      {carrera}
-    </Button>
+    {[
+      "Ambiente Construido",
+      "Derecho, Economía y Relaciones Internacionales",
+      "Estudios Creativos",
+      "Ingeniería y Ciencias",
+      "Negocios",
+      "Salud",
+    ].map((carrera) => (
+     <Button
+  key={carrera}
+  className={`glass-buttonProjects ${carreraFilter === carrera ? "active" : ""}`}
+  onClick={() => handleCarreraClick(carrera)}
+  sx={{
+    fontSize: "0.75rem",
+    fontWeight: 600,
+    px: 2,
+    py: 0.6,
+    borderRadius: 2.5,
+    minWidth: "auto",
+    whiteSpace: "nowrap",
+    backgroundColor: carreraFilter === carrera ? "#60a5fa" : "#ffffff",
+    color: carreraFilter === carrera ? "#ffffff" : "#1d4ed8", // texto azul normal
+    boxShadow: "0 2px 4px rgba(0,0,0,0.08)",
+    transition: "all 0.2s ease",
+    border: "1px solid #e2e8f0",
+    "&:hover": {
+      backgroundColor: "#60a5fa",
+      color: "#ffffff",
+      transform: "scale(1.03)",
+    },
+  }}
+>
+  {carrera}
+</Button>
 
-      
+
     ))}
-
   </Box>
 </Box>
+
+
 
 
       <Box className="cardList">
@@ -236,6 +358,7 @@ Todos
                     <img
                       src={
                         hoveredId === project.id
+                        
                           ? project.images[imageIndexes[project.id] || 0]
                           : project.images[0]
                       }
@@ -269,36 +392,41 @@ Todos
 
 
 <CardContent>
-  <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-  <Avatar
+  <Box
   sx={{
-    width: 32,
-    height: 32,
-    backgroundColor: "#e0f2fe",
-    color: "#0284c7",
-    fontSize: "14px",
+    position: "absolute",
+    top: 12,
+    right: 12,
     display: "flex",
-    justifyContent: "center",
     alignItems: "center",
-    gap: 0.3, // pequeño espacio entre íconos
+    gap: 0.5,
+    px: 1.2,
+    py: "3px",
+    borderRadius: "999px",
+    fontSize: "0.65rem",
+    fontWeight: 600,
+    color: "#1e293b",
+    backgroundColor:
+      project.modalidad.toLowerCase() === "presencial"
+        ? "#dbeafe" // azul claro
+        : project.modalidad.toLowerCase() === "en linea"
+        ? "#ccfbf1" // cian claro
+        : "#ede9fe", // mixto
+    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+    zIndex: 3,
   }}
 >
-  {project.modalidad.toLowerCase() === "presencial" && <FaPerson />}
-  {project.modalidad.toLowerCase() === "en linea" && <FaChalkboardTeacher />}
+  {project.modalidad.toLowerCase() === "presencial" && <FaPerson size={12} />}
+  {project.modalidad.toLowerCase() === "en linea" && <FaChalkboardTeacher size={12} />}
   {project.modalidad.toLowerCase() === "mixto" && (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 0.2 }}>
-      <FaPerson size={10} />
-      <FaChalkboardTeacher size={10} />
-    </Box>
+    <>
+      <FaPerson size={11} />
+      <FaChalkboardTeacher size={11} />
+    </>
   )}
-</Avatar>
+  <span style={{ textTransform: "capitalize" }}>{project.modalidad}</span>
+</Box>
 
-
-
-    <Typography variant="body2" sx={{ color: "#64748b" }}>
-      {project.modalidad}
-    </Typography>
-  </Box>
 
   <Typography
   variant="h6"
@@ -338,6 +466,8 @@ Todos
 
     {/* Color tags carreras y efecto hover */}
     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
+
+      {/*
   {project.carreras.map((carrera, idx) => (
     <Box
       key={carrera}
@@ -374,7 +504,125 @@ Todos
       {carrera}
     </Box>
   ))}
+
+*/}
+
+
+
+
+{getCarrerasRandom().map((carrera, idx) => (
+  <Box
+    key={idx}
+    sx={{
+      fontSize: "0.65rem",
+      px: 1.6,
+      py: "4px",
+      borderRadius: "999px",
+      fontWeight: 600,
+      background: `linear-gradient(135deg, hsl(${(idx * 97) % 360}, 80%, 85%), hsl(${(idx * 97 + 30) % 360}, 80%, 75%))`,
+      color: "#334155",
+      display: "flex",
+      alignItems: "center",
+      gap: 0.5,
+      boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+      transition: "all 0.3s ease",
+      "&:hover": {
+        transform: "scale(1.05)",
+        boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
+        background: `linear-gradient(135deg, hsl(${(idx * 97 + 20) % 360}, 90%, 88%), hsl(${(idx * 97 + 50) % 360}, 90%, 78%))`,
+      },
+    }}
+  >
+    <FaUserGraduate size={10} />
+    {carrera}
+  </Box>
+))}
+
+
+
+
 </Box>
+
+
+
+
+
+{/* Campos adicionales del proyecto NUEVOS despues de estar trabajando en la mismas tarjetas, darles estilos y harcelos mas bonitos*/}
+<div className="project-attributes-grid">
+  {[
+    {
+      label: "Tipo de Vulnerabilidad",
+      value: project.tipo_vulnerabilidad,
+      icon: <FiUser size={11} />,
+    },
+    {
+      label: "Zona",
+      value: project.zona,
+      icon: <FiMapPin size={11} />,
+    },
+    {
+      label: "Beneficiarios",
+      value: project.numero_beneficiarios,
+      icon: <FiUsers size={11} />,
+    },
+    {
+      label: "Producto a Entregar",
+      value: project.producto_a_entregar,
+      icon: <FiBox size={11} />,
+    },
+    {
+      label: "Impacto Social",
+      value: project.medida_impacto_social,
+      icon: <FiTarget size={11} />,
+    },
+    {
+      label: "Competencias",
+      value: project.competencias,
+      icon: <FiActivity size={11} />,
+    },
+  ].map((item, i) => (
+    <div className="attribute-card" key={i}>
+      <div className="attribute-header">
+        {item.icon}
+        <span className="attribute-label">{item.label}</span>
+      </div>
+      <div className="attribute-value">{item.value || "Sin info"}</div>
+    </div>
+  ))}
+</div>
+
+
+
+
+{/* Vista de google maps  */}
+
+{project.enlace_maps && (
+  <Box
+    sx={{
+      borderRadius: 4,
+      overflow: "hidden",
+      boxShadow: "0 2px 12px rgba(0,0,0,0.1)",
+      mt: 2,
+      height: 100,
+      maxWidth: "100%",
+    }}
+  >
+    <iframe
+      src={getSrcFromIframe(project.enlace_maps)}
+      width="100%"
+      height="100%"
+      style={{ border: 0 }}
+      allowFullScreen=""
+      loading="lazy"
+      referrerPolicy="no-referrer-when-downgrade"
+    />
+  </Box>
+)}
+
+
+
+
+
 
 
 
@@ -385,29 +633,38 @@ Todos
     gap: 1,
     mb: 2,
     p: 1,
-    backgroundColor: "rgba(255,255,255,0.5)",
     borderRadius: 3,
+    background: "linear-gradient(135deg, rgba(224, 242, 255, 0.5), rgba(255,255,255,0.3))",
+    border: "1px solid rgba(203, 213, 225, 0.5)",
+    backdropFilter: "blur(10px)",
+    WebkitBackdropFilter: "blur(10px)",
+    boxShadow: "0 2px 6px rgba(0, 0, 0, 0.03)",
   }}
 >
-  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-    <FaClock size={14} style={{ color: "#475569" }} />
-    <Typography variant="caption" sx={{ fontWeight: 500, color: "#475569" }}>
-      {project.horas} horas requeridas
-    </Typography>
-  </Box>
-  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-    <FaUserFriends size={14} style={{ color: "#475569" }} />
-    <Typography variant="caption" sx={{ fontWeight: 500, color: "#475569" }}>
-      {project.rango_edad} años
-    </Typography>
-  </Box>
-  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-    <FaStar size={14} style={{ color: "#475569" }} />
-    <Typography variant="caption" sx={{ fontWeight: 500, color: "#475569" }}>
-      {project.valor_promueve}
-    </Typography>
-  </Box>
+  {[
+    {
+      icon: <FaClock size={14} style={{ color: "#1e293b" }} />,
+      text: `${project.horas} horas requeridas`,
+    },
+    {
+      icon: <FaUserFriends size={14} style={{ color: "#1e293b" }} />,
+      text: `${project.rango_edad} años`,
+    },
+    {
+      icon: <FaStar size={14} style={{ color: "#1e293b" }} />,
+      text: project.valor_promueve,
+    },
+  ].map((item, i) => (
+    <Box key={i} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+      {item.icon}
+      <Typography variant="caption" sx={{ fontWeight: 500, color: "#1e293b" }}>
+        {item.text}
+      </Typography>
+    </Box>
+  ))}
 </Box>
+
+
 
 </CardContent>
 
@@ -433,9 +690,7 @@ Todos
   }}
 >
 
-    
-    
-  
+
     <Box>
       <Typography variant="h6" fontWeight="bold" mb={3} sx={{ color: "#1e293b" }}>
         Filtros Avanzados
@@ -537,6 +792,15 @@ Todos
   </Box>
 </Drawer>
 
+
+
+
+
+
+
+
+
+
       {/*Modal para Proyectos
             <ProjectModal proyecto={proyectoSeleccionado} onClose={() => setProyectoSeleccionado(null)} />
 
@@ -545,7 +809,7 @@ Todos
   <ProjectModal
     proyecto={proyectoSeleccionado}
     onClose={() => setProyectoSeleccionado(null)}
-    proyectosDisponibles={projectsDb} // ✅ Este sí es el array completo de proyectos
+    proyectosDisponibles={projectsDb} // Este sí es el array completo de proyectos
   />
 )}
 

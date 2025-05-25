@@ -14,6 +14,19 @@ import {
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 
+import { FiBox, FiActivity, FiUser } from "react-icons/fi";
+
+import Box from '@mui/material/Box';
+
+
+const cleanIframeHtml = (html) => {
+  return html
+    .replace(/width="[^"]*"/, 'width="100%"')
+    .replace(/height="[^"]*"/, 'height="100%"')
+    .replace(/style="[^"]*"/, 'style="border:0; width:100%; height:100%;"');
+};
+
+
 
 const ProjectModal = ({ proyecto, onClose, proyectosDisponibles }) => {
     const carouselRef = useRef(null);
@@ -28,6 +41,11 @@ const ProjectModal = ({ proyecto, onClose, proyectosDisponibles }) => {
     const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
 
     //const [proyectoSeleccionado, setProyectoSeleccionado] = useState(null); //Lo llamamos desde Project, no desde aca
+
+
+    //Al dar click postular abra formulario
+    const [mostrarFormularioPostulacion, setMostrarFormularioPostulacion] = useState(false);
+
 
 
 
@@ -64,11 +82,11 @@ const ProjectModal = ({ proyecto, onClose, proyectosDisponibles }) => {
     )
   : [];
 
-  console.log("🧪 Proyecto actual:", proyecto);
-console.log("🧪 Modalidad actual:", proyecto.modalidad);
-console.log("🧪 Todos los proyectos:", proyectosDisponibles);
+  console.log(" Proyecto actual:", proyecto);
+console.log(" Modalidad actual:", proyecto.modalidad);
+console.log(" Todos los proyectos:", proyectosDisponibles);
 
-console.log("🧪 Proyectos relacionados encontrados:", relatedProjects);
+console.log(" Proyectos relacionados encontrados:", relatedProjects);
 
 
 
@@ -138,6 +156,8 @@ console.log("🧪 Proyectos relacionados encontrados:", relatedProjects);
       <button className="close-button" onClick={onClose}><FiX /></button>
       <h1 className="modal-title">{proyecto.title}</h1>
 
+      
+
 
           <div className="carousel-section">
             <img src={proyecto.images[selectedImage]} alt="Principal" className="main-image" />
@@ -157,6 +177,8 @@ console.log("🧪 Proyectos relacionados encontrados:", relatedProjects);
             </div>
           </div>
 
+   
+
           <div className="chips">
             <span><FiClock /> {horas} hrs</span>
             <span><FiUsers /> {proyecto.carreras.join(", ")}</span>
@@ -164,6 +186,222 @@ console.log("🧪 Proyectos relacionados encontrados:", relatedProjects);
             <span><FiCalendar /> {proyecto.rango_edad || "Edad no definida"}</span>
             <span><FiStar /> {proyecto.valor_promueve || "Sin valor"}</span>
           </div>
+
+
+    
+
+
+{/* Tarjetas compactas estilo Zillow */}
+<div
+  style={{
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "0.6rem",
+    marginTop: "1rem", // antes estaba 1.5rem
+    marginBottom: "2rem", // opcional, separa de lo que esté debajo
+    paddingLeft: "1.5rem",
+    maxWidth: "720px",
+  }}
+>
+  {[
+    {
+      label: "Tipo de Vulnerabilidad",
+      value: proyecto.tipo_vulnerabilidad,
+      icon: <FiUser size={12} />,
+    },
+    {
+      label: "Zona",
+      value: proyecto.zona,
+      icon: <FiMapPin size={12} />,
+    },
+    {
+      label: "Beneficiarios",
+      value: proyecto.numero_beneficiarios,
+      icon: <FiUsers size={12} />,
+    },
+    {
+      label: "Producto a Entregar",
+      value: proyecto.producto_a_entregar,
+      icon: <FiBox size={12} />,
+    },
+    {
+      label: "Impacto Social",
+      value: proyecto.medida_impacto_social,
+      icon: <FiTarget size={12} />,
+    },
+    {
+      label: "Competencias",
+      value: proyecto.competencias,
+      icon: <FiActivity size={12} />,
+    },
+  ].map((item, i) => (
+    <div
+      key={i}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "0.4rem",
+        background: "#f8fafc",
+        borderRadius: "8px",
+        padding: "0.4rem 0.6rem",
+        fontSize: "0.7rem",
+        color: "#1e293b",
+        width: "190px",
+        flex: "none",
+        boxShadow: "inset 0 0 0 1px #e2e8f0",
+      }}
+    >
+      <div style={{ color: "#6366f1", marginTop: "1px" }}>{item.icon}</div>
+      <div>
+        <div style={{ fontWeight: 600, fontSize: "0.68rem" }}>{item.label}</div>
+        <div style={{ fontSize: "0.65rem", color: "#475569" }}>
+          {item.value || "Sin información"}
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
+
+
+
+ {/* Descripción del problema social estilo libre */}
+<div style={{ padding: "0 1.8rem", marginTop: "2rem", marginBottom: "2.5rem" }}>
+  <strong style={{ fontSize: "1.15rem", display: "block", marginBottom: "0.5rem" }}>
+    Descripción
+  </strong>
+  <p
+    style={{
+      fontSize: "1.1rem",
+      lineHeight: "1.9",
+      color: "#1e293b",
+      fontWeight: 400,
+      whiteSpace: "pre-line",
+      margin: 0
+    }}
+  >
+    {proyecto.problema_social || "Este proyecto aún no tiene una descripción del problema social."}
+  </p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+{/* Aplicar/postularse */}
+
+
+{/*
+                            <section className="apply-section">
+  <div className="apply-box">
+    <button className="apply-button">Postularme</button>
+  </div>
+</section>
+
+*/}
+
+
+
+<div className="apply-box-top">
+  <button
+    className="apply-button"
+    onClick={() => setMostrarFormularioPostulacion(!mostrarFormularioPostulacion)}
+  >
+    {mostrarFormularioPostulacion ? "Cancelar" : "Postularme"}
+  </button>
+
+  {mostrarFormularioPostulacion && (
+    <div className="postulacion-form-container">
+      <label htmlFor="respuestaPostulacion">¿Por qué te interesa este proyecto?</label>
+      <textarea
+        id="respuestaPostulacion"
+        className="respuesta-textarea"
+        placeholder="Escribe tu motivo..."
+      />
+      <button className="enviar-button">Enviar postulación</button>
+    </div>
+  )}
+</div>
+
+
+
+{/* === Periodos de Ejecución === */}
+<section className="info-structured-section">
+  <div className="info-container">
+
+    <h3 className="info-group-title"><FiCalendar /> Periodos de Ejecución</h3>
+
+    <div className="info-grid-modern">
+      <div className="info-card full">
+        <img
+          src="/periodos.jpeg"
+          alt="Periodos de ejecución Febrero - Junio 2025"
+          style={{
+            width: "100%",
+            borderRadius: "16px",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
+            marginTop: "0.8rem",
+            maxHeight: "500px",
+            objectFit: "contain"
+          }}
+        />
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+
+{/* === Vista del maps === */}
+<section className="info-structured-section">
+  <div className="info-container">
+
+    <h3 className="info-group-title"><FiCalendar /> Mapa</h3>
+
+    <div className="info-grid-modern">
+      {proyecto.enlace_maps && (
+  <Box
+    sx={{
+      borderRadius: 4,
+      overflow: "hidden",
+      boxShadow: "0 2px 12px rgba(0,0,0,0.1)",
+      mt: 2,
+      height: 400,
+      width: "100%", // Asegura que el contenedor sea 100%
+    }}
+  >
+    <div
+      dangerouslySetInnerHTML={{ __html: cleanIframeHtml(proyecto.enlace_maps) }}
+      style={{
+        width: "100%",
+        height: "100%",
+      }}
+    />
+  </Box>
+)}
+
+    </div>
+
+  </div>
+</section>
+
+
+
+
+
+
+
+
+
+
 
           <section className="info-structured-section">
             <div className="info-container">
@@ -178,6 +416,10 @@ console.log("🧪 Proyectos relacionados encontrados:", relatedProjects);
                   <FiEdit3 /> {isEditing ? "Guardar" : "Editar"}
                 </button>
               </div>
+
+
+      
+
 
               <h3 className="info-group-title"><FiMapPin /> Logística</h3>
               <div className="info-grid-modern">
@@ -211,64 +453,141 @@ console.log("🧪 Proyectos relacionados encontrados:", relatedProjects);
                 </div>
               </div>
 
-              <h3 className="info-group-title"><FiCalendar /> Detalles Generales</h3>
-              <div className="info-grid-modern">
-                <div className="info-card">
-                  <FiCalendar className="info-icon" />
-                  <div>
-                    <h4>Tipo de inscripción</h4>
-                    <p>Por IRIS</p>
-                  </div>
-                </div>
-                <div className="info-card">
-                  <FiUsers className="info-icon" />
-                  <div>
-                    <h4>Carreras</h4>
-                    <p>{proyecto.carreras.join(", ")}</p>
-                  </div>
-                </div>
-              </div>
+            <h3 className="info-group-title"><FiCalendar /> Detalles Generales</h3>
+<div className="info-grid-modern">
+  <div className="info-card">
+    <FiCalendar className="info-icon" />
+    <div>
+      <h4>Tipo de inscripción</h4>
+      <p>Por IRIS</p>
+    </div>
+  </div>
+  <div className="info-card">
+    <FiUsers className="info-icon" />
+    <div>
+      <h4>Carreras</h4>
+      <p>{proyecto.carreras.join(", ")}</p>
+    </div>
+  </div>
+</div>
 
-              <div className="info-grid-modern" style={{ marginTop: "1.5rem" }}>
-                <div className="info-card full">
-                  <FiTarget className="info-icon" />
-                  <div>
-                    <h4>Objetivo</h4>
-                    <p>{proyecto.objetivo}</p>
-                  </div>
-                </div>
-              </div>
+<h3 className="info-group-title"><FiList /> Información Complementaria</h3>
+<div className="info-grid-modern">
 
-              <h3 className="info-group-title"><FiClock /> Horas & Clave</h3>
-              <div className="info-grid-modern">
-                <div className="info-card">
-                  <FiClock className="info-icon" />
-                  <div>
-                    <h4>Horas requeridas</h4>
-                    {isEditing ? (
-                      <input type="number" value={horas} onChange={(e) => setHoras(e.target.value)} className="edit-input" />
-                    ) : (
-                      <p>{horas} hrs</p>
-                    )}
-                  </div>
-                </div>
-                <div className="info-card">
-                  <FiClock className="info-icon" />
-                  <div>
-                    <h4>Horas máximas</h4>
-                    <p>{proyecto.horas_maximas}</p>
-                  </div>
-                </div>
-                <div className="info-card">
-                  <FiKey className="info-icon" />
-                  <div>
-                    <h4>Clave</h4>
-                    <p>{`WA1058 - Grupo: ${proyecto.grupo} - CRN: ${proyecto.crn}`}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
+
+{/*
+  <div className="info-card full">
+    <FiTarget className="info-icon" />
+    <div>
+      <h4>Problema Social</h4>
+      <p>{proyecto.problema_social}</p>
+    </div>
+  </div>
+
+*/}
+
+
+  
+  <div className="info-card full">
+    <FiUsers className="info-icon" />
+    <div>
+      <h4>Tipo de Vulnerabilidad</h4>
+      <p>{proyecto.tipo_vulnerabilidad}</p>
+    </div>
+  </div>
+
+  <div className="info-card">
+    <FiMapPin className="info-icon" />
+    <div>
+      <h4>Zona</h4>
+      <p>{proyecto.zona}</p>
+    </div>
+  </div>
+
+  <div className="info-card">
+    <FiUsers className="info-icon" />
+    <div>
+      <h4>Número de Beneficiarios</h4>
+      <p>{proyecto.numero_beneficiarios}</p>
+    </div>
+  </div>
+  <div className="info-card full">
+    <FiList className="info-icon" />
+    <div>
+      <h4>Producto a Entregar</h4>
+      <p>{proyecto.producto_a_entregar}</p>
+    </div>
+  </div>
+  <div className="info-card full">
+    <FiStar className="info-icon" />
+    <div>
+      <h4>Medida de Impacto Social</h4>
+      <p>{proyecto.medida_impacto_social}</p>
+    </div>
+  </div>
+  <div className="info-card full">
+    <FiList className="info-icon" />
+    <div>
+      <h4>Competencias</h4>
+      <p>{proyecto.competencias}</p>
+    </div>
+  </div>
+  <div className="info-card full">
+    <FiMapPin className="info-icon" />
+    <div>
+      <h4>Dirección</h4>
+      <p>{proyecto.direccion}</p>
+    </div>
+  </div>
+</div>
+
+<div className="info-grid-modern" style={{ marginTop: "1.5rem" }}>
+  <div className="info-card full">
+    <FiTarget className="info-icon" />
+    <div>
+      <h4>Objetivo</h4>
+      <p>{proyecto.objetivo}</p>
+    </div>
+  </div>
+</div>
+
+<h3 className="info-group-title"><FiClock /> Horas & Clave</h3>
+<div className="info-grid-modern">
+  <div className="info-card">
+    <FiClock className="info-icon" />
+    <div>
+      <h4>Horas requeridas</h4>
+      {isEditing ? (
+        <input type="number" value={horas} onChange={(e) => setHoras(e.target.value)} className="edit-input" />
+      ) : (
+        <p>{horas} hrs</p>
+      )}
+    </div>
+  </div>
+  <div className="info-card">
+    <FiClock className="info-icon" />
+    <div>
+      <h4>Horas máximas</h4>
+      <p>{proyecto.horas_maximas}</p>
+    </div>
+  </div>
+  <div className="info-card">
+    <FiKey className="info-icon" />
+    <div>
+      <h4>Clave</h4>
+      <p>{`WA1058 - Grupo: ${proyecto.grupo} - CRN: ${proyecto.crn}`}</p>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+</div> {/* Este cierra .info-container */}
+</section>
+
+          
 
           {/* Proyectos relacionados inicio*/}
              {/* PROYECTOS RELACIONADOS */}

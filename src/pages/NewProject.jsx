@@ -9,6 +9,9 @@ import {
 import { ConstructionOutlined } from "@mui/icons-material";
 import { FaMoneyCheck } from "react-icons/fa";
 
+import './NewProject.css';
+
+
 const NewProject = () => {
     const {sessionType} = useContext(SessionContext)
     const [odsList, setOdsList] = useState([]);

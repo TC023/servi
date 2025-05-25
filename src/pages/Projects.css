@@ -467,3 +467,232 @@
 
 
 
+
+
+
+
+
+
+.projects-filters {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 2rem;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.5);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.3);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+}
+
+/* Agrupación para modalidad */
+.filters-top-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Agrupación para carreras */
+.filters-bottom-row {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Botones de categoría */
+.glass-buttonProjects {
+  background: #ffffff;
+  color: #2563eb;
+  padding: 10px 24px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.glass-buttonProjects:hover {
+  background: linear-gradient(to right, #93c5fd, #60a5fa);
+  color: white;
+  transform: scale(1.05);
+}
+
+
+
+
+
+
+
+{/*boton postularse*/}
+.apply-section {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0;
+}
+
+.apply-box {
+  border: 1px solid #d1d5db; /* gris claro tipo Zillow */
+  border-radius: 12px;
+  padding: 1.2rem 2rem;
+  background-color: white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.apply-button {
+  background-color: #007bff; /* azul vivo tipo Zillow */
+  color: white;
+  font-weight: 600;
+  padding: 0.8rem 2rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.apply-button:hover {
+  background-color: #0056d2;
+}
+
+
+{/*formulario postularse*/}
+
+.postulacion-form-container {
+  margin-top: 1rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  max-width: 540px;
+  animation: fadeSlide 0.5s ease forwards;
+}
+
+.postulacion-form-container label {
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.6rem;
+  display: block;
+  font-size: 1rem;
+}
+
+.respuesta-textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255,255,255,0.8);
+  font-size: 1rem;
+  resize: vertical;
+  margin-bottom: 1rem;
+  font-family: 'Inter', sans-serif;
+  color: #334155;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  transition: border 0.3s ease;
+}
+
+.respuesta-textarea:focus {
+  border: 1px solid #60a5fa;
+  outline: none;
+}
+
+.enviar-button {
+  background: linear-gradient(to right, #22c55e, #16a34a);
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1.6rem;
+  border: none;
+  border-radius: 16px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+.enviar-button:hover {
+  transform: scale(1.04);
+  background: linear-gradient(to right, #15803d, #166534);
+}
+
+
+
+
+
+
+
+
+
+
+
+.project-attributes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.25rem 0.3rem;
+  margin-top: 0.6rem;
+  margin-bottom: 1rem;
+  padding: 0.2rem;
+  max-width: 100%;
+}
+
+.attribute-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  padding: 3px 6px;
+  font-size: 0.48rem;
+  height: 38px;
+  justify-content: center;
+
+  /* Cambios fríos */
+  background: linear-gradient(135deg, rgba(147, 197, 253, 0.12), rgba(240, 249, 255, 0.1)); /* azul claro */
+  border: 1px solid rgba(147, 197, 253, 0.25); /* azul frío translúcido */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 5px rgba(147, 197, 253, 0.1); /* sombra fría */
+  color: #1e293b;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.attribute-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(147, 197, 253, 0.18); /* un azul más notorio al hacer hover */
+}
+
+.attribute-header {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 600;
+  color: #3b82f6; /* azul frío (Tailwind blue-500) */
+  font-size: 0.52rem;
+}
+
+.attribute-label {
+  font-size: 0.52rem;
+}
+
+.attribute-value {
+  color: #475569;
+  font-size: 0.47rem;
+  padding-left: 0.7rem;
+}
+
+
+
+
+
+
+
