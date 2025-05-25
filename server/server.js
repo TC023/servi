@@ -81,6 +81,34 @@ app.get('/proyectos', (req, res) => {
     .catch((error) => console.log('ERROR:', error));
 })
 
+app.get('/proyectos/:id', (req, res) => {
+  const proyectoId = req.params.id;
+  db.oneOrNone('SELECT * FROM proyecto WHERE proyecto_id = $1', [proyectoId])
+    .then((data) => {
+      if (data) {
+        res.json(data);
+      } else {
+        res.status(404).json({ error: 'Proyecto no encontrado' });
+      }
+    })
+    .catch((error) => {
+      console.log('ERROR:', error);
+      res.status(500).json({ error: 'Error en la base de datos' });
+    });
+});
+
+app.get('/proyectos/preguntas/:id', (req, res) => {
+  const proyectoId = req.params.id;
+  db.oneOrNone('SELECT * FROM pregunta WHERE id_proyecto = $1', [proyectoId])
+    .then((data) => {
+      if (data) {
+        res.json(data);
+      } else {
+        res.status(400).json({error: 'Error en la DB'})
+      }
+    })
+})
+
 // fetch a todas las carreras
 app.get('/carreras', (req, res) => {
     db.any('SELECT * FROM carrera')
