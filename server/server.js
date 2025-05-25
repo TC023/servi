@@ -76,7 +76,15 @@ app.get('/session/detail', authenticateSession, (req, res) => {
 
 // fetch a todos los proyectos
 app.get('/proyectos', (req, res) => {
-    db.any('SELECT * FROM proyecto')
+    db.any(`
+      SELECT 
+        p.*, 
+        array_remove(array_agg(c.nombre), NULL) AS carreras
+      FROM proyecto p
+      LEFT JOIN proyecto_carrera pc ON p.proyecto_id = pc.proyecto_id
+      LEFT JOIN carrera c ON pc.carrera_id = c.carrera_id
+      GROUP BY p.proyecto_id
+    `)
     .then((data) => res.json(data))
     .catch((error) => console.log('ERROR:', error));
 })

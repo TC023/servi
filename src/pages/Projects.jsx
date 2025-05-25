@@ -112,6 +112,7 @@ useEffect(() => {
     .then((res) => res.json())
     .then((proyectos) => {
       const adaptados = proyectos.map((p) => ({
+        ...p,
         id: p.proyecto_id,
         osf_id: p.osf_id,
         periodo_id: p.periodo_id,
@@ -136,8 +137,8 @@ useEffect(() => {
         necesita_entrevista: p.necesita_entrevista,
         notificaciones: p.notificaciones,
         horas: p.cantidad,
-        images: ["/logo.jpg"], // puedes cambiar esto si usas una columna de imagen real
-        carreras: ["ARQ", "ISC", "MKT"], // cambia esto si tienes relación real con carreras
+        images: ["/logo.jpg"], // puedes cambiar esto si usaSs una columna de imagen real
+        // carreras: ["ARQ", "ISC", "MKT"], // cambia esto si tienes relación real con carreras
       }));
       setProjectsDb(adaptados);
     });
@@ -354,6 +355,7 @@ useEffect(() => {
           
           
         >
+          {console.log(project)}
                   <Box sx={{ position: "relative" }}>
                     <img
                       src={
@@ -510,7 +512,7 @@ useEffect(() => {
 
 
 
-{getCarrerasRandom().map((carrera, idx) => (
+{project.carreras.map((carrera, idx) => (
   <Box
     key={idx}
     sx={{
