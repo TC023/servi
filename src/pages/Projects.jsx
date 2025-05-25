@@ -112,7 +112,6 @@ useEffect(() => {
     .then((res) => res.json())
     .then((proyectos) => {
       const adaptados = proyectos.map((p) => ({
-        ...p,
         id: p.proyecto_id,
         osf_id: p.osf_id,
         periodo_id: p.periodo_id,
@@ -136,9 +135,10 @@ useEffect(() => {
         surgio_unidad_formacion: p.surgio_unidad_formacion,
         necesita_entrevista: p.necesita_entrevista,
         notificaciones: p.notificaciones,
-        horas: p.cantidad,
+        horas: p.horas,
         images: ["/logo.jpg"], // puedes cambiar esto si usaSs una columna de imagen real
-        // carreras: ["ARQ", "ISC", "MKT"], // cambia esto si tienes relación real con carreras
+        carreras: p.carreras, // cambia esto si tienes relación real con carreras
+        cupo: p.cantidad
       }));
       setProjectsDb(adaptados);
     });

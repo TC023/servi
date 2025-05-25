@@ -79,11 +79,13 @@ app.get('/proyectos', (req, res) => {
     db.any(`
       SELECT 
         p.*, 
-        array_remove(array_agg(c.nombre), NULL) AS carreras
+        array_remove(array_agg(c.nombre), NULL) AS carreras,
+		m.horas
       FROM proyecto p
       LEFT JOIN proyecto_carrera pc ON p.proyecto_id = pc.proyecto_id
       LEFT JOIN carrera c ON pc.carrera_id = c.carrera_id
-      GROUP BY p.proyecto_id
+	  LEFT JOIN momentos_periodo m ON p.momento_id = m.momento_id 
+      GROUP BY p.proyecto_id, m.horas
     `)
     .then((data) => res.json(data))
     .catch((error) => console.log('ERROR:', error));
