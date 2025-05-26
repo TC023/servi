@@ -84,14 +84,17 @@ app.get('/proyectos', (req, res) => {
         CASE 
           WHEN osf.tipo = 'institucional' THEN osf_i.logo
           ELSE NULL
-        END AS logo
+        END AS logo,
+        q.id_pregunta,
+        q.pregunta
       FROM proyecto p
       LEFT JOIN proyecto_carrera pc ON p.proyecto_id = pc.proyecto_id
       LEFT JOIN carrera c ON pc.carrera_id = c.carrera_id
       LEFT JOIN momentos_periodo m ON p.momento_id = m.momento_id 
       LEFT JOIN osf ON osf.osf_id = p.osf_id
       LEFT JOIN osf_institucional osf_i ON osf_i.osf_id = osf.osf_id
-      GROUP BY p.proyecto_id, m.horas, osf.tipo, osf_i.logo
+      LEFT JOIN pregunta q ON q.id_proyecto = p.proyecto_id
+      GROUP BY p.proyecto_id, m.horas, osf.tipo, osf_i.logo, q.id_pregunta, q.pregunta
       ORDER BY p.proyecto_id DESC
     `)
     .then((data) => res.json(data))
@@ -191,6 +194,9 @@ app.post('/login', upload.none(), async (req, res, next) => {
           // Aquí puedes agregar lógica para osf tipo alumno si es necesario
         }
       }
+    } else if(req.session.tipo === 'alumno') {
+        const alumno = await db.oneOrNone(`SELECT alumno_id FROM alumno WHERE user_id = $1`, [data.user_id]);
+        req.session.info = alumno
     }
     req.session.save(function (err) {
       if (err) return next(err);
@@ -201,6 +207,45 @@ app.post('/login', upload.none(), async (req, res, next) => {
     res.status(500).send({ message: 'Internal server error' });
   }
 });
+
+app.post('/postulaciones/newPostulacion', upload.none(), (req, res) => {
+  console.log(req.body)
+  console.log(req.session)
+  const form = req.body
+  if (form.id_pregunta !== 'null') {
+    db.none(`
+      CALL insertar_postulacion($1, $2::TEXT, $3::TEXT, $4::TEXT, $5::TEXT, $6)
+      `,[
+        Number(form.id_proyecto),
+        req.session.info.alumno_id,
+        form.confirmacion_lectura,
+        form.respuesta_habilidades,
+        form.respuesta_descarte,
+        Number(form.id_pregunta)
+      ])
+      .then(() => res.status(200).send('Postulación creada!'))
+      .catch((error) => {
+        res.status(400).send(error)
+        console.log(error)
+    })
+  } else {
+    db.none(`
+      CALL insertar_postulacion($1, $2::TEXT, $3::TEXT, $4::TEXT, NULL, NULL)
+      `,[
+        Number(form.id_proyecto),
+        req.session.info.alumno_id,
+        form.confirmacion_lectura,
+        form.respuesta_habilidades,
+        form.respuesta_descarte,
+        Number(form.id_pregunta)
+      ])
+      .then(() => res.status(200).send('Postulación creada!'))
+      .catch((error) => {
+        res.status(400).send(error)
+        console.log(error)
+    })  }
+
+})
 
 app.post('/projects/newProject', upload.none(), async (req, res) => {
   try {

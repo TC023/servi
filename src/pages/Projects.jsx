@@ -139,7 +139,9 @@ useEffect(() => {
         images: ["/logo.jpg"], // puedes cambiar esto si usaSs una columna de imagen real
         carreras: p.carreras, // cambia esto si tienes relación real con carreras
         cupo: p.cantidad,
-        logo: p.logo
+        logo: p.logo,
+        pregunta_id: p.id_pregunta || null,
+        pregunta: p.pregunta || null 
       }));
       setProjectsDb(adaptados);
     });

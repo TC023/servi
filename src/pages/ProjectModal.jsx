@@ -46,7 +46,12 @@ const ProjectModal = ({ proyecto, onClose, proyectosDisponibles }) => {
     //Al dar click postular abra formulario
     const [mostrarFormularioPostulacion, setMostrarFormularioPostulacion] = useState(false);
 
-
+  const [postulacionForm, setPostulacionForm] = useState({
+    confirmacion_lectura: '',
+    respuesta_habilidades: '',
+    respuesta_descarte: null,
+    id_pregunta: null
+  })
 
 
   const scrollLeft = () => {
@@ -75,6 +80,41 @@ const ProjectModal = ({ proyecto, onClose, proyectosDisponibles }) => {
     }
   };
 
+  const handleFormChange = (e) => {
+      const { name, value } = e.target;
+      setPostulacionForm({ ...postulacionForm, [name]: value });  
+      console.log(postulacionForm)
+  } 
+
+  function handleSubmit(){
+      const formInf = new FormData();
+      Object.entries(postulacionForm).forEach(([key, value]) => {
+            formInf.append(key, value);
+        });
+      formInf.append("id_proyecto", proyecto.id)
+      proyecto.pregunta_id ? formInf.append("id_pregunta", proyecto.pregunta_id) : null
+
+      fetch('http://localhost:8000/postulaciones/newPostulacion', {
+          method: 'POST',
+          credentials: "include",
+          body: formInf,
+      })
+      .then((res) => {
+          if (res.ok) {
+              alert("Te postulaste a este proyecto! redirigiendo...")
+              navigate("/");
+
+          } else {
+              res.json().then((error) => {
+                  console.error("Error en el registro:", error);
+              });
+          }
+      })
+      .catch((error) => {
+          console.error("Error en el registro:", error);
+      });
+  }
+  
   const relatedProjects = Array.isArray(proyectosDisponibles)
   ? proyectosDisponibles.filter(p =>
       p.id !== proyecto.id &&
@@ -319,13 +359,46 @@ console.log(" Proyectos relacionados encontrados:", relatedProjects);
 
   {mostrarFormularioPostulacion && (
     <div className="postulacion-form-container">
-      <label htmlFor="respuestaPostulacion">¿Por qué te interesa este proyecto?</label>
+    
+      <label htmlFor="respuestaPostulacion">Para nosotros es importante que hayas leído sobre el objetivo y actividades de nuestro proyecto. <br /> <br />
+
+Coméntanos con tus propias palabras: ¿Qué buscamos? ¿Qué es lo que crees que necesitaríamos de ti?</label>
       <textarea
         id="respuestaPostulacion"
         className="respuesta-textarea"
         placeholder="Escribe tu motivo..."
+        name="confirmacion_lectura"
+        value={postulacionForm.confirmacion_lectura}
+        onChange={handleFormChange}
       />
-      <button className="enviar-button">Enviar postulación</button>
+
+      <label htmlFor="respuestaPostulacion2">Para participar en este proyecto es necesario contar con habilidades como: <br /> <br />
+      {proyecto.competencias} <br /><br />
+      Coméntanos la razón por la que deberíamos elegirte.</label>
+      <textarea 
+        id="respuestaPostulacion2" 
+        className="respuesta-textarea" 
+        placeholder="Escribe aquí..."
+        value={postulacionForm.respuesta_habilidades}
+        name="respuesta_habilidades"
+        onChange={handleFormChange}
+      />
+
+      {proyecto.pregunta && (
+        <>
+        <label htmlFor="respuestaPostulacion3">{proyecto.pregunta}</label>
+        <textarea  
+          id="respuestaPostulacion3" 
+          className="respuesta-textarea" 
+          placeholder="Escribe aquí..."
+          name="respuesta_descarte"
+          onChange={handleFormChange}
+        />
+        </>
+      )}
+
+      
+      <button className="enviar-button" onClick={handleSubmit}>Enviar postulación</button>
     </div>
   )}
 </div>
