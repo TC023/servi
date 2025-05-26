@@ -49,8 +49,7 @@ const ProjectModal = ({ proyecto, onClose, proyectosDisponibles }) => {
   const [postulacionForm, setPostulacionForm] = useState({
     confirmacion_lectura: '',
     respuesta_habilidades: '',
-    respuesta_descarte: null,
-    id_pregunta: null
+    respuesta_descarte: null
   })
 
 
@@ -88,11 +87,17 @@ const ProjectModal = ({ proyecto, onClose, proyectosDisponibles }) => {
 
   function handleSubmit(){
       const formInf = new FormData();
+      // console.log(postulacionForm)
+      // console.log(proyecto)
       Object.entries(postulacionForm).forEach(([key, value]) => {
             formInf.append(key, value);
         });
       formInf.append("id_proyecto", proyecto.id)
-      proyecto.pregunta_id ? formInf.append("id_pregunta", proyecto.pregunta_id) : null
+      if (proyecto.pregunta_id) {
+        formInf.append("id_pregunta", proyecto.pregunta_id);
+      } else {
+        formInf.append("id_pregunta", null);
+      }
 
       fetch('http://localhost:8000/postulaciones/newPostulacion', {
           method: 'POST',
@@ -102,7 +107,7 @@ const ProjectModal = ({ proyecto, onClose, proyectosDisponibles }) => {
       .then((res) => {
           if (res.ok) {
               alert("Te postulaste a este proyecto! redirigiendo...")
-              navigate("/");
+              window.location.reload();
 
           } else {
               res.json().then((error) => {
