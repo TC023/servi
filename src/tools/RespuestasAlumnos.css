@@ -182,4 +182,5 @@
     flex-direction: row;
     gap: 1rem;
     margin-bottom: 1.5rem;
+    /* height: 50px; */
   }

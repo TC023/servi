@@ -265,6 +265,34 @@ app.get('/postulaciones', upload.none(), (req, res) => {
     .catch((error) => console.log('ERROR', error))
 })
 
+app.patch('/postulaciones/update', upload.none(), async (req, res) => {
+  const postulacion = JSON.parse(req.body.postulacion)
+  const alumno = JSON.parse(req.body.alumno)
+  const toChange = JSON.parse(req.body.toChange)
+  console.log(postulacion)
+  console.log(alumno)
+  console.log(toChange)
+  if (Object.entries(postulacion).length > 0) {
+    const keys = Object.keys(postulacion)
+    const values = Object.values(postulacion)
+    const sets = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
+    db.none(`UPDATE postulacion SET ${sets} WHERE id_postulacion = $${keys.length + 1}`,
+      [...values, toChange.id_postulacion]
+    )
+  }
+
+  if (Object.entries(alumno).length > 0) {
+    const keys = Object.keys(alumno)
+    const values = Object.values(alumno)
+    const sets = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
+    db.none(`UPDATE alumno SET ${sets} WHERE alumno_id = $${keys.length + 1}`,
+      [...values, toChange.alumno_id]
+    )
+  }
+
+  res.status(200).send('ok')
+})
+
 app.post('/projects/newProject', upload.none(), async (req, res) => {
   try {
     if (!req.session.info || !req.session.info.osf_id) {

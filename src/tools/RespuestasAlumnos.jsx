@@ -18,10 +18,12 @@ const RespuestasAlumnos = () => {
   const [postulaciones, setPostulaciones] = useState([])
   const [isEditing, setIsEditing] = useState(false)
   const [carrerasArr, setCarrerasArr] = useState([]);
-  const estados = ['POSTULADX', 'ACEPTADX', 'RECHAZADX', 'DECLINADX']
+  const estados = ['POSTULADX', 'ACEPTADX', 'RECHAZADX', 'DECLINADX', 'CONFIRMADX']
   const [savedPostulaciones, setSavedPostulaciones] = useState({})
   const [currEdit, setCurrEdit] = useState(null)
   const [changes, setChanges] = useState({})
+  const [changesAlumno, setChangesAlumno] = useState({})
+  const [toChange, setToChange] = useState({})
   
   const {
     ballPos,
@@ -116,7 +118,29 @@ const RespuestasAlumnos = () => {
     setIsEditing(false)
     setCurrEdit(null)
     console.log(changes)
-    
+    console.log(changesAlumno)
+
+    const formInfo = new FormData()
+    formInfo.append("postulacion", JSON.stringify(changes))
+    formInfo.append("alumno", JSON.stringify(changesAlumno))
+    formInfo.append("toChange", JSON.stringify(toChange))
+    await fetch('http://localhost:8000/postulaciones/update', {
+      method: "PATCH",
+      body: formInfo
+    })
+    // Refetch postulaciones after save
+    fetch('http://localhost:8000/postulaciones')
+      .then(res => res.json())
+      .then((data) => {
+        console.log(data)
+        const temp = {}
+        data.forEach(e => {
+          temp[e.id_postulacion] = e
+        });
+        console.log(temp)
+        setPostulaciones(temp)
+        setSavedPostulaciones(temp)
+      })
   }
 
   const handleCancel = () => {
@@ -125,15 +149,24 @@ const RespuestasAlumnos = () => {
     setCurrEdit(null)
   }
 
+  const alumnoFields = new Set(["nombre", "alumno_id", "carrera", "telefono"]);
   const handleChange = (e) => {
-    const {value, name, id} = e.target
-    console.log(value, name, id)
-    const newPos = {...postulaciones[id], [name]: value}
-    setPostulaciones({...postulaciones, [id]: newPos})
-    setChanges(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    const { value, name, id } = e.target;
+    console.log(value, name, id);
+    const newPos = { ...postulaciones[id], [name]: value };
+    setPostulaciones({ ...postulaciones, [id]: newPos });
+
+    if (alumnoFields.has(name)) {
+        setChangesAlumno(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    } else {
+        setChanges(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    }
   }
   
 
@@ -151,16 +184,18 @@ const RespuestasAlumnos = () => {
         <h1>Respuestas Alumnos</h1>
       </div>
 
+      <div className="edit-buttons-container">
       {isEditing && (
-        <div className="edit-buttons-container">
+          <>
           <button className="edit-button" onClick={isEditing ? handleSave : () => setIsEditing(true)}>
             <FiEdit3 /> {isEditing ? "Guardar" : "Editar"}
           </button>
           <button className="cancel-button" onClick={handleCancel}>
             <FiX /> Cancelar
           </button>
-        </div>
+          </>
       )}
+        </div>
 
       <div className="respuestas-filtros">
         <label>
@@ -195,6 +230,7 @@ const RespuestasAlumnos = () => {
               <th>Nombre completo</th>
               <th>Matrícula</th>
               <th>Estado</th>
+              <th>Comentarios</th>
               <th>Proyecto</th>
               <th>Carrera</th>
               <th>Correo</th>
@@ -202,7 +238,6 @@ const RespuestasAlumnos = () => {
               <th>¿Qué queremos?</th>
               <th>¿Por qué deberíamos elegirte?</th>
               <th>Pregunta descarte</th>
-              <th>Comentarios</th>
             </tr>
           </thead>
           <tbody>
@@ -213,7 +248,10 @@ const RespuestasAlumnos = () => {
                 onDoubleClick={() => {
                   if (!isEditing) {
                     setCurrEdit(postulacion.id_postulacion);
-                    setChanges({"id_postulacion": postulacion.id_postulacion})
+                    setToChange({
+                      "id_postulacion": postulacion.id_postulacion,
+                      "alumno_id": postulacion.id_alumno
+                    })
                     setIsEditing(true);
                   }
                 }}
@@ -224,6 +262,7 @@ const RespuestasAlumnos = () => {
                     <td>{postulacion.nombre}</td>
                     <td>{postulacion.alumno_id}</td>
                     <td>{postulacion.estado}</td>
+                    <td>{postulacion.comentarios}</td>
                     <td>{postulacion.proyecto}</td>
                     <td>{postulacion.carrera}</td>
                     <td>{`${postulacion.alumno_id}@tec.mx`}</td>
@@ -231,7 +270,6 @@ const RespuestasAlumnos = () => {
                     <td>{postulacion.confirmacion_lectura}</td>
                     <td>{postulacion.respuesta_habilidades}</td>
                     <td>{postulacion.respuesta_descarte || ''}</td>
-                    <td>{postulacion.comentario}</td>
                   </>
                 )}
                 {currEdit === postulacion.id_postulacion && (
@@ -269,6 +307,15 @@ const RespuestasAlumnos = () => {
                         ))}
                       </select>
                     </td>
+                    <td>
+                      <input
+                        type="text"
+                        name="comentarios"
+                        id={postulacion.id_postulacion}
+                        value={postulaciones[postulacion.id_postulacion].comentarios || ''}
+                        onChange={handleChange}
+                      />
+                    </td>
                     <td>{postulacion.proyecto}</td>
                     <td>
                       <select
@@ -284,7 +331,7 @@ const RespuestasAlumnos = () => {
                             carrera: selectedOption ? selectedOption.nombre : '',
                           };
                           setPostulaciones({ ...postulaciones, [id]: newPos });
-                          setChanges(prev => ({
+                          setChangesAlumno(prev => ({
                             ...prev,
                             [name]: value
                           }));
@@ -331,15 +378,6 @@ const RespuestasAlumnos = () => {
                         name="respuesta_descarte"
                         id={postulacion.id_postulacion}
                         value={postulaciones[postulacion.id_postulacion].respuesta_descarte || ''}
-                        onChange={handleChange}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        name="comentario"
-                        id={postulacion.id_postulacion}
-                        value={postulaciones[postulacion.id_postulacion].comentario}
                         onChange={handleChange}
                       />
                     </td>
