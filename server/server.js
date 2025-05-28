@@ -247,6 +247,24 @@ app.post('/postulaciones/newPostulacion', upload.none(), (req, res) => {
 
 })
 
+app.get('/postulaciones', upload.none(), (req, res) => {
+  db.any(`
+    SELECT 
+    p.*, 
+    a.*,
+    c.nombre AS carrera,
+    pr.nombre_proyecto AS proyecto,
+    r.respuesta AS respuesta_descarte
+    FROM postulacion p
+    LEFT JOIN alumno a ON a.alumno_id=p.id_alumno
+    LEFT JOIN carrera c ON a.carrera_id=c.carrera_id
+    LEFT JOIN proyecto pr ON p.id_proyecto=pr.proyecto_id
+    LEFT JOIN respuesta r ON p.id_postulacion=r.id_postulacion
+    `)
+    .then((data) => res.json(data))
+    .catch((error) => console.log('ERROR', error))
+})
+
 app.post('/projects/newProject', upload.none(), async (req, res) => {
   try {
     if (!req.session.info || !req.session.info.osf_id) {

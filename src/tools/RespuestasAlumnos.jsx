@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
 import "./RespuestasAlumnos.css";
-import { FiArrowLeft, FiCheck, FiX } from "react-icons/fi";
+import { FiArrowLeft, FiEdit3, FiCheck, FiX } from "react-icons/fi";
 import { BallContext } from "../Contexts/BallContext";
 
 const dummyData = [
@@ -15,7 +15,14 @@ const dummyData = [
 const RespuestasAlumnos = () => {
   const [filtroCarrera, setFiltroCarrera] = useState("Todas");
   const [filtroDispuesto, setFiltroDispuesto] = useState("Todos");
-
+  const [postulaciones, setPostulaciones] = useState([])
+  const [isEditing, setIsEditing] = useState(false)
+  const [carrerasArr, setCarrerasArr] = useState([]);
+  const estados = ['POSTULADX', 'ACEPTADX', 'RECHAZADX', 'DECLINADX']
+  const [savedPostulaciones, setSavedPostulaciones] = useState({})
+  const [currEdit, setCurrEdit] = useState(null)
+  const [changes, setChanges] = useState({})
+  
   const {
     ballPos,
     setBallPos,
@@ -31,9 +38,30 @@ const RespuestasAlumnos = () => {
   const containerRef = useRef(null);
   const animationRef = useRef(null);
 
-  const carreras = ["Todas", ...Array.from(new Set(dummyData.map((a) => a.carrera)))];
+  useEffect(() => {
+  fetch('http://localhost:8000/postulaciones')
+    .then(res => res.json())
+    .then((data) => {
+      // console.log(data)
+      const temp = {}
+      data.forEach(e => {
+        temp[e.id_postulacion] = e
+      });
+      setPostulaciones(temp)
+      setSavedPostulaciones(temp)
 
-  const dataFiltrada = dummyData.filter((alumno) => {
+      console.log(temp)
+    })
+
+  fetch("http://localhost:8000/carreras")
+    .then((res) => res.json())
+    .then((data) => setCarrerasArr(data));
+    
+  },[])
+  
+  const carreras = ["Todas", ...Array.from(new Set(Object.values(postulaciones).map((a) => a.carrera)))];
+
+  const dataFiltrada = Object.values(postulaciones).filter((alumno) => {
     const coincideCarrera = filtroCarrera === "Todas" || alumno.carrera === filtroCarrera;
     const coincideDispuesto =
       filtroDispuesto === "Todos" ||
@@ -82,6 +110,33 @@ const RespuestasAlumnos = () => {
     animate();
   }, [ballStartY]);
 
+  const handleSave = async () => {
+    console.log("holi")
+    setSavedPostulaciones(postulaciones)
+    setIsEditing(false)
+    setCurrEdit(null)
+    console.log(changes)
+    
+  }
+
+  const handleCancel = () => {
+    setPostulaciones(savedPostulaciones)
+    setIsEditing(false)
+    setCurrEdit(null)
+  }
+
+  const handleChange = (e) => {
+    const {value, name, id} = e.target
+    console.log(value, name, id)
+    const newPos = {...postulaciones[id], [name]: value}
+    setPostulaciones({...postulaciones, [id]: newPos})
+    setChanges(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+  
+
   const handleClick = (e) => {
     const x = e.clientX;
     const y = e.clientY - containerRef.current.getBoundingClientRect().top;
@@ -95,6 +150,17 @@ const RespuestasAlumnos = () => {
         <FiArrowLeft />
         <h1>Respuestas Alumnos</h1>
       </div>
+
+      {isEditing && (
+        <div className="edit-buttons-container">
+          <button className="edit-button" onClick={isEditing ? handleSave : () => setIsEditing(true)}>
+            <FiEdit3 /> {isEditing ? "Guardar" : "Editar"}
+          </button>
+          <button className="cancel-button" onClick={handleCancel}>
+            <FiX /> Cancelar
+          </button>
+        </div>
+      )}
 
       <div className="respuestas-filtros">
         <label>
@@ -125,21 +191,160 @@ const RespuestasAlumnos = () => {
         <table>
           <thead>
             <tr>
-              <th>Carrera</th>
+              <th>Marca temporal</th>
+              <th>Nombre completo</th>
               <th>Matrícula</th>
+              <th>Estado</th>
+              <th>Proyecto</th>
+              <th>Carrera</th>
+              <th>Correo</th>
               <th>Teléfono</th>
-              <th>Dispuesto</th>
+              <th>¿Qué queremos?</th>
+              <th>¿Por qué deberíamos elegirte?</th>
+              <th>Pregunta descarte</th>
+              <th>Comentarios</th>
             </tr>
           </thead>
           <tbody>
-            {dataFiltrada.map((alumno, idx) => (
-              <tr key={idx}>
-                <td>{alumno.carrera}</td>
-                <td>{alumno.matricula}</td>
-                <td>{alumno.telefono}</td>
-                <td className="icon">
-                  {alumno.dispuesto ? <FiCheck className="check" /> : <FiX className="cross" />}
-                </td>
+            {dataFiltrada.map((postulacion, idx) => (
+              <tr
+                key={idx}
+                id={postulacion.id_postulacion}
+                onDoubleClick={() => {
+                  if (!isEditing) {
+                    setCurrEdit(postulacion.id_postulacion);
+                    setChanges({"id_postulacion": postulacion.id_postulacion})
+                    setIsEditing(true);
+                  }
+                }}
+              >
+                {currEdit !== postulacion.id_postulacion && (
+                  <>
+                    <td>{postulacion.lastupdate}</td>
+                    <td>{postulacion.nombre}</td>
+                    <td>{postulacion.alumno_id}</td>
+                    <td>{postulacion.estado}</td>
+                    <td>{postulacion.proyecto}</td>
+                    <td>{postulacion.carrera}</td>
+                    <td>{`${postulacion.alumno_id}@tec.mx`}</td>
+                    <td>{postulacion.telefono}</td>
+                    <td>{postulacion.confirmacion_lectura}</td>
+                    <td>{postulacion.respuesta_habilidades}</td>
+                    <td>{postulacion.respuesta_descarte || ''}</td>
+                    <td>{postulacion.comentario}</td>
+                  </>
+                )}
+                {currEdit === postulacion.id_postulacion && (
+                  <>
+                    <td>{postulacion.lastupdate}</td>
+                    <td>
+                      <input
+                        type="text"
+                        name="nombre"
+                        id={postulacion.id_postulacion}
+                        value={postulaciones[postulacion.id_postulacion].nombre}
+                        onChange={handleChange}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        name="alumno_id"
+                        id={postulacion.id_postulacion}
+                        value={postulaciones[postulacion.id_postulacion].alumno_id}
+                        onChange={handleChange}
+                      />
+                    </td>
+                    <td>
+                      <select
+                        name="estado"
+                        id={postulacion.id_postulacion}
+                        value={postulaciones[postulacion.id_postulacion].estado}
+                        onChange={handleChange}
+                      >
+                        {estados.map((estado, index) => (
+                          <option key={index} value={estado}>
+                            {estado}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td>{postulacion.proyecto}</td>
+                    <td>
+                      <select
+                        name="carrera"
+                        id={postulacion.id_postulacion}
+                        value={postulaciones[postulacion.id_postulacion].carrera_id}
+                        onChange={e => {
+                          const { value, name, id } = e.target;
+                          const selectedOption = carrerasArr.find(c => String(c.carrera_id) === value);
+                          const newPos = {
+                            ...postulaciones[id],
+                            carrera_id: value,
+                            carrera: selectedOption ? selectedOption.nombre : '',
+                          };
+                          setPostulaciones({ ...postulaciones, [id]: newPos });
+                          setChanges(prev => ({
+                            ...prev,
+                            [name]: value
+                          }));
+                        }}
+                      >
+                        {carrerasArr.map((carrera) => (
+                          <option value={carrera.carrera_id} key={carrera.carrera_id}>
+                            {carrera.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td>{`${postulacion.id_alumno}@tec.mx`}</td>
+                    <td>
+                      <input
+                        type="text"
+                        name="telefono"
+                        id={postulacion.id_postulacion}
+                        value={postulaciones[postulacion.id_postulacion].telefono}
+                        onChange={handleChange}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        name="confirmacion_lectura"
+                        id={postulacion.id_postulacion}
+                        value={postulaciones[postulacion.id_postulacion].confirmacion_lectura}
+                        onChange={handleChange}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        name="respuesta_habilidades"
+                        id={postulacion.id_postulacion}
+                        value={postulaciones[postulacion.id_postulacion].respuesta_habilidades}
+                        onChange={handleChange}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        name="respuesta_descarte"
+                        id={postulacion.id_postulacion}
+                        value={postulaciones[postulacion.id_postulacion].respuesta_descarte || ''}
+                        onChange={handleChange}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        name="comentario"
+                        id={postulacion.id_postulacion}
+                        value={postulaciones[postulacion.id_postulacion].comentario}
+                        onChange={handleChange}
+                      />
+                    </td>
+                  </>
+                )}
               </tr>
             ))}
           </tbody>
