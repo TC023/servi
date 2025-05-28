@@ -254,12 +254,14 @@ app.get('/postulaciones', upload.none(), (req, res) => {
     a.*,
     c.nombre AS carrera,
     pr.nombre_proyecto AS proyecto,
-    r.respuesta AS respuesta_descarte
+    r.respuesta AS respuesta_descarte,
+    pre. id_pregunta
     FROM postulacion p
     LEFT JOIN alumno a ON a.alumno_id=p.id_alumno
     LEFT JOIN carrera c ON a.carrera_id=c.carrera_id
     LEFT JOIN proyecto pr ON p.id_proyecto=pr.proyecto_id
     LEFT JOIN respuesta r ON p.id_postulacion=r.id_postulacion
+    LEFT JOIN pregunta pre ON pre.id_proyecto=p.id_proyecto
     `)
     .then((data) => res.json(data))
     .catch((error) => console.log('ERROR', error))
@@ -268,10 +270,12 @@ app.get('/postulaciones', upload.none(), (req, res) => {
 app.patch('/postulaciones/update', upload.none(), async (req, res) => {
   const postulacion = JSON.parse(req.body.postulacion)
   const alumno = JSON.parse(req.body.alumno)
+  const respuesta = req.body.respuesta_descarte
   const toChange = JSON.parse(req.body.toChange)
   console.log(postulacion)
   console.log(alumno)
   console.log(toChange)
+  console.log(respuesta)
   if (Object.entries(postulacion).length > 0) {
     const keys = Object.keys(postulacion)
     const values = Object.values(postulacion)
@@ -287,6 +291,12 @@ app.patch('/postulaciones/update', upload.none(), async (req, res) => {
     const sets = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
     db.none(`UPDATE alumno SET ${sets} WHERE alumno_id = $${keys.length + 1}`,
       [...values, toChange.alumno_id]
+    )
+  }
+
+  if (respuesta !== 'null') {
+    db.none(`UPDATE respuesta SET respuesta = $1 WHERE id_postulacion = $2`,
+      [respuesta, toChange.id_postulacion]
     )
   }
 

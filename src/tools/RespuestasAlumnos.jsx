@@ -24,6 +24,7 @@ const RespuestasAlumnos = () => {
   const [changes, setChanges] = useState({})
   const [changesAlumno, setChangesAlumno] = useState({})
   const [toChange, setToChange] = useState({})
+  const [resDescarte, setResDescarte] = useState(null)
   
   const {
     ballPos,
@@ -119,10 +120,12 @@ const RespuestasAlumnos = () => {
     setCurrEdit(null)
     console.log(changes)
     console.log(changesAlumno)
+    console.log(resDescarte)
 
     const formInfo = new FormData()
     formInfo.append("postulacion", JSON.stringify(changes))
     formInfo.append("alumno", JSON.stringify(changesAlumno))
+    formInfo.append("respuesta_descarte", resDescarte)
     formInfo.append("toChange", JSON.stringify(toChange))
     await fetch('http://localhost:8000/postulaciones/update', {
       method: "PATCH",
@@ -140,6 +143,9 @@ const RespuestasAlumnos = () => {
         console.log(temp)
         setPostulaciones(temp)
         setSavedPostulaciones(temp)
+        setChanges({})
+        setChangesAlumno({})
+        setResDescarte(null)
       })
   }
 
@@ -156,7 +162,9 @@ const RespuestasAlumnos = () => {
     const newPos = { ...postulaciones[id], [name]: value };
     setPostulaciones({ ...postulaciones, [id]: newPos });
 
-    if (alumnoFields.has(name)) {
+    if (name === 'respuesta_descarte') {
+      setResDescarte(value)
+    } else if (alumnoFields.has(name)) {
         setChangesAlumno(prev => ({
             ...prev,
             [name]: value
@@ -256,6 +264,7 @@ const RespuestasAlumnos = () => {
                   }
                 }}
               >
+                {console.log(postulacion)}
                 {currEdit !== postulacion.id_postulacion && (
                   <>
                     <td>{postulacion.lastupdate}</td>
@@ -373,13 +382,13 @@ const RespuestasAlumnos = () => {
                       />
                     </td>
                     <td>
-                      <input
+                      {postulacion.id_pregunta && (<input
                         type="text"
                         name="respuesta_descarte"
                         id={postulacion.id_postulacion}
                         value={postulaciones[postulacion.id_postulacion].respuesta_descarte || ''}
                         onChange={handleChange}
-                      />
+                      />)}
                     </td>
                   </>
                 )}
