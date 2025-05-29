@@ -254,6 +254,7 @@ app.get('/postulaciones', upload.none(), (req, res) => {
     a.*,
     c.nombre AS carrera,
     pr.nombre_proyecto AS proyecto,
+    pr.estado AS estado_proyecto,
     r.respuesta AS respuesta_descarte,
     pre. id_pregunta,
     m.momento,
