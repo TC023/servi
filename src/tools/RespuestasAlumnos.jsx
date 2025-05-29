@@ -12,9 +12,8 @@ const dummyData = [
   { carrera: "IMT", matricula: "A01736813", telefono: "2311535986", dispuesto: false },
 ];
 
-const RespuestasAlumnos = () => {
+const RespuestasAlumnos = ( filtro = {} ) => {
   const [filtroCarrera, setFiltroCarrera] = useState("Todas");
-  const [filtroDispuesto, setFiltroDispuesto] = useState("Todos");
   const [postulaciones, setPostulaciones] = useState([])
   const [isEditing, setIsEditing] = useState(false)
   const [carrerasArr, setCarrerasArr] = useState([]);
@@ -25,6 +24,7 @@ const RespuestasAlumnos = () => {
   const [changesAlumno, setChangesAlumno] = useState({})
   const [toChange, setToChange] = useState({})
   const [resDescarte, setResDescarte] = useState(null)
+  const [defaultFilter, setDefaultFilter] = useState(filtro)
   
   const {
     ballPos,
@@ -66,11 +66,8 @@ const RespuestasAlumnos = () => {
 
   const dataFiltrada = Object.values(postulaciones).filter((alumno) => {
     const coincideCarrera = filtroCarrera === "Todas" || alumno.carrera === filtroCarrera;
-    const coincideDispuesto =
-      filtroDispuesto === "Todos" ||
-      (filtroDispuesto === "Sí" && alumno.dispuesto) ||
-      (filtroDispuesto === "No" && !alumno.dispuesto);
-    return coincideCarrera && coincideDispuesto;
+    // return coincideCarrera && coincideDispuesto;
+    return coincideCarrera;
   });
 
   // logica pelota
@@ -232,14 +229,6 @@ const RespuestasAlumnos = () => {
           </select>
         </label>
 
-        <label>
-          Dispuesto:
-          <select value={filtroDispuesto} onChange={(e) => setFiltroDispuesto(e.target.value)}>
-            <option value="Todos">Todos</option>
-            <option value="Sí">Sí</option>
-            <option value="No">No</option>
-          </select>
-        </label>
 
         <div className="deposito" />
         <div className="respuestas-contador">
@@ -345,7 +334,7 @@ const RespuestasAlumnos = () => {
                     <td>{postulacion.proyecto}</td>
                     <td>
                       <select
-                        name="carrera"
+                        name="carrera_id"
                         id={postulacion.id_postulacion}
                         value={postulaciones[postulacion.id_postulacion].carrera_id}
                         onChange={e => {
