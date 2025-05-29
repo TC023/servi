@@ -255,14 +255,45 @@ app.get('/postulaciones', upload.none(), (req, res) => {
     c.nombre AS carrera,
     pr.nombre_proyecto AS proyecto,
     r.respuesta AS respuesta_descarte,
-    pre. id_pregunta
+    pre. id_pregunta,
+    m.momento,
+    periodo.nombre AS periodo
     FROM postulacion p
     LEFT JOIN alumno a ON a.alumno_id=p.id_alumno
     LEFT JOIN carrera c ON a.carrera_id=c.carrera_id
     LEFT JOIN proyecto pr ON p.id_proyecto=pr.proyecto_id
     LEFT JOIN respuesta r ON p.id_postulacion=r.id_postulacion
     LEFT JOIN pregunta pre ON pre.id_proyecto=p.id_proyecto
+    LEFT JOIN momentos_periodo m ON pr.momento_id = m.momento_id
+    LEFT JOIN periodo_academico periodo ON periodo.periodo_id = m.periodo_id
     `)
+    .then((data) => res.json(data))
+    .catch((error) => console.log('ERROR', error))
+})
+
+
+app.get('/postulaciones/:osf_id', upload.none(), (req, res) => {
+  const {osf_id} = req.params
+  db.any(`
+    SELECT 
+    p.*, 
+    a.*,
+    c.nombre AS carrera,
+    pr.nombre_proyecto AS proyecto,
+    r.respuesta AS respuesta_descarte,
+    pre. id_pregunta,
+    m.momento,
+    periodo.nombre AS periodo
+    FROM postulacion p
+    LEFT JOIN alumno a ON a.alumno_id=p.id_alumno
+    LEFT JOIN carrera c ON a.carrera_id=c.carrera_id
+    LEFT JOIN proyecto pr ON p.id_proyecto=pr.proyecto_id
+    LEFT JOIN respuesta r ON p.id_postulacion=r.id_postulacion
+    LEFT JOIN pregunta pre ON pre.id_proyecto=p.id_proyecto
+    LEFT JOIN momentos_periodo m ON pr.momento_id = m.momento_id
+    LEFT JOIN periodo_academico periodo ON periodo.periodo_id = m.periodo_id
+    WHERE pr.osf_id = $1    
+    `,[osf_id])
     .then((data) => res.json(data))
     .catch((error) => console.log('ERROR', error))
 })

@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef, useContext } from "react";
 import "./RespuestasAlumnos.css";
 import { FiArrowLeft, FiEdit3, FiCheck, FiX } from "react-icons/fi";
 import { BallContext } from "../Contexts/BallContext";
+import { SessionContext } from "../Contexts/SessionContext";
+import { UserIdContext } from "../Contexts/UserIdContext";
 
 const dummyData = [
   { carrera: "IMT", matricula: "A01736813", telefono: "2311535986", dispuesto: false },
@@ -12,11 +14,9 @@ const dummyData = [
   { carrera: "IMT", matricula: "A01736813", telefono: "2311535986", dispuesto: false },
 ];
 
-const RespuestasAlumnos = ( {filtro = {"alumno": '', 'proyecto': 'Todos'}} ) => {
-  console.log(filtro)
+const RespuestasAlumnos = ( ) => {
   const [filtroCarrera, setFiltroCarrera] = useState("Todas");
-  const [postulaciones, setPostulaciones] = useState([
-  ])
+  const [postulaciones, setPostulaciones] = useState([])
   const [isEditing, setIsEditing] = useState(false)
   const [carrerasArr, setCarrerasArr] = useState([]);
   const estados = ['POSTULADX', 'ACEPTADX', 'RECHAZADX', 'DECLINADX', 'CONFIRMADX']
@@ -26,8 +26,11 @@ const RespuestasAlumnos = ( {filtro = {"alumno": '', 'proyecto': 'Todos'}} ) => 
   const [changesAlumno, setChangesAlumno] = useState({})
   const [toChange, setToChange] = useState({})
   const [resDescarte, setResDescarte] = useState(null)
-  const [filters, setFilters] = useState(filtro)
+  const [filters, setFilters] = useState({ "alumno": "", "proyecto": "Todos" })
+  const { userId, setUserId } = useContext(UserIdContext)
+  const { sessionType, setSessionType } = useContext(SessionContext)
   
+
   const {
     ballPos,
     setBallPos,
@@ -44,24 +47,30 @@ const RespuestasAlumnos = ( {filtro = {"alumno": '', 'proyecto': 'Todos'}} ) => 
   const animationRef = useRef(null);
 
   useEffect(() => {
-  fetch('http://localhost:8000/postulaciones')
-    .then(res => res.json())
-    .then((data) => {
-      // console.log(data)
-      const temp = {}
-      data.forEach(e => {
-        temp[e.id_postulacion] = e
-      });
-      setPostulaciones(temp)
-      setSavedPostulaciones(temp)
-
-      console.log(temp)
-    })
+fetch(( sessionType === 'osf' ? 'http://localhost:8000/postulaciones/'+userId.special_id : 'http://localhost:8000/postulaciones'))
+  .then(res => res.json())
+  .then((data) => {
+    const result = data.reduce((acc, p) => {
+      acc[p.id_postulacion] = {
+        ...p,
+        proyecto: `${p.proyecto} - ${p.periodo} Periodo ${p.momento}`
+      };
+      return acc;
+    }, {});
+    setPostulaciones(result);
+    setSavedPostulaciones(result);
+    console.log(result);
+  });
 
   fetch("http://localhost:8000/carreras")
     .then((res) => res.json())
     .then((data) => setCarrerasArr(data));
-    
+  
+  if (sessionType === "alumno") {
+    setFilters({ "alumno": `${userId.special_id}`, "proyecto": "Todos" })
+  }
+  
+  
   },[])
   
   const carreras = ["Todas", ...Array.from(new Set(Object.values(postulaciones).map((a) => a.carrera)))];
@@ -71,7 +80,7 @@ const RespuestasAlumnos = ( {filtro = {"alumno": '', 'proyecto': 'Todos'}} ) => 
     // console.log(alumno)
     const coincideCarrera = filtroCarrera === "Todas" || alumno.carrera === filtroCarrera;
     const coincideAlumno = ((alumno["nombre"]).toLowerCase().includes(filters["alumno"].toLowerCase())) || (alumno["id_alumno"].includes(filters.alumno))
-    const coincideProyecto = filters.proyecto === "Todos" || alumno.proyecto === filters.proyecto 
+    const coincideProyecto = filters.proyecto === "Todos" || alumno.proyecto === filters.proyecto  || alumno.id_proyecto === filters.proyecto
     // console.log(alumno["nombre"], filters)
     // return coincideCarrera && coincideDispuesto;
     return coincideCarrera && coincideAlumno && coincideProyecto ;
@@ -136,21 +145,20 @@ const RespuestasAlumnos = ( {filtro = {"alumno": '', 'proyecto': 'Todos'}} ) => 
       body: formInfo
     })
     // Refetch postulaciones after save
-    fetch('http://localhost:8000/postulaciones')
-      .then(res => res.json())
-      .then((data) => {
-        console.log(data)
-        const temp = {}
-        data.forEach(e => {
-          temp[e.id_postulacion] = e
-        });
-        console.log(temp)
-        setPostulaciones(temp)
-        setSavedPostulaciones(temp)
-        setChanges({})
-        setChangesAlumno({})
-        setResDescarte(null)
-      })
+fetch(( sessionType === 'osf' ? 'http://localhost:8000/postulaciones/'+userId.special_id : 'http://localhost:8000/postulaciones'))
+  .then(res => res.json())
+  .then((data) => {
+    const result = data.reduce((acc, p) => {
+      acc[p.id_postulacion] = {
+        ...p,
+        proyecto: `${p.proyecto} - ${p.periodo} Periodo ${p.momento}`
+      };
+      return acc;
+    }, {});
+    setPostulaciones(result);
+    setSavedPostulaciones(result);
+    console.log(result);
+  });
   }
 
   const handleCancel = () => {
@@ -227,6 +235,8 @@ const RespuestasAlumnos = ( {filtro = {"alumno": '', 'proyecto': 'Todos'}} ) => 
         </div>
 
       <div className="respuestas-filtros">
+        { sessionType !== "alumno" && (
+        <>
         <label>
           Carrera:
           <select value={filtroCarrera} onChange={(e) => setFiltroCarrera(e.target.value)}>
@@ -236,14 +246,16 @@ const RespuestasAlumnos = ( {filtro = {"alumno": '', 'proyecto': 'Todos'}} ) => 
           </select>
         </label>
 
-        <label>
+          <label>
           Alumno:
           <input type="text" value={filters["alumno"]} onChange={
             (e) => {
               setFilters({...filters, ["alumno"]: e.target.value})
             }
-            }/>
+          }/>
         </label>
+        </>
+        ) }
 
         <label>
           Proyecto:
