@@ -185,6 +185,23 @@ const RespuestasAlumnos = () => {
     setBallStartY(y);
   };
 
+  // Función para obtener la clase según el estado
+  const getEstadoClass = (estado) => {
+    switch (estado) {
+      case 'ACEPTADX':
+        return 'estado-aceptadx';
+      case 'RECHAZADX':
+        return 'estado-rechazadx';
+      case 'DECLINADX':
+        return 'estado-declinadx';
+      case 'CONFIRMADX':
+        return 'estado-confirmadx';
+      case 'POSTULADX':
+      default:
+        return 'estado-postuladx';
+    }
+  }
+
   return (
     <div className="respuestas-container" onClick={handleClick} ref={containerRef}>
       <div className="respuestas-header">
@@ -270,7 +287,7 @@ const RespuestasAlumnos = () => {
                     <td>{postulacion.lastupdate}</td>
                     <td>{postulacion.nombre}</td>
                     <td>{postulacion.alumno_id}</td>
-                    <td>{postulacion.estado}</td>
+                    <td className={getEstadoClass(postulacion.estado)}>{postulacion.estado}</td>
                     <td>{postulacion.comentarios}</td>
                     <td>{postulacion.proyecto}</td>
                     <td>{postulacion.carrera}</td>
@@ -302,7 +319,7 @@ const RespuestasAlumnos = () => {
                         onChange={handleChange}
                       />
                     </td>
-                    <td>
+                    <td className={getEstadoClass(postulacion.estado)}>
                       <select
                         name="estado"
                         id={postulacion.id_postulacion}

@@ -184,3 +184,30 @@
     margin-bottom: 1.5rem;
     /* height: 50px; */
   }
+
+  /* === Colores para el estado de postulaciones === */
+.estado-declinadx {
+  background-color: #e0e7ff; /* azul claro */
+  color: #3730a3;
+  font-weight: bold;
+}
+.estado-aceptadx {
+  background-color: #d1fae5; /* verde claro */
+  color: #047857;
+  font-weight: bold;
+}
+.estado-rechazadx {
+  background-color: #fee2e2; /* rojo claro */
+  color: #b91c1c;
+  font-weight: bold;
+}
+.estado-postuladx {
+  background-color: #fef9c3; /* amarillo claro */
+  color: #b45309;
+  font-weight: bold;
+}
+.estado-confirmadx {
+  background-color: #f0fdf4; /* verde muy claro */
+  color: #166534;
+  font-weight: bold;
+}
