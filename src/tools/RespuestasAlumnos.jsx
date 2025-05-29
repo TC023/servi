@@ -12,9 +12,11 @@ const dummyData = [
   { carrera: "IMT", matricula: "A01736813", telefono: "2311535986", dispuesto: false },
 ];
 
-const RespuestasAlumnos = ( filtro = {} ) => {
+const RespuestasAlumnos = ( {filtro = {"alumno": '', 'proyecto': 'Todos'}} ) => {
+  console.log(filtro)
   const [filtroCarrera, setFiltroCarrera] = useState("Todas");
-  const [postulaciones, setPostulaciones] = useState([])
+  const [postulaciones, setPostulaciones] = useState([
+  ])
   const [isEditing, setIsEditing] = useState(false)
   const [carrerasArr, setCarrerasArr] = useState([]);
   const estados = ['POSTULADX', 'ACEPTADX', 'RECHAZADX', 'DECLINADX', 'CONFIRMADX']
@@ -24,7 +26,7 @@ const RespuestasAlumnos = ( filtro = {} ) => {
   const [changesAlumno, setChangesAlumno] = useState({})
   const [toChange, setToChange] = useState({})
   const [resDescarte, setResDescarte] = useState(null)
-  const [defaultFilter, setDefaultFilter] = useState(filtro)
+  const [filters, setFilters] = useState(filtro)
   
   const {
     ballPos,
@@ -63,11 +65,16 @@ const RespuestasAlumnos = ( filtro = {} ) => {
   },[])
   
   const carreras = ["Todas", ...Array.from(new Set(Object.values(postulaciones).map((a) => a.carrera)))];
+  const proyectos = ["Todos", ...Array.from(new Set(Object.values(postulaciones).map((a) => a.proyecto)))]
 
   const dataFiltrada = Object.values(postulaciones).filter((alumno) => {
+    // console.log(alumno)
     const coincideCarrera = filtroCarrera === "Todas" || alumno.carrera === filtroCarrera;
+    const coincideAlumno = ((alumno["nombre"]).toLowerCase().includes(filters["alumno"].toLowerCase())) || (alumno["id_alumno"].includes(filters.alumno))
+    const coincideProyecto = filters.proyecto === "Todos" || alumno.proyecto === filters.proyecto 
+    // console.log(alumno["nombre"], filters)
     // return coincideCarrera && coincideDispuesto;
-    return coincideCarrera;
+    return coincideCarrera && coincideAlumno && coincideProyecto ;
   });
 
   // logica pelota
@@ -229,6 +236,27 @@ const RespuestasAlumnos = ( filtro = {} ) => {
           </select>
         </label>
 
+        <label>
+          Alumno:
+          <input type="text" value={filters["alumno"]} onChange={
+            (e) => {
+              setFilters({...filters, ["alumno"]: e.target.value})
+            }
+            }/>
+        </label>
+
+        <label>
+          Proyecto:
+          <select value={filters.proyecto} onChange={
+            (e) => {
+              setFilters({...filters, ["proyecto"]: e.target.value})
+            }
+          }>
+            {proyectos.map((proyecto, index) => (
+              <option key={index} value={proyecto}>{proyecto}</option>
+            ))}
+          </select>
+        </label>
 
         <div className="deposito" />
         <div className="respuestas-contador">
