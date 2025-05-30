@@ -26,7 +26,7 @@ const RespuestasAlumnos = ( ) => {
   const [changesAlumno, setChangesAlumno] = useState({})
   const [toChange, setToChange] = useState({})
   const [resDescarte, setResDescarte] = useState(null)
-  const [filters, setFilters] = useState({ "alumno": "", "proyecto": "Todos" })
+  const [filters, setFilters] = useState({ "alumno": "", "proyecto": "Todos", "periodo": "Todos" })
   const { userId, setUserId } = useContext(UserIdContext)
   const { sessionType, setSessionType } = useContext(SessionContext)
   
@@ -73,10 +73,10 @@ const RespuestasAlumnos = ( ) => {
   // Centraliza la lógica de estados según sessionType
   useEffect(() => {
     if (sessionType === "alumno") {
-      setFilters({ "alumno": `${userId.special_id}`, "proyecto": "Todos" })
-      setEstados(['DECLINADX', "CONFIRMADX"])
+      setFilters({ "alumno": `${userId.special_id}`, "proyecto": "Todos", "periodo":"Todos" })
+      setEstados(['ACEPTADX', 'DECLINADX', "CONFIRMADX"])
     } else if (sessionType === "osf") {
-      setEstados(['ACEPTADX', "RECHAZADX"])
+      setEstados(['POSTULADX', 'ACEPTADX', "RECHAZADX"])
     } else if (sessionType === "ss") {
       setEstados(['POSTULADX', 'ACEPTADX', 'RECHAZADX', 'DECLINADX', 'CONFIRMADX'])
     } else {
@@ -86,15 +86,20 @@ const RespuestasAlumnos = ( ) => {
 
   const carreras = ["Todas", ...Array.from(new Set(Object.values(postulaciones).map((a) => a.carrera)))];
   const proyectos = ["Todos", ...Array.from(new Set(Object.values(postulaciones).map((a) => a.proyecto)))]
+  const periodos = [
+    "Todos",
+    ...Array.from(new Set(Object.values(postulaciones).map((a) => a.periodo)))
+  ]
 
   const dataFiltrada = Object.values(postulaciones).filter((alumno) => {
     // console.log(alumno)
     const coincideCarrera = filtroCarrera === "Todas" || alumno.carrera === filtroCarrera;
     const coincideAlumno = ((alumno["nombre"]).toLowerCase().includes(filters["alumno"].toLowerCase())) || (alumno["id_alumno"].includes(filters.alumno))
     const coincideProyecto = filters.proyecto === "Todos" || alumno.proyecto === filters.proyecto  || alumno.id_proyecto === filters.proyecto
+    const coincidePeriodo = filters.periodo === "Todos" || alumno.periodo === filters.periodo;
     // console.log(alumno["nombre"], filters)
     // return coincideCarrera && coincideDispuesto;
-    return coincideCarrera && coincideAlumno && coincideProyecto ;
+    return coincideCarrera && coincideAlumno && coincideProyecto && coincidePeriodo;
   });
 
   
@@ -162,7 +167,7 @@ const RespuestasAlumnos = ( ) => {
     })
 
     // Refetch postulaciones after save
-    fetch(( sessionType === 'osf' ? 'http://localhost:8000/postulaciones/'+userId.special_id : 'http://localhost:8000/postulaciones'))
+    await fetch(( sessionType === 'osf' ? 'http://localhost:8000/postulaciones/'+userId.special_id : 'http://localhost:8000/postulaciones'))
       .then(res => res.json())
       .then((data) => {
         const result = data.reduce((acc, p) => {
@@ -302,6 +307,18 @@ const RespuestasAlumnos = ( ) => {
             ))}
           </select>
         </label>
+        <label>
+          Periodo:
+          <select value={filters.periodo} onChange={
+            (e) => {
+              setFilters({...filters, ["periodo"]: e.target.value})
+            }
+          }>
+            {periodos.map((periodo, index) => (
+              <option key={index} value={periodo}>{periodo}</option>
+            ))}
+          </select>
+        </label>
 
         <div className="deposito" />
         <div className="respuestas-contador">
@@ -344,7 +361,7 @@ const RespuestasAlumnos = ( ) => {
                   }
                 }}
               >
-                {console.log(postulacion)}
+                {/* {console.log(postulacion)} */}
                 {currEdit !== postulacion.id_postulacion && (
                   <>
                     <td>{postulacion.lastupdate}</td>

@@ -8,6 +8,7 @@ import { FaUserGraduate, FaChalkboardTeacher, FaHeart, FaClock, FaStar, FaUserFr
 import { FaPerson } from "react-icons/fa6";
 import { FilterList } from "@mui/icons-material";
 import { SessionContext } from "../Contexts/SessionContext";
+import { UserIdContext } from "../Contexts/UserIdContext";
 import "./Projects.css";
 import ProjectModal from "../pages/ProjectModal"; // ajusta la ruta si es necesario
 import Hero from "../components/Hero"; // ajusta la ruta si es necesario
@@ -68,7 +69,9 @@ const getCarrerasRandom = () => {
   const [horasMax, setHorasMax] = useState("");
   const [edadRange, setEdadRange] = useState([0, 100]);
   const [valoresSeleccionados, setValoresSeleccionados] = useState([]);
+  const [postulaciones, setPostulaciones] = useState({})
   const { sessionType } = useContext(SessionContext);
+  const { userId } = useContext(UserIdContext)
   //const navigate = useNavigate(); //Sin navegacion ahora solo abre un modal
 
   const [proyectoSeleccionado, setProyectoSeleccionado] = useState(null); //Para el model dependiendo el proyect
@@ -141,24 +144,35 @@ useEffect(() => {
         cupo: p.cantidad,
         logo: p.logo,
         pregunta_id: p.id_pregunta || null,
-        pregunta: p.pregunta || null 
+        pregunta: p.pregunta || null ,
+        estado_proyecto: p.estado,
+        num_postulaciones: p.num,
+        periodo_nombre: p.periodo_nombre,
+        momento: p.momento
       }));
       setProjectsDb(adaptados);
     });
-}, []);
 
-//proyectos aleatorios al momento para las cards
-useEffect(() => {
-  fetch("http://localhost:8000/carreras")
+    fetch("http://localhost:8000/carreras")
     .then((res) => res.json())
     .then((data) => {
       const nombres = data.map((c) => c.nombre); // solo nombres
       setTodasCarreras(nombres);
     })
     .catch((err) => console.error("Error al cargar carreras:", err));
-}, []);
+
+    if (sessionType === "alumno") {
+      fetch("http://localhost:8000/postulaciones/alumno/"+userId.special_id)
+      .then((res) => res.json()) 
+      .then((data) => {
+        setPostulaciones( Object.fromEntries(data.map(e => ([e.id_proyecto, e]))))
+      })
+    }
+    
+}, [userId, sessionType]);
 
 
+  console.log(postulaciones)
 
 
 
@@ -286,7 +300,7 @@ useEffect(() => {
           {filteredProjects.map((project, index) => (
             <Fade in={true} timeout={500 + index * 100} key={project.id}>
               <Grid item xs={12} sm={6} md={4} lg={3}>
-              <Card
+              <Card className={project.estado_proyecto === "lleno" ? "lleno":"" }
               //Desde ACA EMPIEZA TODA EL elemento CARD, no es posible realizar algo similar desde un CSS
           //onClick={() => navigate(`/projects/${project.id}`)} //Quitamos navigate para usar el modal
           onClick={() => setProyectoSeleccionado(project)}
@@ -358,7 +372,6 @@ useEffect(() => {
           
           
         >
-          {console.log(project)}
                   <Box sx={{ position: "relative" }}>
                     <img
                       // src={
@@ -464,11 +477,43 @@ useEffect(() => {
     "&:hover span:nth-of-type(11)": { animationDelay: "0.4s" },
   }}
 >
-{project.title.split("").map((char, i) => (
+  {project.title.split("").map((char, i) => (
   <span key={i}>{char === " " ? "\u00A0" : char}</span>
 ))}
 
-</Typography>
+</Typography> <br />
+<Typography
+  variant="h6"
+  sx={{
+    fontWeight: 700,
+    fontSize: "1rem",
+    mb: 1,
+    color: "#1e293b",
+    display: "inline-block",
+    "& span": {
+      display: "inline-block",
+      transition: "transform 0.3s ease",
+    },
+    "&:hover span": {
+      animation: "bounceUp 0.6s ease forwards",
+    },
+    "&:hover span:nth-of-type(1)": { animationDelay: "0s" },
+    "&:hover span:nth-of-type(2)": { animationDelay: "0.04s" },
+    "&:hover span:nth-of-type(3)": { animationDelay: "0.08s" },
+    "&:hover span:nth-of-type(4)": { animationDelay: "0.12s" },
+    "&:hover span:nth-of-type(5)": { animationDelay: "0.16s" },
+    "&:hover span:nth-of-type(6)": { animationDelay: "0.2s" },
+    "&:hover span:nth-of-type(7)": { animationDelay: "0.24s" },
+    "&:hover span:nth-of-type(8)": { animationDelay: "0.28s" },
+    "&:hover span:nth-of-type(9)": { animationDelay: "0.32s" },
+    "&:hover span:nth-of-type(10)": { animationDelay: "0.36s" },
+    "&:hover span:nth-of-type(11)": { animationDelay: "0.4s" },
+  }}
+>
+  {`${project.periodo_nombre} - Periodo ${project.momento}`.split("").map((char, i) => (
+    <span key={i}>{char === " " ? "\u00A0" : char}</span>
+  ))}
+</Typography> <br />
 
 
 
@@ -604,28 +649,7 @@ useEffect(() => {
 
 {/* Vista de google maps  */}
 
-{project.enlace_maps && (
-  <Box
-    sx={{
-      borderRadius: 4,
-      overflow: "hidden",
-      boxShadow: "0 2px 12px rgba(0,0,0,0.1)",
-      mt: 2,
-      height: 100,
-      maxWidth: "100%",
-    }}
-  >
-    <iframe
-      src={getSrcFromIframe(project.enlace_maps)}
-      width="100%"
-      height="100%"
-      style={{ border: 0 }}
-      allowFullScreen=""
-      loading="lazy"
-      referrerPolicy="no-referrer-when-downgrade"
-    />
-  </Box>
-)}
+
 
 
 
@@ -671,6 +695,16 @@ useEffect(() => {
     </Box>
   ))}
 </Box>
+
+  <div className="footer">
+    <span>Cupo: {project.num_postulaciones}/{project.cupo}</span>
+    {postulaciones[project.id] && (
+      <div className="state-container">
+      {console.log(postulaciones[project.id])}
+      <span>{postulaciones[project.id].estado}</span>
+    </div>
+    )}
+  </div>
 
 
 
@@ -814,18 +848,16 @@ useEffect(() => {
 
       */}
 {proyectoSeleccionado && (
+  <>
+  {console.log(postulaciones[proyectoSeleccionado.id] ? true : false)}
   <ProjectModal
     proyecto={proyectoSeleccionado}
     onClose={() => setProyectoSeleccionado(null)}
     proyectosDisponibles={projectsDb} // Este sí es el array completo de proyectos
-  />
+    pos={ postulaciones[proyectoSeleccionado.id] ? true : false }
+    />
+  </>
 )}
-
-
-
-
-
-
     </Box>
   );
 };

@@ -77,25 +77,36 @@ app.get('/session/detail', authenticateSession, (req, res) => {
 // fetch a todos los proyectos
 app.get('/proyectos', (req, res) => {
     db.any(`
-      SELECT 
-        p.*, 
-        array_remove(array_agg(c.nombre), NULL) AS carreras,
-        m.horas,
-        CASE 
-          WHEN osf.tipo = 'institucional' THEN osf_i.logo
-          ELSE NULL
-        END AS logo,
-        q.id_pregunta,
-        q.pregunta
-      FROM proyecto p
-      LEFT JOIN proyecto_carrera pc ON p.proyecto_id = pc.proyecto_id
-      LEFT JOIN carrera c ON pc.carrera_id = c.carrera_id
-      LEFT JOIN momentos_periodo m ON p.momento_id = m.momento_id 
-      LEFT JOIN osf ON osf.osf_id = p.osf_id
-      LEFT JOIN osf_institucional osf_i ON osf_i.osf_id = osf.osf_id
-      LEFT JOIN pregunta q ON q.id_proyecto = p.proyecto_id
-      GROUP BY p.proyecto_id, m.horas, osf.tipo, osf_i.logo, q.id_pregunta, q.pregunta
-      ORDER BY p.proyecto_id DESC
+SELECT 
+  p.*, 
+  array_remove(array_agg(c.nombre), NULL) AS carreras,
+  m.horas,
+  CASE 
+    WHEN osf.tipo = 'institucional' THEN osf_i.logo
+    ELSE NULL
+  END AS logo,
+  q.id_pregunta,
+  q.pregunta,
+  (
+    SELECT COUNT(*) 
+    FROM postulacion pos 
+    WHERE pos.id_proyecto = p.proyecto_id 
+      AND pos.estado <> 'RECHAZADX' 
+      AND pos.estado <> 'DECLINADX'
+  ) AS num,
+  periodo.nombre AS periodo_nombre,
+  m.momento
+FROM proyecto p
+LEFT JOIN proyecto_carrera pc ON p.proyecto_id = pc.proyecto_id
+LEFT JOIN carrera c ON pc.carrera_id = c.carrera_id
+LEFT JOIN momentos_periodo m ON p.momento_id = m.momento_id 
+LEFT JOIN osf ON osf.osf_id = p.osf_id
+LEFT JOIN osf_institucional osf_i ON osf_i.osf_id = osf.osf_id
+LEFT JOIN pregunta q ON q.id_proyecto = p.proyecto_id
+LEFT JOIN periodo_academico periodo ON m.periodo_id = periodo.periodo_id
+GROUP BY p.proyecto_id, m.horas, osf.tipo, osf_i.logo, q.id_pregunta, q.pregunta, periodo.nombre, m.momento
+ORDER BY p.proyecto_id DESC;
+
     `)
     .then((data) => res.json(data))
     .catch((error) => console.log('ERROR:', error));
@@ -272,6 +283,14 @@ app.get('/postulaciones', upload.none(), (req, res) => {
     .catch((error) => console.log('ERROR', error))
 })
 
+app.get('/postulaciones/alumno/:alumno_id', upload.none(), (req, res) => {
+  const {alumno_id} = req.params
+  db.any(`
+SELECT * FROM postulacion WHERE id_alumno = $1;    
+    `,[alumno_id])
+    .then((data) => res.json(data))
+    .catch((error) => console.log('ERROR', error))
+  })
 
 app.get('/postulaciones/:osf_id', upload.none(), (req, res) => {
   const {osf_id} = req.params
@@ -304,36 +323,43 @@ app.patch('/postulaciones/update', upload.none(), async (req, res) => {
   const alumno = JSON.parse(req.body.alumno)
   const respuesta = req.body.respuesta_descarte
   const toChange = JSON.parse(req.body.toChange)
-  console.log(postulacion)
-  console.log(alumno)
-  console.log(toChange)
-  console.log(respuesta)
+
+  const promises = [];
+
   if (Object.entries(postulacion).length > 0) {
     const keys = Object.keys(postulacion)
     const values = Object.values(postulacion)
     const sets = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
-    db.none(`UPDATE postulacion SET ${sets} WHERE id_postulacion = $${keys.length + 1}`,
-      [...values, toChange.id_postulacion]
-    )
+    promises.push(
+      db.none(`UPDATE postulacion SET ${sets} WHERE id_postulacion = $${keys.length + 1}`,
+        [...values, toChange.id_postulacion]
+      )
+    );
   }
 
   if (Object.entries(alumno).length > 0) {
     const keys = Object.keys(alumno)
     const values = Object.values(alumno)
     const sets = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
-    db.none(`UPDATE alumno SET ${sets} WHERE alumno_id = $${keys.length + 1}`,
-      [...values, toChange.alumno_id]
-    )
+    promises.push(
+      db.none(`UPDATE alumno SET ${sets} WHERE alumno_id = $${keys.length + 1}`,
+        [...values, toChange.alumno_id]
+      )
+    );
   }
 
   if (respuesta !== 'null') {
-    db.none(`UPDATE respuesta SET respuesta = $1 WHERE id_postulacion = $2`,
-      [respuesta, toChange.id_postulacion]
-    )
+    promises.push(
+      db.none(`UPDATE respuesta SET respuesta = $1 WHERE id_postulacion = $2`,
+        [respuesta, toChange.id_postulacion]
+      )
+    );
   }
 
+  await Promise.all(promises);
+
   res.status(200).send('ok')
-})
+});
 
 app.post('/projects/newProject', upload.none(), async (req, res) => {
   try {

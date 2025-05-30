@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useContext } from "react";
 import "./ProjectModal.css";
 import {
   FiClock,
@@ -16,6 +16,9 @@ import { useNavigate } from "react-router-dom";
 
 import { FiBox, FiActivity, FiUser } from "react-icons/fi";
 
+import { SessionContext } from "../Contexts/SessionContext";
+import { UserIdContext } from "../Contexts/UserIdContext";
+
 import Box from '@mui/material/Box';
 
 
@@ -28,14 +31,17 @@ const cleanIframeHtml = (html) => {
 
 
 
-const ProjectModal = ({ proyecto, onClose, proyectosDisponibles }) => {
-    const carouselRef = useRef(null);
+const ProjectModal = ({ proyecto, onClose, proyectosDisponibles, pos = false }) => {
+  const carouselRef = useRef(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [editedModalidad, setEditedModalidad] = useState(proyecto.modalidad);
   const [horas, setHoras] = useState(proyecto.horas);
   const [showPreview, setShowPreview] = useState(false);
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const { sessionType } = useContext(SessionContext)
+  const { userId } = useContext(UserIdContext)
+  const [postulacion, setPostulacion] = useState(pos)
 
       const [showAllPhotos, setShowAllPhotos] = useState(false); 
     const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
@@ -354,6 +360,7 @@ console.log(" Proyectos relacionados encontrados:", relatedProjects);
 
 
 
+{sessionType === "alumno" && !postulacion && (
 <div className="apply-box-top">
   <button
     className="apply-button"
@@ -406,7 +413,17 @@ Coméntanos con tus propias palabras: ¿Qué buscamos? ¿Qué es lo que crees qu
       <button className="enviar-button" onClick={handleSubmit}>Enviar postulación</button>
     </div>
   )}
+  
 </div>
+)}
+
+{postulacion && (
+    <button
+    className="apply-button-fail"
+  >
+    {"Ya te postulaste a este proyecto"}
+  </button>
+)}
 
 
 
