@@ -14,7 +14,7 @@ const dummyData = [
   { carrera: "IMT", matricula: "A01736813", telefono: "2311535986", dispuesto: false },
 ];
 
-const RespuestasAlumnos = ( ) => {
+const RespuestasAlumnos = ( {test = ''} ) => {
   const [filtroCarrera, setFiltroCarrera] = useState("Todas");
   const [postulaciones, setPostulaciones] = useState([])
   const [isEditing, setIsEditing] = useState(false)
@@ -256,7 +256,7 @@ const RespuestasAlumnos = ( ) => {
     <div className="respuestas-container" onClick={handleClick} ref={containerRef}>
       <div className="respuestas-header">
         <FiArrowLeft />
-        <h1>Postulaciones - {sessionType}</h1>
+        <h1>Postulaciones - {sessionType} {test}</h1>
       </div>
 
       <div className="edit-buttons-container">

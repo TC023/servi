@@ -121,13 +121,18 @@ export default function App() {
             {/* Rutas protegidas con layout */}
             <Route path="/" element={ 
               <ProtectedRoute>
-                <MainLayout> <Projects sessionType={sessionType} /> </MainLayout> 
+                <MainLayout> <Projects  /> </MainLayout> 
               </ProtectedRoute>
             } />
             <Route path="/dashboard" element={  <MainLayout> <Dashboard /> </MainLayout> } />
             <Route path="/respuesta_alumnos" element={ <MainLayout> <RespuestasAlumnos /> </MainLayout> } />
             <Route path="/projects/:id" element={ <MainLayout> <ProjectDetail /> </MainLayout> } />
             <Route path="/projects/new" element={ <MainLayout> <NewProject /> </MainLayout> } />
+            <Route path="/proyectos_revisar" element={ 
+              <ProtectedRoute>
+                <MainLayout> <Projects vP={true} /> </MainLayout> 
+              </ProtectedRoute>
+             } />
             
             {/* Rutas públicas sin layout */}
             <Route path="/login" element={<Login />} />

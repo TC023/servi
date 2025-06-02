@@ -19,6 +19,8 @@ import { FiBox, FiActivity, FiUser } from "react-icons/fi";
 import { SessionContext } from "../Contexts/SessionContext";
 import { UserIdContext } from "../Contexts/UserIdContext";
 
+import FormsOSF from "../components/FormsOsf";
+
 import Box from '@mui/material/Box';
 
 
@@ -42,6 +44,8 @@ const ProjectModal = ({ proyecto, onClose, proyectosDisponibles, pos = false }) 
   const { sessionType } = useContext(SessionContext)
   const { userId } = useContext(UserIdContext)
   const [postulacion, setPostulacion] = useState(pos)
+  const [toggleEditOsf, setToggleEditOsf] = useState(false)
+  const [osf, setOsf] = useState("")
 
       const [showAllPhotos, setShowAllPhotos] = useState(false); 
     const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
@@ -149,6 +153,17 @@ console.log(" Proyectos relacionados encontrados:", relatedProjects);
   }, []);
 
   useEffect(() => {
+    if (proyecto.osf_id) {
+      fetch("http://localhost:8000/osf_institucional/" + proyecto.osf_id)
+      .then(res => res.json())
+      .then(data => {setOsf(data)
+        console.log(data)
+      })
+      .catch(err => setOsf(""));
+    }
+  },[])
+  
+  useEffect(() => {
     setEditedModalidad(proyecto.modalidad);
     setHoras(proyecto.horas);
   }, [proyecto]);
@@ -228,7 +243,11 @@ console.log(" Proyectos relacionados encontrados:", relatedProjects);
             </div>
           </div>
 
-   
+          { sessionType == "ss" && (<button onClick={() => setToggleEditOsf(!toggleEditOsf)}>Editar información de osf</button>)}
+              
+          {toggleEditOsf && (
+            <FormsOSF osf={osf}/>
+          )}
 
           <div className="chips">
             <span><FiClock /> {horas} hrs</span>
@@ -359,8 +378,7 @@ console.log(" Proyectos relacionados encontrados:", relatedProjects);
 */}
 
 
-
-{sessionType === "alumno" && !postulacion && (
+{sessionType === "alumno" && !postulacion && proyecto.estado_proyecto !== 'lleno' && (
 <div className="apply-box-top">
   <button
     className="apply-button"
@@ -425,6 +443,14 @@ Coméntanos con tus propias palabras: ¿Qué buscamos? ¿Qué es lo que crees qu
   </button>
 )}
 
+
+{proyecto.estado_proyecto === "lleno" && (
+    <button
+    className="apply-button-fail"
+  >
+    {"Este proyecto está lleno"}
+  </button>
+)}
 
 
 {/* === Periodos de Ejecución === */}

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Importa useNavigate
 
-const FormsOSF = () => {
+const FormsOSF = ( {osf = {}} ) => {
     const [files, setFiles] = useState([]);
     const [odsList, setOdsList] = useState([])
     const [formDataOsf, setFormDataOsf] = useState({
@@ -136,6 +136,103 @@ const FormsOSF = () => {
         });
     };
 
+    const handleUpdateOsf = async (e) => {
+        e.preventDefault();
+        setSuccessMessage("");
+        console.log(formDataOsf)
+        const formInf = new FormData();
+        // Construye el objeto osf solo con los campos correspondientes a osf/institucional
+        const institucional = {
+            subtipo: formDataOsf.subtipo,
+            mision: formDataOsf.mision,
+            vision: formDataOsf.vision,
+            objetivos: formDataOsf.objetivo,
+            // ods: formDataOsf.ods,
+            poblacion: formDataOsf.poblacion,
+            num_beneficiarios: formDataOsf.num_beneficiarios,
+            nombre_responsable: formDataOsf.nombre_responsable,
+            puesto_responsable: formDataOsf.puesto_responsable,
+            correo_responsable: formDataOsf.correo_responsable,
+            telefono: formDataOsf.telefono,
+            direccion: formDataOsf.direccion,
+            horario: formDataOsf.horario,
+            pagina_web_redes: formDataOsf.pagina_web_redes,
+            correo_registro: formDataOsf.correo_registro
+        };
+        const userData = {
+            correo: formDataOsf.correo,
+            contrasena: formDataOsf.contrasena,
+        };
+        const encargadoData = {
+            nombre: formDataOsf.nombre_encargado,
+            puesto: formDataOsf.puesto_encargado,
+            telefono: formDataOsf.telefono_encargado,
+            correo: formDataOsf.correo_encargado,
+        };
+
+        const osfData = {
+            nombre: formDataOsf.nombre,
+            tipo: 'institucional',
+        }
+        
+        formInf.append("osf", JSON.stringify(osfData));
+        formInf.append("user", JSON.stringify(userData));
+        formInf.append("encargado", JSON.stringify(encargadoData));
+        formInf.append("institucional", JSON.stringify(institucional));
+        try {
+            // Suponiendo que tienes el osf_id en el prop osf.osf_id o similar
+            const osfId = osf.osf?.osf_id || osf.osf_id || osf.institucional?.osf_id;
+            if (!osfId) {
+                setSuccessMessage("No se encontró el ID de la OSF para actualizar.");
+                return;
+            }
+            const response = await fetch(`http://localhost:8000/osf_institucional/${osfId}`, {
+                method: "PATCH",
+                body: formInf
+            });
+            if (response.ok) {
+                setSuccessMessage("Cambios guardados correctamente.");
+            } else {
+                setSuccessMessage("Error al guardar los cambios.");
+            }
+        } catch (error) {
+            setSuccessMessage("Error al guardar los cambios.");
+        }
+    };
+
+    useEffect(() => {
+        if (osf && Object.keys(osf).length > 0) {
+            setFormDataOsf(prev => ({
+                ...prev,
+                correo: osf.user?.correo || '',
+                contrasena: osf.user?.contrasena || '',
+                nombre: osf.osf?.nombre || '',
+                subtipo: osf.institucional?.subtipo || '',
+                mision: osf.institucional?.mision || '',
+                vision: osf.institucional?.vision || '',
+                objetivo: osf.institucional?.objetivos || '',
+                ods: osf.institucional?.ods_id || '',
+                poblacion: osf.institucional?.poblacion || '',
+                num_beneficiarios: osf.institucional?.num_beneficiarios || 0,
+                nombre_responsable: osf.institucional?.nombre_responsable || '',
+                puesto_responsable: osf.institucional?.puesto_responsable || '',
+                correo_responsable: osf.institucional?.correo_responsable || '',
+                telefono: osf.institucional?.telefono || '',
+                direccion: osf.institucional?.direccion || '',
+                horario: osf.institucional?.horario || '',
+                pagina_web_redes: osf.institucional?.pagina_web_redes || '',
+                correo_registro: osf.institucional?.correo_registro || '',
+                nombre_encargado: osf.encargado?.nombre_encargado || '',
+                puesto_encargado: osf.encargado?.puesto_encargado || '',
+                telefono_encargado: osf.encargado?.telefono_encargado || '',
+                correo_encargado: osf.encargado?.correo_encargado || '',
+            }));
+            // Si "poblacion" es un array, también actualiza poblacionSelect
+            if (Array.isArray(osf.institucional?.poblacion)) {
+                setPoblacionSelect(osf.institucional.poblacion);
+            }
+        }
+    }, [osf]);
     
     return (
         <div>
@@ -183,25 +280,32 @@ const FormsOSF = () => {
                             <label htmlFor="ods">1.4 Objetivo de Desarrollo Sostenible (ODS) en el que se enfoca la organización </label> <br />
                         {odsList.map((ods, index) => (
                             <label key={index}>
-                            <input type="radio" name="ods" value={ods.ods_id} onChange={handleChangeOsf} />
-                            {ods.nombre}
-                            <br />
+                                <input
+                                    type="radio"
+                                    name="ods"
+                                    value={ods.ods_id}
+                                    onChange={handleChangeOsf}
+                                    checked={String(formDataOsf.ods) === String(ods.ods_id)}
+                                />
+                                {ods.nombre}
+                                <br />
                             </label>
                         ))}                    
                     </div>
                     <div>
                         <label htmlFor="poblacion">1.5 Población que atiende:</label> <br />
                         {poblacionList.map((item, index) => (
-                            <div  key={index}>
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    name="poblacion"
-                                    value={item}
-                                    onChange={handleChangePoblacion}
+                            <div key={index}>
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        name="poblacion"
+                                        value={item}
+                                        onChange={handleChangePoblacion}
+                                        checked={poblacionSelect.includes(item)}
                                     />
-                                {item} 
-                            </label> <br />
+                                    {item}
+                                </label> <br />
                             </div>
                         ))}
                     </div>
@@ -296,7 +400,8 @@ const FormsOSF = () => {
                     </div>
                     </div>
                     ) }           
-                    <button type="submit">Registrar OSF</button>
+                    { !osf && (<button type="submit">Registrar OSF</button>)}
+                    <button type="button" onClick={handleUpdateOsf} style={{marginLeft: '1rem'}}>Guardar cambios</button>
                 </form>
                 {successMessage}
             </div>

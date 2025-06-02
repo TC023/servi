@@ -3,7 +3,7 @@ import {
   Box, Card, CardContent, Typography, Grid, Button, Select, MenuItem,
   Avatar, Fade, Drawer, TextField, FormControl, InputLabel, Slider, Checkbox, ListItemText
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { FaUserGraduate, FaChalkboardTeacher, FaHeart, FaClock, FaStar, FaUserFriends } from "react-icons/fa";
 import { FaPerson } from "react-icons/fa6";
 import { FilterList } from "@mui/icons-material";
@@ -45,7 +45,7 @@ const getCoordsFromIframe = (iframeHtml) => {
 
 
 
-const Projects = () => {
+const Projects = ( {vP = false} ) => {
 
 //Carreras random
 const getCarrerasRandom = () => {
@@ -76,8 +76,14 @@ const getCarrerasRandom = () => {
 
   const [proyectoSeleccionado, setProyectoSeleccionado] = useState(null); //Para el model dependiendo el proyect
   const [searchText, setSearchText] = useState(""); //Dar funcionamiento a el campo de busqueda de HERO
+  const [vistaPendientes, setVistaPendientes] = useState(vP)
 
+  const location = useLocation();
 
+  // Sincroniza vistaPendientes con el prop vP cuando cambia la ruta
+  useEffect(() => {
+    setVistaPendientes(vP);
+  }, [vP, location.pathname]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -111,6 +117,141 @@ const getCarrerasRandom = () => {
 
 
 useEffect(() => {
+  if (sessionType === "alumno" && userId.special_id) {
+  console.log(userId)
+  fetch("http://localhost:8000/proyectos/alumnos/"+userId.special_id)
+    .then((res) => res.json())
+    .then((proyectos) => {
+      console.log(userId)
+      const adaptados = proyectos.map((p) => ({
+        id: p.proyecto_id,
+        osf_id: p.osf_id,
+        // periodo_id: p.periodo_id,
+        nombre_coordinador: p.nombre_coordinador,
+        numero_coordinador: p.numero_coordinador,
+        title: p.nombre_proyecto,
+        problema_social: p.problema_social,
+        tipo_vulnerabilidad: p.tipo_vulnerabilidad,
+        rango_edad: p.rango_edad?.replace(/\[|\)/g, "").split(",")[1] || "100",
+        zona: p.zona,
+        numero_beneficiarios: p.numero_beneficiarios,
+        lista_actividades_alumno: p.lista_actividades_alumno,
+        producto_a_entregar: p.producto_a_entregar,
+        medida_impacto_social: p.medida_impacto_social,
+        modalidad: p.modalidad,
+        modalidad_desc: p.modalidad_desc,
+        competencias: p.competencias,
+        direccion: p.direccion,
+        enlace_maps: p.enlace_maps,
+        valor_promueve: p.valor_promueve?.trim() || "Sin valor",
+        surgio_unidad_formacion: p.surgio_unidad_formacion,
+        necesita_entrevista: p.necesita_entrevista,
+        notificaciones: p.notificaciones,
+        horas: p.horas,
+        images: ["/logo.jpg"], // puedes cambiar esto si usaSs una columna de imagen real
+        carreras: p.carreras, // cambia esto si tienes relación real con carreras
+        cupo: p.cantidad,
+        logo: p.logo,
+        pregunta_id: p.id_pregunta || null,
+        pregunta: p.pregunta || null ,
+        estado_proyecto: p.estado,
+        num_postulaciones: p.num,
+        periodo_nombre: p.periodo_nombre,
+        momento: p.momento
+      }));
+      setProjectsDb(adaptados);
+    });
+  }
+
+  if (sessionType === "osf" && userId) {
+  fetch("http://localhost:8000/proyectos/"+userId.special_id)
+    .then((res) => res.json())
+    .then((proyectos) => {
+      const adaptados = proyectos.map((p) => ({
+        id: p.proyecto_id,
+        osf_id: p.osf_id,
+        // periodo_id: p.periodo_id,
+        nombre_coordinador: p.nombre_coordinador,
+        numero_coordinador: p.numero_coordinador,
+        title: p.nombre_proyecto,
+        problema_social: p.problema_social,
+        tipo_vulnerabilidad: p.tipo_vulnerabilidad,
+        rango_edad: p.rango_edad?.replace(/\[|\)/g, "").split(",")[1] || "100",
+        zona: p.zona,
+        numero_beneficiarios: p.numero_beneficiarios,
+        lista_actividades_alumno: p.lista_actividades_alumno,
+        producto_a_entregar: p.producto_a_entregar,
+        medida_impacto_social: p.medida_impacto_social,
+        modalidad: p.modalidad,
+        modalidad_desc: p.modalidad_desc,
+        competencias: p.competencias,
+        direccion: p.direccion,
+        enlace_maps: p.enlace_maps,
+        valor_promueve: p.valor_promueve?.trim() || "Sin valor",
+        surgio_unidad_formacion: p.surgio_unidad_formacion,
+        necesita_entrevista: p.necesita_entrevista,
+        notificaciones: p.notificaciones,
+        horas: p.horas,
+        images: ["/logo.jpg"], // puedes cambiar esto si usaSs una columna de imagen real
+        carreras: p.carreras, // cambia esto si tienes relación real con carreras
+        cupo: p.cantidad,
+        logo: p.logo,
+        pregunta_id: p.id_pregunta || null,
+        pregunta: p.pregunta || null ,
+        estado_proyecto: p.estado,
+        num_postulaciones: p.num,
+        periodo_nombre: p.periodo_nombre,
+        momento: p.momento
+      }));
+      setProjectsDb(adaptados);
+    });
+  }
+
+  if (sessionType === "ss" && vistaPendientes) {
+  fetch("http://localhost:8000/proyectos/revisar")
+    .then((res) => res.json())
+    .then((proyectos) => {
+      const adaptados = proyectos.map((p) => ({
+        id: p.proyecto_id,
+        osf_id: p.osf_id,
+        // periodo_id: p.periodo_id,
+        nombre_coordinador: p.nombre_coordinador,
+        numero_coordinador: p.numero_coordinador,
+        title: p.nombre_proyecto,
+        problema_social: p.problema_social,
+        tipo_vulnerabilidad: p.tipo_vulnerabilidad,
+        rango_edad: p.rango_edad?.replace(/\[|\)/g, "").split(",")[1] || "100",
+        zona: p.zona,
+        numero_beneficiarios: p.numero_beneficiarios,
+        lista_actividades_alumno: p.lista_actividades_alumno,
+        producto_a_entregar: p.producto_a_entregar,
+        medida_impacto_social: p.medida_impacto_social,
+        modalidad: p.modalidad,
+        modalidad_desc: p.modalidad_desc,
+        competencias: p.competencias,
+        direccion: p.direccion,
+        enlace_maps: p.enlace_maps,
+        valor_promueve: p.valor_promueve?.trim() || "Sin valor",
+        surgio_unidad_formacion: p.surgio_unidad_formacion,
+        necesita_entrevista: p.necesita_entrevista,
+        notificaciones: p.notificaciones,
+        horas: p.horas,
+        images: ["/logo.jpg"], // puedes cambiar esto si usaSs una columna de imagen real
+        carreras: p.carreras, // cambia esto si tienes relación real con carreras
+        cupo: p.cantidad,
+        logo: p.logo,
+        pregunta_id: p.id_pregunta || null,
+        pregunta: p.pregunta || null ,
+        estado_proyecto: p.estado,
+        num_postulaciones: p.num,
+        periodo_nombre: p.periodo_nombre,
+        momento: p.momento
+      }));
+      setProjectsDb(adaptados);
+    });
+  }
+
+  if (sessionType === "ss" && !vistaPendientes) {
   fetch("http://localhost:8000/proyectos")
     .then((res) => res.json())
     .then((proyectos) => {
@@ -152,6 +293,8 @@ useEffect(() => {
       }));
       setProjectsDb(adaptados);
     });
+  }
+
 
     fetch("http://localhost:8000/carreras")
     .then((res) => res.json())
@@ -161,18 +304,16 @@ useEffect(() => {
     })
     .catch((err) => console.error("Error al cargar carreras:", err));
 
-    if (sessionType === "alumno") {
+    if (sessionType === "alumno" && userId) {
       fetch("http://localhost:8000/postulaciones/alumno/"+userId.special_id)
       .then((res) => res.json()) 
       .then((data) => {
         setPostulaciones( Object.fromEntries(data.map(e => ([e.id_proyecto, e]))))
       })
     }
+
     
-}, [userId, sessionType]);
-
-
-  console.log(postulaciones)
+}, [userId, sessionType, vistaPendientes, location.pathname]);
 
 
 
@@ -195,31 +336,17 @@ useEffect(() => {
   });
   
 
-  useEffect(() => {
-    let interval;
-    if (hoveredId !== null) {
-      interval = setInterval(() => {
-        setImageIndexes((prev) => {
-          const currentProject = projectsDb.find((p) => p.id === hoveredId);
-          if (!currentProject) return prev;
-          const currentIndex = prev[hoveredId] || 0;
-          const nextIndex = (currentIndex + 1) % currentProject.images.length;
-          return { ...prev, [hoveredId]: nextIndex };
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [hoveredId, projectsDb]);
+
 
   return (
     <Box className="projects-page">
 
-<Hero searchText={searchText} setSearchText={setSearchText} /> 
+{ sessionType == "alumno" && (<Hero searchText={searchText} setSearchText={setSearchText} /> )}
 
 
       
       <Box className="projects-header">
-        <Typography variant="h4">Proyectos Solidarios - {sessionType}</Typography>
+        <Typography variant="h4">{!vistaPendientes ? "Proyectos Solidarios" : "Proyectos pendientes" } - {sessionType}</Typography>
         <Button variant="outlined" startIcon={<FilterList />} onClick={() => setDrawerOpen(true)}>Filtros Avanzados</Button>
       </Box>
 
@@ -238,7 +365,7 @@ useEffect(() => {
     mt: 3,
     mb: 4,
     backgroundColor: "rgba(255,255,255,0.4)",
-    backdropFilter: "blur(10px)",
+    // backdropFilter: "blur(10px)",
     border: "1px solid rgba(255,255,255,0.25)",
     boxShadow: "0 4px 18px rgba(0,0,0,0.06)",
   }}
@@ -305,8 +432,8 @@ useEffect(() => {
           //onClick={() => navigate(`/projects/${project.id}`)} //Quitamos navigate para usar el modal
           onClick={() => setProyectoSeleccionado(project)}
 
-          onMouseEnter={() => setHoveredId(project.id)}
-          onMouseLeave={() => setHoveredId(null)}
+          // onMouseEnter={() => setHoveredId(project.id)}
+          // onMouseLeave={() => setHoveredId(null)}
           sx={{
             borderRadius: 5,
             overflow: "hidden",
@@ -700,7 +827,7 @@ useEffect(() => {
     <span>Cupo: {project.num_postulaciones}/{project.cupo}</span>
     {postulaciones[project.id] && (
       <div className="state-container">
-      {console.log(postulaciones[project.id])}
+      {/* {console.log(postulaciones[project.id])} */}
       <span>{postulaciones[project.id].estado}</span>
     </div>
     )}
@@ -849,7 +976,7 @@ useEffect(() => {
       */}
 {proyectoSeleccionado && (
   <>
-  {console.log(postulaciones[proyectoSeleccionado.id] ? true : false)}
+  {/* {console.log(postulaciones[proyectoSeleccionado.id] ? true : false)} */}
   <ProjectModal
     proyecto={proyectoSeleccionado}
     onClose={() => setProyectoSeleccionado(null)}
