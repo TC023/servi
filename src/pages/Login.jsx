@@ -1,12 +1,14 @@
 import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SessionContext } from "../Contexts/SessionContext";
+import { UserIdContext } from "../Contexts/UserIdContext";
 import './Login.css';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const { setSessionType } = useContext(SessionContext);
+  const { setUserId } = useContext(UserIdContext)
   const navigate = useNavigate();
 
   const [mensaje, setMensaje] = useState(null)
@@ -56,6 +58,11 @@ export default function Login() {
       if (data.tipo) {
         console.log(data.tipo)
         setSessionType(data.tipo);
+        if (data.tipo === "alumno") {
+          setUserId({"user_id": data.user_id, "special_id": data.info.alumno_id})
+        } else if (data.tipo === "osf") {
+          setUserId({"user_id": data.user_id, "special_id": data.info.osf_id})
+        }
         navigate('/');
 
       }

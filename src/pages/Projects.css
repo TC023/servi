@@ -36,17 +36,7 @@
   box-shadow: 0 8px 32px rgba(0,0,0,0.1);
 }
 
-.project-card {
-  border-radius: 20px;
-  background: rgba(255,255,255,0.6);
-  backdrop-filter: blur(8px);
-  overflow: hidden;
-  cursor: pointer;
-  border: 1px solid rgba(255,255,255,0.3);
-  position: relative;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.05);
-  transition: all 0.4s ease;
-}
+
 
 .project-card:hover {
   transform: scale(1.02) rotateX(1deg) rotateY(1deg);
@@ -525,12 +515,6 @@
 }
 
 
-
-
-
-
-
-{/*boton postularse*/}
 .apply-section {
   display: flex;
   justify-content: center;
@@ -560,12 +544,22 @@
   transition: background-color 0.3s ease;
 }
 
+.apply-button-fail {
+  background-color: #007bff; /* azul vivo tipo Zillow */
+  color: white;
+  font-weight: 600;
+  padding: 0.8rem 2rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+  filter: grayscale(100%);
+  cursor: not-allowed;
+}
+
 .apply-button:hover {
   background-color: #0056d2;
 }
-
-
-{/*formulario postularse*/}
 
 .postulacion-form-container {
   margin-top: 1rem;
@@ -691,8 +685,20 @@
 }
 
 
+.lleno {
+  filter: grayscale(100%);
+  cursor: not-allowed;
+}
 
+.footer{
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+}
 
-
-
-
+.state-container{
+  border-radius: 15%;
+  background-color: #7ab0fa;
+  padding: 2%;
+}

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useContext } from "react";
 import "./ProjectModal.css";
 import {
   FiClock,
@@ -16,6 +16,11 @@ import { useNavigate } from "react-router-dom";
 
 import { FiBox, FiActivity, FiUser } from "react-icons/fi";
 
+import { SessionContext } from "../Contexts/SessionContext";
+import { UserIdContext } from "../Contexts/UserIdContext";
+
+import FormsOSF from "../components/FormsOsf";
+
 import Box from '@mui/material/Box';
 
 
@@ -28,14 +33,19 @@ const cleanIframeHtml = (html) => {
 
 
 
-const ProjectModal = ({ proyecto, onClose, proyectosDisponibles }) => {
-    const carouselRef = useRef(null);
+const ProjectModal = ({ proyecto, onClose, proyectosDisponibles, pos = false }) => {
+  const carouselRef = useRef(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [editedModalidad, setEditedModalidad] = useState(proyecto.modalidad);
   const [horas, setHoras] = useState(proyecto.horas);
   const [showPreview, setShowPreview] = useState(false);
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const { sessionType } = useContext(SessionContext)
+  const { userId } = useContext(UserIdContext)
+  const [postulacion, setPostulacion] = useState(pos)
+  const [toggleEditOsf, setToggleEditOsf] = useState(false)
+  const [osf, setOsf] = useState("")
 
       const [showAllPhotos, setShowAllPhotos] = useState(false); 
     const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
@@ -46,7 +56,11 @@ const ProjectModal = ({ proyecto, onClose, proyectosDisponibles }) => {
     //Al dar click postular abra formulario
     const [mostrarFormularioPostulacion, setMostrarFormularioPostulacion] = useState(false);
 
-
+  const [postulacionForm, setPostulacionForm] = useState({
+    confirmacion_lectura: '',
+    respuesta_habilidades: '',
+    respuesta_descarte: null
+  })
 
 
   const scrollLeft = () => {
@@ -75,6 +89,47 @@ const ProjectModal = ({ proyecto, onClose, proyectosDisponibles }) => {
     }
   };
 
+  const handleFormChange = (e) => {
+      const { name, value } = e.target;
+      setPostulacionForm({ ...postulacionForm, [name]: value });  
+      console.log(postulacionForm)
+  } 
+
+  function handleSubmit(){
+      const formInf = new FormData();
+      // console.log(postulacionForm)
+      // console.log(proyecto)
+      Object.entries(postulacionForm).forEach(([key, value]) => {
+            formInf.append(key, value);
+        });
+      formInf.append("id_proyecto", proyecto.id)
+      if (proyecto.pregunta_id) {
+        formInf.append("id_pregunta", proyecto.pregunta_id);
+      } else {
+        formInf.append("id_pregunta", null);
+      }
+
+      fetch('http://localhost:8000/postulaciones/newPostulacion', {
+          method: 'POST',
+          credentials: "include",
+          body: formInf,
+      })
+      .then((res) => {
+          if (res.ok) {
+              alert("Te postulaste a este proyecto! redirigiendo...")
+              window.location.reload();
+
+          } else {
+              res.json().then((error) => {
+                  console.error("Error en el registro:", error);
+              });
+          }
+      })
+      .catch((error) => {
+          console.error("Error en el registro:", error);
+      });
+  }
+  
   const relatedProjects = Array.isArray(proyectosDisponibles)
   ? proyectosDisponibles.filter(p =>
       p.id !== proyecto.id &&
@@ -97,6 +152,17 @@ console.log(" Proyectos relacionados encontrados:", relatedProjects);
     return () => { document.body.style.overflow = "auto"; };
   }, []);
 
+  useEffect(() => {
+    if (proyecto.osf_id) {
+      fetch("http://localhost:8000/osf_institucional/" + proyecto.osf_id)
+      .then(res => res.json())
+      .then(data => {setOsf(data)
+        console.log(data)
+      })
+      .catch(err => setOsf(""));
+    }
+  },[])
+  
   useEffect(() => {
     setEditedModalidad(proyecto.modalidad);
     setHoras(proyecto.horas);
@@ -177,7 +243,11 @@ console.log(" Proyectos relacionados encontrados:", relatedProjects);
             </div>
           </div>
 
-   
+          { sessionType == "ss" && (<button onClick={() => setToggleEditOsf(!toggleEditOsf)}>Editar información de osf</button>)}
+              
+          {toggleEditOsf && (
+            <FormsOSF osf={osf}/>
+          )}
 
           <div className="chips">
             <span><FiClock /> {horas} hrs</span>
@@ -308,7 +378,7 @@ console.log(" Proyectos relacionados encontrados:", relatedProjects);
 */}
 
 
-
+{sessionType === "alumno" && !postulacion && proyecto.estado_proyecto !== 'lleno' && (
 <div className="apply-box-top">
   <button
     className="apply-button"
@@ -319,17 +389,68 @@ console.log(" Proyectos relacionados encontrados:", relatedProjects);
 
   {mostrarFormularioPostulacion && (
     <div className="postulacion-form-container">
-      <label htmlFor="respuestaPostulacion">¿Por qué te interesa este proyecto?</label>
+    
+      <label htmlFor="respuestaPostulacion">Para nosotros es importante que hayas leído sobre el objetivo y actividades de nuestro proyecto. <br /> <br />
+
+Coméntanos con tus propias palabras: ¿Qué buscamos? ¿Qué es lo que crees que necesitaríamos de ti?</label>
       <textarea
         id="respuestaPostulacion"
         className="respuesta-textarea"
         placeholder="Escribe tu motivo..."
+        name="confirmacion_lectura"
+        value={postulacionForm.confirmacion_lectura}
+        onChange={handleFormChange}
       />
-      <button className="enviar-button">Enviar postulación</button>
+
+      <label htmlFor="respuestaPostulacion2">Para participar en este proyecto es necesario contar con habilidades como: <br /> <br />
+      {proyecto.competencias} <br /><br />
+      Coméntanos la razón por la que deberíamos elegirte.</label>
+      <textarea 
+        id="respuestaPostulacion2" 
+        className="respuesta-textarea" 
+        placeholder="Escribe aquí..."
+        value={postulacionForm.respuesta_habilidades}
+        name="respuesta_habilidades"
+        onChange={handleFormChange}
+      />
+
+      {proyecto.pregunta && (
+        <>
+        <label htmlFor="respuestaPostulacion3">{proyecto.pregunta}</label>
+        <textarea  
+          id="respuestaPostulacion3" 
+          className="respuesta-textarea" 
+          placeholder="Escribe aquí..."
+          name="respuesta_descarte"
+          onChange={handleFormChange}
+        />
+        </>
+      )}
+
+      
+      <button className="enviar-button" onClick={handleSubmit}>Enviar postulación</button>
     </div>
   )}
+  
 </div>
+)}
 
+{postulacion && (
+    <button
+    className="apply-button-fail"
+  >
+    {"Ya te postulaste a este proyecto"}
+  </button>
+)}
+
+
+{proyecto.estado_proyecto === "lleno" && (
+    <button
+    className="apply-button-fail"
+  >
+    {"Este proyecto está lleno"}
+  </button>
+)}
 
 
 {/* === Periodos de Ejecución === */}

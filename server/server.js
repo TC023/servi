@@ -10,6 +10,7 @@ app.use(express.json());
 const multer = require('multer');
 const { data } = require('react-router');
 const e = require('express');
+const { Upload } = require('@mui/icons-material');
 
 const storage = multer.diskStorage({
   destination: '../src/assets',
@@ -76,7 +77,190 @@ app.get('/session/detail', authenticateSession, (req, res) => {
 
 // fetch a todos los proyectos
 app.get('/proyectos', (req, res) => {
-    db.any('SELECT * FROM proyecto')
+    db.any(`
+SELECT 
+  p.*, 
+  array_remove(array_agg(c.nombre), NULL) AS carreras,
+  m.horas,
+  CASE 
+    WHEN osf.tipo = 'institucional' THEN osf_i.logo
+    ELSE NULL
+  END AS logo,
+  q.id_pregunta,
+  q.pregunta,
+  (
+    SELECT COUNT(*) 
+    FROM postulacion pos 
+    WHERE pos.id_proyecto = p.proyecto_id 
+      AND pos.estado <> 'RECHAZADX' 
+      AND pos.estado <> 'DECLINADX'
+  ) AS num,
+  periodo.nombre AS periodo_nombre,
+  m.momento
+FROM proyecto p
+LEFT JOIN proyecto_carrera pc ON p.proyecto_id = pc.proyecto_id
+LEFT JOIN carrera c ON pc.carrera_id = c.carrera_id
+LEFT JOIN momentos_periodo m ON p.momento_id = m.momento_id 
+LEFT JOIN osf ON osf.osf_id = p.osf_id
+LEFT JOIN osf_institucional osf_i ON osf_i.osf_id = osf.osf_id
+LEFT JOIN pregunta q ON q.id_proyecto = p.proyecto_id
+LEFT JOIN periodo_academico periodo ON m.periodo_id = periodo.periodo_id
+WHERE (p.estado <> 'pendiente') 
+GROUP BY p.proyecto_id, m.horas, osf.tipo, osf_i.logo, q.id_pregunta, q.pregunta, periodo.nombre, m.momento
+ORDER BY 
+  CASE 
+    WHEN p.estado = 'visible' THEN 1
+    WHEN p.estado = 'lleno' THEN 2
+    ELSE 3
+  END,
+  p.proyecto_id DESC;
+    `)
+    .then((data) => res.json(data))
+    .catch((error) => console.log('ERROR:', error));
+})
+
+app.get('/proyectos/alumnos/:alumno_id', (req, res) => {
+  const { alumno_id } = req.params
+  console.log(alumno_id)
+    db.any(`
+SELECT 
+  p.*, 
+  array_remove(array_agg(c.nombre), NULL) AS carreras,
+  m.horas,
+  CASE 
+    WHEN osf.tipo = 'institucional' THEN osf_i.logo
+    ELSE NULL
+  END AS logo,
+  q.id_pregunta,
+  (
+    SELECT COUNT(*) 
+    FROM postulacion pos 
+    WHERE pos.id_proyecto = p.proyecto_id 
+      AND pos.estado <> 'RECHAZADX' 
+      AND pos.estado <> 'DECLINADX'
+  ) AS num,
+  periodo.nombre AS periodo_nombre,
+  m.momento,
+  (
+    SELECT infos.estado 
+    FROM info_postulaciones infos 
+    WHERE infos.id_proyecto = p.proyecto_id 
+      AND infos.id_alumno = $1
+    LIMIT 1
+  ) AS estado_postulacion
+FROM proyecto p
+LEFT JOIN proyecto_carrera pc ON p.proyecto_id = pc.proyecto_id
+LEFT JOIN carrera c ON pc.carrera_id = c.carrera_id
+LEFT JOIN momentos_periodo m ON p.momento_id = m.momento_id 
+LEFT JOIN osf ON osf.osf_id = p.osf_id
+LEFT JOIN osf_institucional osf_i ON osf_i.osf_id = osf.osf_id
+LEFT JOIN pregunta q ON q.id_proyecto = p.proyecto_id
+LEFT JOIN periodo_academico periodo ON m.periodo_id = periodo.periodo_id
+WHERE (p.estado = 'visible' OR p.estado = 'lleno')
+GROUP BY p.proyecto_id, m.horas, osf.tipo, osf_i.logo, q.id_pregunta, periodo.nombre, m.momento
+ORDER BY 
+  CASE 
+    WHEN (
+      SELECT infos.estado 
+      FROM info_postulaciones infos 
+      WHERE infos.id_proyecto = p.proyecto_id 
+        AND infos.id_alumno = $1
+      LIMIT 1
+    ) IS NOT NULL THEN 0
+    WHEN p.estado = 'visible' THEN 1
+    WHEN p.estado = 'lleno' THEN 2
+    ELSE 3
+  END,
+  p.proyecto_id DESC
+    `, [alumno_id])
+    .then((data) => res.json(data))
+    .catch((error) => console.log('ERROR:', error));
+})
+
+app.get('/proyectos/revisar', (req, res) => {
+  const { osf_id } = req.params
+    db.any(`
+SELECT 
+  p.*, 
+  array_remove(array_agg(c.nombre), NULL) AS carreras,
+  m.horas,
+  CASE 
+    WHEN osf.tipo = 'institucional' THEN osf_i.logo
+    ELSE NULL
+  END AS logo,
+  q.id_pregunta,
+  q.pregunta,
+  (
+    SELECT COUNT(*) 
+    FROM postulacion pos 
+    WHERE pos.id_proyecto = p.proyecto_id 
+      AND pos.estado <> 'RECHAZADX' 
+      AND pos.estado <> 'DECLINADX'
+  ) AS num,
+  periodo.nombre AS periodo_nombre,
+  m.momento
+FROM proyecto p
+LEFT JOIN proyecto_carrera pc ON p.proyecto_id = pc.proyecto_id
+LEFT JOIN carrera c ON pc.carrera_id = c.carrera_id
+LEFT JOIN momentos_periodo m ON p.momento_id = m.momento_id 
+LEFT JOIN osf ON osf.osf_id = p.osf_id
+LEFT JOIN osf_institucional osf_i ON osf_i.osf_id = osf.osf_id
+LEFT JOIN pregunta q ON q.id_proyecto = p.proyecto_id
+LEFT JOIN periodo_academico periodo ON m.periodo_id = periodo.periodo_id
+WHERE (p.estado = 'pendiente') 
+GROUP BY p.proyecto_id, m.horas, osf.tipo, osf_i.logo, q.id_pregunta, q.pregunta, periodo.nombre, m.momento
+ORDER BY 
+  CASE 
+    WHEN p.estado = 'visible' THEN 1
+    WHEN p.estado = 'lleno' THEN 2
+    ELSE 3
+  END,
+  p.proyecto_id DESC;
+    `)
+    .then((data) => res.json(data))
+    .catch((error) => console.log('ERROR:', error));
+})
+
+app.get('/proyectos/:osf_id', (req, res) => {
+  const { osf_id } = req.params
+    db.any(`
+SELECT 
+  p.*, 
+  array_remove(array_agg(c.nombre), NULL) AS carreras,
+  m.horas,
+  CASE 
+    WHEN osf.tipo = 'institucional' THEN osf_i.logo
+    ELSE NULL
+  END AS logo,
+  q.id_pregunta,
+  q.pregunta,
+  (
+    SELECT COUNT(*) 
+    FROM postulacion pos 
+    WHERE pos.id_proyecto = p.proyecto_id 
+      AND pos.estado <> 'RECHAZADX' 
+      AND pos.estado <> 'DECLINADX'
+  ) AS num,
+  periodo.nombre AS periodo_nombre,
+  m.momento
+FROM proyecto p
+LEFT JOIN proyecto_carrera pc ON p.proyecto_id = pc.proyecto_id
+LEFT JOIN carrera c ON pc.carrera_id = c.carrera_id
+LEFT JOIN momentos_periodo m ON p.momento_id = m.momento_id 
+LEFT JOIN osf ON osf.osf_id = p.osf_id
+LEFT JOIN osf_institucional osf_i ON osf_i.osf_id = osf.osf_id
+LEFT JOIN pregunta q ON q.id_proyecto = p.proyecto_id
+LEFT JOIN periodo_academico periodo ON m.periodo_id = periodo.periodo_id
+WHERE (p.estado = 'visible' OR p.estado = 'lleno') AND p.osf_id = $1
+GROUP BY p.proyecto_id, m.horas, osf.tipo, osf_i.logo, q.id_pregunta, q.pregunta, periodo.nombre, m.momento
+ORDER BY 
+  CASE 
+    WHEN p.estado = 'visible' THEN 1
+    WHEN p.estado = 'lleno' THEN 2
+    ELSE 3
+  END,
+  p.proyecto_id DESC;
+    `, [osf_id])
     .then((data) => res.json(data))
     .catch((error) => console.log('ERROR:', error));
 })
@@ -115,6 +299,131 @@ app.get('/carreras', (req, res) => {
     .then((data) => res.json(data))
     .catch((error) => console.log('ERROR:', error));
 })
+
+app.get('/osf_institucional/:osf_id', async (req, res) => {
+  const { osf_id } = req.params;
+  try {
+    // Query ajustada según el esquema real
+    const data = await db.oneOrNone(`
+      SELECT 
+        u.user_id, u.correo, u.contrasena,
+        o.osf_id, o.tipo, o.nombre AS nombre_oficial,
+        oi.subtipo, oi.mision, oi.vision, oi.objetivos, oi.ods_id, oi.poblacion, oi.num_beneficiarios, oi.nombre_responsable, oi.puesto_responsable, oi.correo_responsable, oi.telefono, oi.direccion, oi.horario, oi.pagina_web_redes, oi.correo_registro, oi.logo, oi.comprobante_domicilio, oi.rfc, oi.acta_constitutiva, oi.fotos_instalaciones,
+        e.nombre AS nombre_encargado, e.puesto AS puesto_encargado, e.telefono AS telefono_encargado, e.correo AS correo_encargado, e.ine AS ine_encargado
+      FROM osf_institucional oi
+      JOIN osf o ON oi.osf_id = o.osf_id
+      JOIN "user" u ON o.user_id = u.user_id
+      LEFT JOIN osf_institucional_encargado e ON oi.osf_id = e.osf_id
+      WHERE oi.osf_id = $1
+    `, [osf_id]);
+    if (!data) {
+      return res.status(404).json({ error: 'OSF no encontrado' });
+    }
+    // Estructura el resultado para el frontend
+    const result = {
+      user: {
+        user_id: data.user_id,
+        correo: data.correo,
+        contrasena: data.contrasena
+      },
+      osf: {
+        osf_id: data.osf_id,
+        tipo: data.tipo,
+        nombre: data.nombre_oficial
+      },
+      institucional: {
+        subtipo: data.subtipo,
+        mision: data.mision,
+        vision: data.vision,
+        objetivos: data.objetivos,
+        ods_id: data.ods_id,
+        poblacion: data.poblacion,
+        num_beneficiarios: data.num_beneficiarios,
+        nombre_responsable: data.nombre_responsable,
+        puesto_responsable: data.puesto_responsable,
+        correo_responsable: data.correo_responsable,
+        telefono: data.telefono,
+        direccion: data.direccion,
+        horario: data.horario,
+        pagina_web_redes: data.pagina_web_redes,
+        correo_registro: data.correo_registro,
+        logo: data.logo,
+        comprobante_domicilio: data.comprobante_domicilio,
+        rfc: data.rfc,
+        acta_constitutiva: data.acta_constitutiva,
+        fotos_instalaciones: data.fotos_instalaciones
+      },
+      encargado: {
+        nombre_encargado: data.nombre_encargado,
+        puesto_encargado: data.puesto_encargado,
+        telefono_encargado: data.telefono_encargado,
+        correo_encargado: data.correo_encargado,
+        ine_encargado: data.ine_encargado
+      }
+    };
+    res.json(result);
+  } catch (error) {
+    console.log('ERROR:', error);
+    res.status(500).json({ error: 'Error en la base de datos' });
+  }
+});
+
+// PATCH para actualizar OSF institucional y sus datos relacionados
+app.patch('/osf_institucional/:osf_id', upload.none(), async (req, res) => {
+  const { osf_id } = req.params;
+  // const { user, osf, institucional, encargado } = req.body;
+  const user = JSON.parse(req.body.user || '{}');
+  const osf = JSON.parse(req.body.osf || '{}');
+  const encargado = JSON.parse(req.body.encargado || '{}');
+  const institucional = JSON.parse(req.body.institucional || '{}');
+  console.log(osf, user, encargado)
+  const dbOps = [];
+  try {
+    // Actualizar user
+    if (user && Object.keys(user).length > 0) {
+      const keys = Object.keys(user);
+      const values = Object.values(user);
+      const sets = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
+      dbOps.push(db.none(`UPDATE "user" SET ${sets} WHERE user_id = (SELECT user_id FROM osf WHERE osf_id = $${keys.length + 1})`, [...values, osf_id]));
+    }
+    // Actualizar osf
+    if (osf && Object.keys(osf).length > 0) {
+      const keys = Object.keys(osf);
+      const values = Object.values(osf);
+      const sets = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
+      console.log(`UPDATE osf SET ${sets} WHERE osf_id = $${keys.length + 1}`, [...values, osf_id])
+      dbOps.push(db.none(`UPDATE osf SET ${sets} WHERE osf_id = $${keys.length + 1}`, [...values, osf_id]));
+    }
+    // Actualizar osf_institucional
+    if (institucional && Object.keys(institucional).length > 0) {
+      const keys = Object.keys(institucional);
+      const values = Object.values(institucional);
+      const sets = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
+      dbOps.push(db.none(`UPDATE osf_institucional SET ${sets} WHERE osf_id = $${keys.length + 1}`, [...values, osf_id]));
+    }
+    // Actualizar o insertar encargado
+    if (encargado && Object.keys(encargado).length > 0) {
+      // Verificar si ya existe encargado
+      const exists = await db.oneOrNone('SELECT 1 FROM osf_institucional_encargado WHERE osf_id = $1', [osf_id]);
+      const keys = Object.keys(encargado);
+      const values = Object.values(encargado);
+      if (exists) {
+        const sets = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
+        dbOps.push(db.none(`UPDATE osf_institucional_encargado SET ${sets} WHERE osf_id = $${keys.length + 1}`, [...values, osf_id]));
+      } else {
+        const cols = keys.join(', ');
+        const params = keys.map((_, i) => `$${i + 2}`).join(', ');
+        dbOps.push(db.none(`INSERT INTO osf_institucional_encargado (osf_id, ${cols}) VALUES ($1, ${params})`, [osf_id, ...values]));
+      }
+    }
+    await Promise.all(dbOps);
+    res.status(200).json({ message: 'OSF actualizado correctamente' });
+  } catch (error) {
+    console.error('ERROR PATCH /osf_institucional:', error);
+    res.status(500).json({ error: 'Error al actualizar OSF' });
+  }
+});
+
 
 // fetch de las carreras asociadas con un proyecto :$
 app.get('/proyecto_carrera/:proyecto_id', (req, res) => {
@@ -174,6 +483,9 @@ app.post('/login', upload.none(), async (req, res, next) => {
           // Aquí puedes agregar lógica para osf tipo alumno si es necesario
         }
       }
+    } else if(req.session.tipo === 'alumno') {
+        const alumno = await db.oneOrNone(`SELECT alumno_id FROM alumno WHERE user_id = $1`, [data.user_id]);
+        req.session.info = alumno
     }
     req.session.save(function (err) {
       if (err) return next(err);
@@ -183,6 +495,148 @@ app.post('/login', upload.none(), async (req, res, next) => {
     console.log('ERROR: ', error);
     res.status(500).send({ message: 'Internal server error' });
   }
+});
+
+app.post('/postulaciones/newPostulacion', upload.none(), (req, res) => {
+  console.log(req.body)
+  console.log(req.session)
+  const form = req.body
+  if (form.id_pregunta !== 'null') {
+    db.none(`
+      CALL insertar_postulacion($1, $2::TEXT, $3::TEXT, $4::TEXT, $5::TEXT, $6)
+      `,[
+        Number(form.id_proyecto),
+        req.session.info.alumno_id,
+        form.confirmacion_lectura,
+        form.respuesta_habilidades,
+        form.respuesta_descarte,
+        Number(form.id_pregunta)
+      ])
+      .then(() => res.status(200).send('Postulación creada!'))
+      .catch((error) => {
+        res.status(400).send(error)
+        console.log(error)
+    })
+  } else {
+    db.none(`
+      CALL insertar_postulacion($1, $2::TEXT, $3::TEXT, $4::TEXT, NULL, NULL)
+      `,[
+        Number(form.id_proyecto),
+        req.session.info.alumno_id,
+        form.confirmacion_lectura,
+        form.respuesta_habilidades,
+        form.respuesta_descarte,
+        Number(form.id_pregunta)
+      ])
+      .then(() => res.status(200).send('Postulación creada!'))
+      .catch((error) => {
+        res.status(400).send(error)
+        console.log(error)
+    })  }
+
+})
+
+app.get('/postulaciones', upload.none(), (req, res) => {
+  db.any(`
+    SELECT 
+    p.*, 
+    a.*,
+    c.nombre AS carrera,
+    pr.nombre_proyecto AS proyecto,
+    pr.estado AS estado_proyecto,
+    r.respuesta AS respuesta_descarte,
+    pre. id_pregunta,
+    m.momento,
+    periodo.nombre AS periodo
+    FROM postulacion p
+    LEFT JOIN alumno a ON a.alumno_id=p.id_alumno
+    LEFT JOIN carrera c ON a.carrera_id=c.carrera_id
+    LEFT JOIN proyecto pr ON p.id_proyecto=pr.proyecto_id
+    LEFT JOIN respuesta r ON p.id_postulacion=r.id_postulacion
+    LEFT JOIN pregunta pre ON pre.id_proyecto=p.id_proyecto
+    LEFT JOIN momentos_periodo m ON pr.momento_id = m.momento_id
+    LEFT JOIN periodo_academico periodo ON periodo.periodo_id = m.periodo_id
+    `)
+    .then((data) => res.json(data))
+    .catch((error) => console.log('ERROR', error))
+})
+
+app.get('/postulaciones/alumno/:alumno_id', upload.none(), (req, res) => {
+  const {alumno_id} = req.params
+  db.any(`
+SELECT * FROM postulacion WHERE id_alumno = $1;    
+    `,[alumno_id])
+    .then((data) => res.json(data))
+    .catch((error) => console.log('ERROR', error))
+  })
+
+app.get('/postulaciones/:osf_id', upload.none(), (req, res) => {
+  const {osf_id} = req.params
+  db.any(`
+    SELECT 
+    p.*, 
+    a.*,
+    c.nombre AS carrera,
+    pr.nombre_proyecto AS proyecto,
+    r.respuesta AS respuesta_descarte,
+    pre. id_pregunta,
+    m.momento,
+    periodo.nombre AS periodo
+    FROM postulacion p
+    LEFT JOIN alumno a ON a.alumno_id=p.id_alumno
+    LEFT JOIN carrera c ON a.carrera_id=c.carrera_id
+    LEFT JOIN proyecto pr ON p.id_proyecto=pr.proyecto_id
+    LEFT JOIN respuesta r ON p.id_postulacion=r.id_postulacion
+    LEFT JOIN pregunta pre ON pre.id_proyecto=p.id_proyecto
+    LEFT JOIN momentos_periodo m ON pr.momento_id = m.momento_id
+    LEFT JOIN periodo_academico periodo ON periodo.periodo_id = m.periodo_id
+    WHERE pr.osf_id = $1    
+    `,[osf_id])
+    .then((data) => res.json(data))
+    .catch((error) => console.log('ERROR', error))
+})
+
+app.patch('/postulaciones/update', upload.none(), async (req, res) => {
+  const postulacion = JSON.parse(req.body.postulacion)
+  const alumno = JSON.parse(req.body.alumno)
+  const respuesta = req.body.respuesta_descarte
+  const toChange = JSON.parse(req.body.toChange)
+
+  const promises = [];
+
+  if (Object.entries(postulacion).length > 0) {
+    const keys = Object.keys(postulacion)
+    const values = Object.values(postulacion)
+    const sets = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
+    promises.push(
+      db.none(`UPDATE postulacion SET ${sets} WHERE id_postulacion = $${keys.length + 1}`,
+        [...values, toChange.id_postulacion]
+      )
+    );
+  }
+
+  if (Object.entries(alumno).length > 0) {
+    const keys = Object.keys(alumno)
+    const values = Object.values(alumno)
+    const sets = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
+    promises.push(
+      db.none(`UPDATE alumno SET ${sets} WHERE alumno_id = $${keys.length + 1}`,
+        [...values, toChange.alumno_id]
+      )
+    );
+  }
+
+  if (respuesta !== 'null') {
+    promises.push(
+      db.none(`UPDATE respuesta SET respuesta = $1 WHERE id_postulacion = $2`,
+        [respuesta, toChange.id_postulacion]
+      )
+    );
+  }
+
+  await Promise.all(promises);
+
+  res.status(200).send('ok')
 });
 
 app.post('/projects/newProject', upload.none(), async (req, res) => {
@@ -384,3 +838,4 @@ app.put('/api/proyectos/:id', (req, res) => {
       res.status(500).json({ error: "Error en la base de datos" });
     });
 });
+

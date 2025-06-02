@@ -1,9 +1,11 @@
-import React,{useEffect, useState} from "react";
+import React,{useEffect, useState, useContext} from "react";
+import { SessionContext } from "../Contexts/SessionContext";
+import { UserIdContext } from "../Contexts/UserIdContext";
 import { Navigate } from "react-router-dom";
 
 const ProtectedRoute = ({children }) => {
-  const [sessionType, setSessionType] = useState('');
-
+  const {sessionType, setSessionType} = useContext(SessionContext);
+  const { setUserId } = useContext(UserIdContext);
   useEffect(() => {
     fetch("http://localhost:8000/session/detail", {
       credentials: "include",
@@ -14,7 +16,14 @@ const ProtectedRoute = ({children }) => {
         }
         return res.json();
       })
-      .then((data) => setSessionType(data.tipo))
+      .then((data) => {
+        setSessionType(data.tipo)
+        if (data.tipo === "alumno") {
+          setUserId({"user_id": data.user_id, "special_id": data.info.alumno_id})
+        } else if (data.tipo === "osf") {
+          setUserId({"user_id": data.user_id, "special_id": data.info.osf_id})
+        }
+      })
       .catch((error) => {
         console.error("Error al verificar la sesión:", error);
         setSessionType(null);

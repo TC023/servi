@@ -20,7 +20,8 @@ import SignUp from "./pages/SignUp";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Applications from "./pages/Applications.jsx";
 import { SessionProvider } from "./Contexts/SessionContext";
-// import Test from "./pages/Test.jsx";
+import { UserIdProvider } from "./Contexts/UserIdContext.jsx";
+import Test from "./pages/Test.jsx";
 import "./App.css";
 
 
@@ -113,30 +114,37 @@ export default function App() {
 
   return (
     <SessionProvider>
-
+    <UserIdProvider>
       <BallProvider>
         <Router>
           <Routes>
             {/* Rutas protegidas con layout */}
             <Route path="/" element={ 
               <ProtectedRoute>
-                <MainLayout> <Projects sessionType={sessionType} /> </MainLayout> 
+                <MainLayout> <Projects  /> </MainLayout> 
               </ProtectedRoute>
             } />
             <Route path="/dashboard" element={  <MainLayout> <Dashboard /> </MainLayout> } />
             <Route path="/respuesta_alumnos" element={ <MainLayout> <RespuestasAlumnos /> </MainLayout> } />
             <Route path="/projects/:id" element={ <MainLayout> <ProjectDetail /> </MainLayout> } />
             <Route path="/projects/new" element={ <MainLayout> <NewProject /> </MainLayout> } />
+            <Route path="/proyectos_revisar" element={ 
+              <ProtectedRoute>
+                <MainLayout> <Projects vP={true} /> </MainLayout> 
+              </ProtectedRoute>
+             } />
             
             {/* Rutas públicas sin layout */}
             <Route path="/login" element={<Login />} />
             <Route path="/logout" element={<Logout />} />
             <Route path="/signup" element={<SignUp></SignUp>}></Route>
-            <Route path="/postulaciones" element={ <MainLayout>  <Applications></Applications>  </MainLayout>   }></Route>
-            {/* <Route path="/test" element={<Test></Test>}></Route> */}
+            <Route path="/mis_postulaciones" element={ <MainLayout>  <ProtectedRoute><RespuestasAlumnos /></ProtectedRoute>  </MainLayout>   }></Route>
+            {/* <Route path="/mis_postulaciones_osf" element={ <MainLayout>  <ProtectedRoute><RespuestasAlumnos filter={  } /></ProtectedRoute>  </MainLayout>   }></Route> */}
+            <Route path="/test" element={<Test></Test>}></Route>
           </Routes>
         </Router>
       </BallProvider>
+    </UserIdProvider>
     </SessionProvider>
 
   );
