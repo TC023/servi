@@ -39,7 +39,7 @@ const cn = {
     port: 5432,
     database: 'servi',
     user: 'postgres',
-    password: 'yahelito346',
+    password: 'postgres',
     allowExitOnIdle: true
 }
 const db = pgp(cn);
