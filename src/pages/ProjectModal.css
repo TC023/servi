@@ -81,6 +81,12 @@
     border-radius: 1rem;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   }
+
+  .main-image:hover {
+  filter: brightness(0.7);
+  transition: filter 0.3s ease;
+}
+
   
   .thumbnail-row {
     display: flex;
@@ -101,6 +107,14 @@
   .thumb.active {
     border-color: #3b82f6;
   }
+
+  
+
+  .thumb:hover {
+  filter: brightness(0.6);
+  transition: filter 0.3s ease;
+}
+
   
   /* Contenido del modal */
   .project-info {
@@ -179,6 +193,7 @@
   
   
   
+  
   */
   
 /* Título principal */
@@ -205,32 +220,40 @@
   
   
   /* Grid moderno para tarjetas */
-  .info-grid-modern {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
-  }
+.info-grid-modern {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: flex-start; /* o center si prefieres centrarlas */
+}
+
+
   
   
   
   /* Tarjetas internas */
-  .info-card {
-    background: #ffffff;
-    padding: 1.5rem;
-    border-radius: 1.5rem;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-    display: flex;
-    gap: 1rem;
-    align-items: flex-start;
-    transition: transform 0.2s ease;
-  }
+ .info-card {
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  transition: transform 0.2s ease;
+  flex: 1 1 auto;          /* ← permite que se contraigan y expandan según contenido */
+  max-width: 400px;        /* ← evita que se hagan muy largas */
+  min-width: 240px;        /* ← asegura que no se achiquen demasiado */
+}
+
   
   .info-card:hover {
     transform: translateY(-2px);
   }
-  
+
   .info-card.full {
-    grid-column: span 2;
+
+      grid-column: unset;
   }
   
   /* Íconos */
@@ -407,7 +430,7 @@
     color: #0f172a;
   }
   
-  /* Botón de Editar/Guardar */
+  /* Boton de Editar/Guardar */
   .edit-button {
     padding: 0.4rem 1rem;
     border-radius: 999px;
@@ -422,7 +445,7 @@
     white-space: nowrap;
   }
   
-  /* Botón de Cancelar */
+  /* Boton de Cancelar */
   .cancel-button {
     padding: 0.4rem 1rem;
     border-radius: 999px;
@@ -451,7 +474,7 @@
   height: 100vh;
   background: rgba(30, 41, 59, 0.45);
   backdrop-filter: blur(10px);
-  z-index: 10000; /* aseguramos que esté por encima */
+  z-index: 10000; /* encima */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -550,9 +573,23 @@
     border-radius: 0.8rem;
     margin-bottom: 0.5rem;
   }
+  
+  /*
   .related-card:hover {
     transform: scale(1.05);
   }
+    */
+
+  .main-image:hover,
+.thumb:hover,
+.related-card img:hover {
+  transform: none !important; /*  quitar el scale */
+  filter: brightness(0.6); /* oscurece */
+  transition: filter 0.3s ease;
+}
+
+
+
   .related-arrow {
     position: absolute;
     top: 50%;
@@ -574,7 +611,7 @@
     right: -10px;
   }
   
-/* Animación de entrada */
+/* Animacion de entrada */
 .fade-in {
     animation: fadeInModal 0.4s ease;
   }
@@ -589,4 +626,46 @@
       transform: scale(1);
     }
   }
+
+  .info-card.full {
+  grid-column: 1 / -1;
+}
+
   
+  
+  
+
+  
+  
+
+
+
+.saving-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.4);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.spinner {
+  border: 6px solid #f3f3f3;
+  border-top: 6px solid #007bff;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  animation: spin 0.9s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

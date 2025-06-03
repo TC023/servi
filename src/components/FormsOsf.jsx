@@ -400,8 +400,9 @@ const FormsOSF = ( {osf = {}} ) => {
                     </div>
                     </div>
                     ) }           
-                    { !osf && (<button type="submit">Registrar OSF</button>)}
-                    <button type="button" onClick={handleUpdateOsf} style={{marginLeft: '1rem'}}>Guardar cambios</button>
+                    { Object.entries(osf).length < 0 && (<button type="submit">Registrar OSF</button>)}
+                    { Object.entries(osf).length && (<button type="button" onClick={handleUpdateOsf} style={{marginLeft: '1rem'}}>Guardar cambios</button>)}
+                    
                 </form>
                 {successMessage}
             </div>
