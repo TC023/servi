@@ -350,7 +350,7 @@ const RespuestasAlumnos = ( {test = ''} ) => {
                 key={idx}
                 id={postulacion.id_postulacion}
                 onDoubleClick={() => {
-                  if (!isEditing) {
+                  if (!isEditing && ((sessionType === "alumno" && postulacion.estado === "ACEPTADX") || (sessionType === "osf" && postulacion.estado === "POSTULADX")) || (sessionType == "ss")) {
                     console.log(estados)
                     setCurrEdit(postulacion.id_postulacion);
                     setToChange({
