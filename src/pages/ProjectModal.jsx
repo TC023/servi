@@ -342,25 +342,9 @@ const handleSave = async () => {
   </div>
 )}
 
-          <div className="carousel-section">
-            <img src={proyecto.images[selectedImage]} alt="Principal" className="main-image" />
-            <div className="thumbnail-row" ref={carouselRef}>
-              {proyecto.images.map((img, i) => (
-                <img
-                  key={i}
-                  src={img}
-                  alt={`Mini ${i}`}
-                  className={`thumb ${selectedImage === i ? "active" : ""}`}
-                  onClick={() => {
-                    setSelectedImage(i);
-                    setShowPreview(true);
-                  }}
-                />
-              ))}
-            </div>
-          </div>
 
-          { sessionType == "ss" && (<button onClick={() => setToggleEditOsf(!toggleEditOsf)}>Editar información de osf</button>)}
+
+          { sessionType == "ss" && (<button className="apply-button" onClick={() => setToggleEditOsf(!toggleEditOsf)}>Editar información de osf</button>)}
               
           {toggleEditOsf && (
             <FormsOSF osf={osf}/>
