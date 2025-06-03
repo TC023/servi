@@ -26,6 +26,8 @@ const Sidebar = () => {
         break
       case "Mis Postulaciones":
         navigate("/mis_postulaciones")
+      case "Dashboard":
+        navigate("/dashboard")
       default:
         break;
     }
@@ -43,7 +45,7 @@ const Sidebar = () => {
       {console.log(sessionType)}
       {sessionType === "ss" && (
       <ul className="sidebar-list">
-        {["Proyectos Overview", "Respuestas Alumnos", "Proyectos a revisar", "Exportar"].map(
+        {["Dashboard", "Proyectos Overview", "Respuestas Alumnos", "Proyectos a revisar", "Exportar"].map(
           (text) => (
             <li
               key={text}

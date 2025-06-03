@@ -5,15 +5,21 @@ import appleLogo from "/logoservicio.png";
 import lupi2 from "/lupi2.png";
 import jetpackIcon from "/jetpackx3.png";
 import { FaBars } from "react-icons/fa";
+import {
+  FiLogOut,
+} from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
+
+
 
 const Header = ({ onMenuClick, toggleCharacter, toggleAI, onRightMenuClick }) => {
+  const navigate = useNavigate();
+  
   const buttons = [
-    { text: "Dashboard", link: "/dashboard" },
-    { text: "Perfil de usuario", link: "/perfil_usuario" },
-    { text: "Botón 3" },
-    { text: "Botón 4" },
-    { text: "Botón 5" },
-    { text: "Botón 6" }
+    { text: "Acerca de" },
+    { text: "Redes sociales" },
+    { text: "Contacto" },
+    { text: "ITESM" }
   ];
 
   return (
@@ -70,6 +76,10 @@ const Header = ({ onMenuClick, toggleCharacter, toggleAI, onRightMenuClick }) =>
   >
     <img src={jetpackIcon} alt="Jetpack" />
   </button>
+<div className="logout-button" onClick={() => navigate("/logout")} >
+  <FiLogOut></FiLogOut>
+</div>
+  
 </div>
 
 
