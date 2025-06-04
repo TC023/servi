@@ -261,7 +261,7 @@ LEFT JOIN osf ON osf.osf_id = p.osf_id
 LEFT JOIN osf_institucional osf_i ON osf_i.osf_id = osf.osf_id
 LEFT JOIN pregunta q ON q.id_proyecto = p.proyecto_id
 LEFT JOIN periodo_academico periodo ON m.periodo_id = periodo.periodo_id
-WHERE (p.estado = 'visible' OR p.estado = 'lleno') AND p.osf_id = $1
+WHERE (p.estado = 'visible' OR p.estado = 'lleno' OR p.estado = 'pendiente') AND p.osf_id = $1
 GROUP BY p.proyecto_id, m.horas, osf.tipo, osf_i.logo, q.id_pregunta, q.pregunta, periodo.nombre, m.momento
 ORDER BY 
   CASE 
