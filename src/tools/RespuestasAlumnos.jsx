@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
 import "./RespuestasAlumnos.css";
-import { FiArrowLeft, FiEdit3, FiCheck, FiX } from "react-icons/fi";
+import { FiArrowLeft, FiEdit3, FiCheck, FiX, FiChevronDown, FiChevronUp, FiInfo } from "react-icons/fi";
 import { BallContext } from "../Contexts/BallContext";
 import { SessionContext } from "../Contexts/SessionContext";
 import { UserIdContext } from "../Contexts/UserIdContext";
@@ -29,6 +29,7 @@ const RespuestasAlumnos = ( {test = ''} ) => {
   const [filters, setFilters] = useState({ "alumno": "", "proyecto": "Todos", "periodo": "Todos" })
   const { userId, setUserId } = useContext(UserIdContext)
   const { sessionType, setSessionType } = useContext(SessionContext)
+  const [showPopUp, setShowPopUp] = useState(false)
   
 
   const {
@@ -252,8 +253,97 @@ const RespuestasAlumnos = ( {test = ''} ) => {
     }
   }
 
+  const ExpandableCell = ({ children, className = '', style = {}, ...props }) => {
+    const [expanded, setExpanded] = useState(false);
+    const [showButton, setShowButton] = useState(false);
+    const spanRef = useRef(null);
+
+    useEffect(() => {
+      const checkOverflow = () => {
+        if (spanRef.current) {
+          setShowButton(spanRef.current.scrollWidth > spanRef.current.clientWidth);
+        }
+      };
+      checkOverflow();
+      window.addEventListener('resize', checkOverflow);
+      return () => window.removeEventListener('resize', checkOverflow);
+    }, [children]);
+
+    return (
+      <td className={className} style={{ position: 'relative', ...style }} {...props}>
+        <span
+          ref={spanRef}
+          style={{
+            display: 'block',
+            whiteSpace: expanded ? 'normal' : 'nowrap',
+            overflow: 'hidden',
+            textOverflow: expanded ? 'unset' : 'ellipsis',
+            wordBreak: expanded ? 'break-word' : 'normal',
+            maxWidth: expanded ? 'none' : '100%',
+          }}
+        >
+          {children}
+        </span>
+        {showButton && (
+          <button
+            style={{
+              position: 'absolute',
+              right: 4,
+              bottom: 4,
+              background: 'rgba(255,255,255,0.7)',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 2,
+              borderRadius: 4,
+              zIndex: 10,
+            }}
+            onClick={e => {
+              e.stopPropagation();
+              setExpanded(v => !v);
+            }}
+            aria-label={expanded ? 'Colapsar' : 'Expandir'}
+          >
+            {expanded ? <FiChevronUp /> : <FiChevronDown />}
+          </button>
+        )}
+      </td>
+    );
+  };
+
   return (
-    <div className="respuestas-container" onClick={handleClick} ref={containerRef}>
+    <>
+        {showPopUp && (
+        <div className="overlay">
+          <div class="popup">
+            <div class="popup-header">
+              <span class="popup-icon"><FiInfo></FiInfo></span>
+              <span class="popup-title">Advertencia</span>
+            </div>
+            <div class="popup-message">
+              Los cambios que realices serán <strong>irreversibles</strong>.
+              {sessionType === "alumno" ? (
+                <>
+                  <br />
+                  Al confirmar un proyecto, <strong>todos los demás proyectos con los que tengas empalmes serán rechazados automáticamente</strong>.
+                </>
+              ) : (
+                <>
+                  <br />
+                  Por favor, revisa cuidadosamente antes de guardar.
+                </>
+              )}
+              </div>
+            <div class="popup-buttons">
+              <button class="btn-outline" onClick={() => setShowPopUp(false)} >Regresar</button>
+              <button class="btn-primary" onClick={() => {
+              setShowPopUp(false)
+              handleSave()
+              }} >Guardar</button>
+            </div>
+          </div>
+        </div>
+      )}
+    <div className="respuestas-container" ref={containerRef}>
       <div className="respuestas-header">
         <FiArrowLeft />
         <h1>Postulaciones - {sessionType} {test}</h1>
@@ -262,7 +352,7 @@ const RespuestasAlumnos = ( {test = ''} ) => {
       <div className="edit-buttons-container">
       {isEditing && (
           <>
-          <button className="edit-button" onClick={isEditing ? handleSave : () => setIsEditing(true)}>
+          <button className="edit-button" onClick={isEditing ? () => setShowPopUp(true) : () => setIsEditing(true)}>
             <FiEdit3 /> {isEditing ? "Guardar" : "Editar"}
           </button>
           <button className="cancel-button" onClick={handleCancel}>
@@ -349,8 +439,8 @@ const RespuestasAlumnos = ( {test = ''} ) => {
               <tr
                 key={idx}
                 id={postulacion.id_postulacion}
-                onDoubleClick={() => {
-                  if (!isEditing && ((sessionType === "alumno" && postulacion.estado === "ACEPTADX") || (sessionType === "osf" && postulacion.estado === "POSTULADX")) || (sessionType == "ss")) {
+                onDoubleClick={(e) => {
+                  if (!isEditing && ((sessionType === "alumno" && postulacion.estado === "ACEPTADX") || (sessionType === "osf" && postulacion.estado === "POSTULADX")) || (sessionType == "ss")  )  {
                     console.log(estados)
                     setCurrEdit(postulacion.id_postulacion);
                     setToChange({
@@ -365,17 +455,20 @@ const RespuestasAlumnos = ( {test = ''} ) => {
                 {currEdit !== postulacion.id_postulacion && (
                   <>
                     <td>{postulacion.lastupdate}</td>
-                    <td>{postulacion.nombre}</td>
-                    <td>{postulacion.alumno_id}</td>
+                    <ExpandableCell>{postulacion.nombre}</ExpandableCell>
+                    <ExpandableCell>{postulacion.alumno_id}</ExpandableCell>
                     <td className={getEstadoClass(postulacion.estado)}>{postulacion.estado}</td>
-                    <td>{postulacion.comentarios}</td>
-                    <td>{postulacion.proyecto}</td>
-                    <td>{postulacion.carrera}</td>
-                    <td>{`${postulacion.alumno_id}@tec.mx`}</td>
-                    <td>{postulacion.telefono}</td>
-                    <td>{postulacion.confirmacion_lectura}</td>
-                    <td>{postulacion.respuesta_habilidades}</td>
-                    <td>{postulacion.respuesta_descarte || ''}</td>
+                    <ExpandableCell>{postulacion.comentarios}</ExpandableCell>
+                    <td style={{
+                      textOverflow: "unset",
+                      maxWidth: "500px"
+                    }}>{postulacion.proyecto}</td>
+                    <ExpandableCell>{postulacion.carrera}</ExpandableCell>
+                    <ExpandableCell>{`${postulacion.alumno_id}@tec.mx`}</ExpandableCell>
+                    <ExpandableCell>{postulacion.telefono}</ExpandableCell>
+                    <ExpandableCell>{postulacion.confirmacion_lectura}</ExpandableCell>
+                    <ExpandableCell>{postulacion.respuesta_habilidades}</ExpandableCell>
+                    <ExpandableCell>{postulacion.respuesta_descarte || ''}</ExpandableCell>
                   </>
                 )}
                 {currEdit === postulacion.id_postulacion && (
@@ -427,8 +520,7 @@ const RespuestasAlumnos = ( {test = ''} ) => {
                     </td>
                     <td>
                       {checkPermission(sessionType, "comentarios") ? (
-                        <input
-                          type="text"
+                        <textarea
                           name="comentarios"
                           id={postulacion.id_postulacion}
                           value={postulaciones[postulacion.id_postulacion].comentarios || ''}
@@ -550,6 +642,9 @@ const RespuestasAlumnos = ( {test = ''} ) => {
         />
       )}
     </div>
+
+    </>
+
   );
 };
 

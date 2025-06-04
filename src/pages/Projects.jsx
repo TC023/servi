@@ -342,7 +342,8 @@ useEffect(() => {
     <Box className="projects-page">
 
 { sessionType == "alumno" && (<Hero searchText={searchText} setSearchText={setSearchText} /> )}
-
+{console.log(projectsDb)}
+{console.log(filteredProjects)}
 
       
       <Box className="projects-header">
