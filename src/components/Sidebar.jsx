@@ -27,6 +27,8 @@ const Sidebar = () => {
       case "Mis Postulaciones":
         navigate("/mis_postulaciones")
         break
+      case "Ver Postulaciones":
+        navigate("/mis_postulaciones")
       case "Dashboard":
         navigate("/dashboard")
         break
@@ -63,7 +65,7 @@ const Sidebar = () => {
 
       {sessionType === "osf" && (
       <ul className="sidebar-list">
-        {["Proyectos Overview", "Crear Proyecto", "Mis Postulaciones"].map(
+        {["Proyectos Overview", "Crear Proyecto", "Ver Postulaciones"].map(
           (text) => (
             <li
               key={text}

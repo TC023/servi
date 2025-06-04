@@ -342,7 +342,8 @@ useEffect(() => {
     <Box className="projects-page">
 
 { sessionType == "alumno" && (<Hero searchText={searchText} setSearchText={setSearchText} /> )}
-
+{console.log(projectsDb)}
+{console.log(filteredProjects)}
 
       
       <Box className="projects-header">
@@ -427,7 +428,7 @@ useEffect(() => {
           {filteredProjects.map((project, index) => (
             <Fade in={true} timeout={500 + index * 100} key={project.id}>
               <Grid item xs={12} sm={6} md={4} lg={3}>
-              <Card className={project.estado_proyecto === "lleno" ? "lleno":"" }
+              <Card className={project.estado_proyecto === "lleno" || project.estado_proyecto === "pendiente" ? "lleno":"" }
               //Desde ACA EMPIEZA TODA EL elemento CARD, no es posible realizar algo similar desde un CSS
           //onClick={() => navigate(`/projects/${project.id}`)} //Quitamos navigate para usar el modal
           onClick={() => setProyectoSeleccionado(project)}
