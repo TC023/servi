@@ -17,7 +17,7 @@ export default function Login() {
   function handleSubmit() {
     const formInfo = new FormData();
 
-    const regex = /^[Aa]01\d{6}$/ // Expresión regular para validar si el username es un número de matrícula
+    const regex = /^[Aa]\d{8}$/ // Expresión regular para validar si el username es un número de matrícula
     console.log(regex.test(username))
     if (regex.test(username)) {
       formInfo.append("username", username+"@tec.mx");
@@ -81,11 +81,24 @@ export default function Login() {
 
   return (
     <div className="login-page">
-      {/*pt izquierda */}
-      <div className="login-left">
-        <img src="/logoservicio.png" alt="Logo Servicio" className="service-logo" />
-        <p className="service-text">¿Listo para registrar un proyecto?</p>
-      </div>
+  {/* pt izquierda */}
+<div className="login-left">
+  <div className="bubbles-bg">
+    <div className="bubble bubble1"></div>
+    <div className="bubble bubble2"></div>
+    <div className="bubble bubble3"></div>
+    <div className="bubble bubble4"></div>
+    <div className="bubble bubble5"></div>
+    <div className="bubble bubble6"></div>
+  </div>
+  <img src="/logoservicio.png" alt="Logo Servicio" className="service-logo" />
+  <p className="service-text">¿Listo para registrar un proyecto?</p>
+</div>
+
+  
+
+
+
 
 
       {/*pt derecha*/}

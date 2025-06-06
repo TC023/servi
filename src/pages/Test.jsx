@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import { UserIdContext } from '../Contexts/UserIdContext';
+import { SessionContext } from '../Contexts/SessionContext';
 
 const Test = () => {
     const [minAge, setMinAge] = useState(18);
     const [maxAge, setMaxAge] = useState(60);
+    const { userId, setUserId } = useContext(UserIdContext);
+    const { sessionType, setSessionType } = useContext(SessionContext)
+    console.log(userId, sessionType)
 
     const handleChangeMin = (e) => {
         const value = Number(e.target.value); // Convert to number
@@ -41,7 +46,12 @@ const Test = () => {
             />
             <p id="rangeValue">Selected age range: {minAge} - {maxAge}</p>
             <button onClick={test}>Test</button>
+
+
+            
         </div>
+
+        
     );
 };
 

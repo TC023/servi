@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from "react-route
 import MainLayout from "./layouts/MainLayout";
 import Projects from "./pages/Projects";
 import Dashboard from "./pages/Dashboard";
+import Export from "./pages/Export";
 import Hero from "./components/Hero";
 import Header from "./components/Header";
 import PixelCharacter from "./components/PixelCharacter";
@@ -18,9 +19,17 @@ import Login from "./pages/Login";
 import Logout from "./components/Logout";
 import SignUp from "./pages/SignUp";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Applications from "./pages/Applications.jsx";
 import { SessionProvider } from "./Contexts/SessionContext";
-// import Test from "./pages/Test.jsx";
+import { UserIdProvider } from "./Contexts/UserIdContext.jsx";
+import Test from "./pages/Test.jsx";
 import "./App.css";
+
+import Perfil_usuario from './pages/Perfil_usuario';
+
+import Acerca_de from './pages/Acerca_de.jsx';
+import Faq from './pages/Faq.jsx';
+
 
 
 // CREO QUE TODO LO QUE ESTÁ ABAJO SE ORIGINÓ DE ALGÚN MERGE RARO, NO SE USA
@@ -112,29 +121,45 @@ export default function App() {
 
   return (
     <SessionProvider>
-
+    <UserIdProvider>
       <BallProvider>
         <Router>
           <Routes>
             {/* Rutas protegidas con layout */}
             <Route path="/" element={ 
               <ProtectedRoute>
-                <MainLayout> <Projects sessionType={sessionType} /> </MainLayout> 
+                <MainLayout> <Projects  /> </MainLayout> 
               </ProtectedRoute>
             } />
             <Route path="/dashboard" element={  <MainLayout> <Dashboard /> </MainLayout> } />
             <Route path="/respuesta_alumnos" element={ <MainLayout> <RespuestasAlumnos /> </MainLayout> } />
             <Route path="/projects/:id" element={ <MainLayout> <ProjectDetail /> </MainLayout> } />
             <Route path="/projects/new" element={ <MainLayout> <NewProject /> </MainLayout> } />
+            <Route path="/export" element={ <MainLayout> <Export /> </MainLayout> } />
+            <Route path="/proyectos_revisar" element={ 
+              <ProtectedRoute>
+                <MainLayout> <Projects vP={true} /> </MainLayout> 
+              </ProtectedRoute>
+             } />
+
+
+               {/* NUEVA RUTA DEL PERFIL (Header) */}
+  <Route path="/perfil_usuario" element={ <MainLayout> <Perfil_usuario /> </MainLayout> } />
+   {/* ✅ NUEVA RUTA DEL PERFIL */}
+  <Route path="/acerca_de" element={ <MainLayout> <Acerca_de /> </MainLayout> } />
+    <Route path="/faq" element={ <MainLayout> <Faq /> </MainLayout> } />
             
             {/* Rutas públicas sin layout */}
             <Route path="/login" element={<Login />} />
             <Route path="/logout" element={<Logout />} />
             <Route path="/signup" element={<SignUp></SignUp>}></Route>
-            {/* <Route path="/test" element={<Test></Test>}></Route> */}
+            <Route path="/mis_postulaciones" element={ <MainLayout>  <ProtectedRoute><RespuestasAlumnos /></ProtectedRoute>  </MainLayout>   }></Route>
+            {/* <Route path="/mis_postulaciones_osf" element={ <MainLayout>  <ProtectedRoute><RespuestasAlumnos filter={  } /></ProtectedRoute>  </MainLayout>   }></Route> */}
+            <Route path="/test" element={<Test></Test>}></Route>
           </Routes>
         </Router>
       </BallProvider>
+    </UserIdProvider>
     </SessionProvider>
 
   );

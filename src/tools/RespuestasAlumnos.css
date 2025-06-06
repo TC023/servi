@@ -63,7 +63,7 @@
   /* Tabla glassmorphism */
   .respuestas-tabla {
     border-radius: 16px;
-    overflow: hidden;
+    overflow-x: auto;
     background: rgba(255, 255, 255, 0.5);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -85,14 +85,49 @@
     padding: 12px 16px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   }
+
+  
+  /* Forzar inputs y selects a ocupar todo el ancho de la celda */
+  .respuestas-tabla td input[type="text"],
+  .respuestas-tabla td select {
+    /* margin-left: 0.5rem; */
+    /* padding: 6px 12px; */
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    background: white;
+    font-size: 0.9rem;
+    font-family: inherit;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    min-width: 120px;
+    max-width: 250px;
+  }
+  
+  /* Fijar un ancho mínimo a las celdas para evitar saltos visuales */
+  .respuestas-tabla th,
+  .respuestas-tabla td {
+    min-width: 120px;
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .comentarios {
+    height: 150px;
+  }
+  
   
   tbody tr:hover {
-    background-color: rgba(243, 244, 255, 0.3);
+    /* background-color: rgba(243, 244, 255, 0.3); */
     transition: background-color 0.3s;
   }
   
   tbody tr:nth-child(even) {
-    background-color: rgba(255, 255, 255, 0.4);
+    /* background-color: rgba(255, 255, 255, 0.4); */
+  }
+  
+  tr:hover {
+    background-color: #D6EEEE;
   }
   
   /* oconos */
@@ -130,3 +165,143 @@
     box-shadow: 0 4px 14px rgba(126, 34, 206, 0.3);
   }
   
+  .respuestas-tabla input[type="text"] {
+    width: 140px;
+    max-width: 100%;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background: rgba(255,255,255,0.8);
+    font-size: 0.95rem;
+    font-family: inherit;
+    color: #334155;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    outline: none;
+    transition: border 0.2s;
+  }
+  
+  .respuestas-tabla input[type="text"]:focus {
+    border: 1.5px solid #7e22ce;
+    background: #f3f0ff;
+  }
+
+  .edit-button {
+    position: static
+  }
+
+  .cancel-button {
+    position: relative;
+  }
+
+  .edit-buttons-container {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    z-index: 100;
+    height: 50px;
+  }
+
+  /* === Colores para el estado de postulaciones === */
+.estado-declinadx {
+  background-color: #e0e7ff; /* azul claro */
+  color: #3730a3;
+  font-weight: bold;
+}
+.estado-aceptadx {
+  background-color: #d1fae5; /* verde claro */
+  color: #047857;
+  font-weight: bold;
+}
+.estado-rechazadx {
+  background-color: #fee2e2; /* rojo claro */
+  color: #b91c1c;
+  font-weight: bold;
+}
+.estado-postuladx {
+  background-color: #fef9c3; /* amarillo claro */
+  color: #b45309;
+  font-weight: bold;
+}
+.estado-confirmadx {
+  background-color: #f0fdf4; /* verde muy claro */
+  color: #166534;
+  font-weight: bold;
+}
+
+.overlay {
+  display: flex;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(6px);
+  background-color: rgba(0, 0, 0, 0.3);
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.popup {
+  width: 400px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-family: system-ui, sans-serif;
+  background-color: white;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  padding: 16px;
+}
+
+.popup-header {
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid #ffcc00;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+}
+
+.popup-icon {
+  font-size: 24px;
+  color: #f0ad4e;
+  margin-right: 8px;
+}
+
+.popup-title {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.popup-message {
+  font-size: 14px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.popup-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-outline {
+  background: white;
+  border: 1px solid #ccc;
+  padding: 6px 12px;
+  border-radius: 4px;
+  color: #007aff;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: #007aff;
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}

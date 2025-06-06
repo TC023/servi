@@ -3,20 +3,83 @@ import {
   Box, Card, CardContent, Typography, Grid, Button, Select, MenuItem,
   Avatar, Fade, Drawer, TextField, FormControl, InputLabel, Slider, Checkbox, ListItemText
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { FaUserGraduate, FaChalkboardTeacher, FaHeart, FaClock, FaStar, FaUserFriends } from "react-icons/fa";
 import { FaPerson } from "react-icons/fa6";
 import { FilterList } from "@mui/icons-material";
 import { SessionContext } from "../Contexts/SessionContext";
+import { UserIdContext } from "../Contexts/UserIdContext";
 import "./Projects.css";
 import ProjectModal from "../pages/ProjectModal"; // ajusta la ruta si es necesario
 import Hero from "../components/Hero"; // ajusta la ruta si es necesario
 
+import {
+  FiUser,
+  FiMapPin,
+  FiUsers,
+  FiBox,
+  FiTarget,
+  FiActivity
+} from "react-icons/fi";
+
+//Filtros de areas diccionario
+const mapaDeAreas = {
+  "Negocios": ["BGB","LAE", "LCPF","LDE","LAF","LIT"], //(EN la BD esta como BGB, pero es LIN = Lic en Negocios internacionales)
+  //Falta (LDO = Licenciatura en desarrollo y talento y cultura organizacional) //Falta (LEM = Lic en Mercadotecnia)
+
+  "Salud": [],
+  //Faltan todas xd
+
+  "Ingeniería y Ciencias": ["ITC","IC" ,"IMT","IM", "IIS", "IRS", "IBT", "IQ"], //Falta (IMD = Ingenieria biomedica), Falta (IE = Ingenieria electronica)
+  //Falta (IID = Ingenieria en innovacion y desarrollo), Falta (ITD = Ingenieria en transformacion  digital de negocios)
+  //Falta (IAL = Ingenieria en alimentos), falta IAG (Ingenieria en Biosistemas Agroalimentarios), Falta (IDS = Ing en desarrollo sustentable)
+  //Falta (IDM = Ingenieria en ciencia de datos y maticamtics), Falta (IFI = Ing Fisica industrial), Falta (INA = Ing nanotecnologia)
+
+  "Estudios Creativos": ["ARQ", "LAD", "LC", "LDI", "LTM"], //Falta (LEI = Licenciatura en innovacion educativa), 
+  // Falta (LLE = Licenciatura en letras hispanicas)
+
+  "Derecho, Economía y Relaciones Internacionales": [, "LED", "LRI", "LEC"], //Falta (LTP = Licenciatura en gobierno y transformacion publica)
+  "Ambiente Construido": ["ARQ", "IC"], //Falta (LUB = Licenciatura en urbanismo)
+};
+
+
+
+const getSrcFromIframe = (iframeHtml) => {
+  const match = iframeHtml.match(/src=["']([^"']+)["']/);
+  return match ? match[1] : null;
+};
 
 
 
 
-const Projects = () => {
+const getCoordsFromIframe = (iframeHtml) => {
+  const regex = /!2d(-?\d+\.\d+)!3d(-?\d+\.\d+)/;
+  const match = iframeHtml.match(regex);
+  if (match) {
+    const [, lng, lat] = match;
+    return `${lat},${lng}`;
+  }
+  return null;
+};
+
+
+
+
+
+const Projects = ( {vP = false} ) => {
+
+//Carreras random
+const getCarrerasRandom = () => {
+  if (todasCarreras.length === 0) return [];
+  const barajadas = [...todasCarreras].sort(() => 0.5 - Math.random());
+  const cantidad = Math.floor(Math.random() * 2) + 2; // 2 o 3
+  return barajadas.slice(0, cantidad);
+};
+
+  //Carreras random cards temporal
+  const [todasCarreras, setTodasCarreras] = useState([]);
+
+  
   const [projectsDb, setProjectsDb] = useState([]);
   const [modalidadFilter, setModalidadFilter] = useState("Todos");
   const [carreraFilter, setCarreraFilter] = useState("");
@@ -27,13 +90,21 @@ const Projects = () => {
   const [horasMax, setHorasMax] = useState("");
   const [edadRange, setEdadRange] = useState([0, 100]);
   const [valoresSeleccionados, setValoresSeleccionados] = useState([]);
+  const [postulaciones, setPostulaciones] = useState({})
   const { sessionType } = useContext(SessionContext);
+  const { userId } = useContext(UserIdContext)
   //const navigate = useNavigate(); //Sin navegacion ahora solo abre un modal
 
   const [proyectoSeleccionado, setProyectoSeleccionado] = useState(null); //Para el model dependiendo el proyect
   const [searchText, setSearchText] = useState(""); //Dar funcionamiento a el campo de busqueda de HERO
+  const [vistaPendientes, setVistaPendientes] = useState(vP)
 
+  const location = useLocation();
 
+  // Sincroniza vistaPendientes con el prop vP cuando cambia la ruta
+  useEffect(() => {
+    setVistaPendientes(vP);
+  }, [vP, location.pathname]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -43,10 +114,8 @@ const Projects = () => {
     return () => window.removeEventListener("abrir-proyecto", handler);
   }, []);
   
-
-
-
-  useEffect(() => {
+/*
+ useEffect(() => {
     fetch("http://localhost:8000/proyectos")
       .then((res) => res.json())
       .then((proyectos) => {
@@ -64,95 +133,318 @@ const Projects = () => {
       });
   }, []);
 
- 
+*/
+
+
+
+useEffect(() => {
+  if (sessionType === "alumno" && userId && userId.special_id) {
+  console.log(userId)
+  fetch("http://localhost:8000/proyectos/alumnos/"+userId.special_id)
+    .then((res) => res.json())
+    .then((proyectos) => {
+      console.log(userId)
+      const adaptados = proyectos.map((p) => ({
+        id: p.proyecto_id,
+        osf_id: p.osf_id,
+        // periodo_id: p.periodo_id,
+        nombre_coordinador: p.nombre_coordinador,
+        numero_coordinador: p.numero_coordinador,
+        title: p.nombre_proyecto,
+        problema_social: p.problema_social,
+        tipo_vulnerabilidad: p.tipo_vulnerabilidad,
+        rango_edad: p.rango_edad?.replace(/\[|\)/g, "").split(",")[1] || "100",
+        zona: p.zona,
+        numero_beneficiarios: p.numero_beneficiarios,
+        lista_actividades_alumno: p.lista_actividades_alumno,
+        producto_a_entregar: p.producto_a_entregar,
+        medida_impacto_social: p.medida_impacto_social,
+        modalidad: p.modalidad,
+        modalidad_desc: p.modalidad_desc,
+        competencias: p.competencias,
+        direccion: p.direccion,
+        enlace_maps: p.enlace_maps,
+        valor_promueve: p.valor_promueve?.trim() || "Sin valor",
+        surgio_unidad_formacion: p.surgio_unidad_formacion,
+        necesita_entrevista: p.necesita_entrevista,
+        notificaciones: p.notificaciones,
+        horas: p.horas,
+        images: ["/logo.jpg"], // puedes cambiar esto si usaSs una columna de imagen real
+        carreras: p.carreras, // cambia esto si tienes relación real con carreras
+        cupo: p.cantidad,
+        logo: p.logo,
+        pregunta_id: p.id_pregunta || null,
+        pregunta: p.pregunta || null ,
+        estado_proyecto: p.estado,
+        num_postulaciones: p.num,
+        periodo_nombre: p.periodo_nombre,
+        momento: p.momento
+      }));
+      setProjectsDb(adaptados);
+    });
+  }
+
+  if (sessionType === "osf" && userId && userId.special_id) {
+  fetch("http://localhost:8000/proyectos/"+userId.special_id)
+    .then((res) => res.json())
+    .then((proyectos) => {
+      const adaptados = proyectos.map((p) => ({
+        id: p.proyecto_id,
+        osf_id: p.osf_id,
+        // periodo_id: p.periodo_id,
+        nombre_coordinador: p.nombre_coordinador,
+        numero_coordinador: p.numero_coordinador,
+        title: p.nombre_proyecto,
+        problema_social: p.problema_social,
+        tipo_vulnerabilidad: p.tipo_vulnerabilidad,
+        rango_edad: p.rango_edad?.replace(/\[|\)/g, "").split(",")[1] || "100",
+        zona: p.zona,
+        numero_beneficiarios: p.numero_beneficiarios,
+        lista_actividades_alumno: p.lista_actividades_alumno,
+        producto_a_entregar: p.producto_a_entregar,
+        medida_impacto_social: p.medida_impacto_social,
+        modalidad: p.modalidad,
+        modalidad_desc: p.modalidad_desc,
+        competencias: p.competencias,
+        direccion: p.direccion,
+        enlace_maps: p.enlace_maps,
+        valor_promueve: p.valor_promueve?.trim() || "Sin valor",
+        surgio_unidad_formacion: p.surgio_unidad_formacion,
+        necesita_entrevista: p.necesita_entrevista,
+        notificaciones: p.notificaciones,
+        horas: p.horas,
+        images: ["/logo.jpg"], // puedes cambiar esto si usaSs una columna de imagen real
+        carreras: p.carreras, // cambia esto si tienes relación real con carreras
+        cupo: p.cantidad,
+        logo: p.logo,
+        pregunta_id: p.id_pregunta || null,
+        pregunta: p.pregunta || null ,
+        estado_proyecto: p.estado,
+        num_postulaciones: p.num,
+        periodo_nombre: p.periodo_nombre,
+        momento: p.momento
+      }));
+      setProjectsDb(adaptados);
+    });
+  }
+
+  if (sessionType === "ss" && vistaPendientes) {
+  fetch("http://localhost:8000/proyectos/revisar")
+    .then((res) => res.json())
+    .then((proyectos) => {
+      const adaptados = proyectos.map((p) => ({
+        id: p.proyecto_id,
+        osf_id: p.osf_id,
+        // periodo_id: p.periodo_id,
+        nombre_coordinador: p.nombre_coordinador,
+        numero_coordinador: p.numero_coordinador,
+        title: p.nombre_proyecto,
+        problema_social: p.problema_social,
+        tipo_vulnerabilidad: p.tipo_vulnerabilidad,
+        rango_edad: p.rango_edad?.replace(/\[|\)/g, "").split(",")[1] || "100",
+        zona: p.zona,
+        numero_beneficiarios: p.numero_beneficiarios,
+        lista_actividades_alumno: p.lista_actividades_alumno,
+        producto_a_entregar: p.producto_a_entregar,
+        medida_impacto_social: p.medida_impacto_social,
+        modalidad: p.modalidad,
+        modalidad_desc: p.modalidad_desc,
+        competencias: p.competencias,
+        direccion: p.direccion,
+        enlace_maps: p.enlace_maps,
+        valor_promueve: p.valor_promueve?.trim() || "Sin valor",
+        surgio_unidad_formacion: p.surgio_unidad_formacion,
+        necesita_entrevista: p.necesita_entrevista,
+        notificaciones: p.notificaciones,
+        horas: p.horas,
+        images: ["/logo.jpg"], // puedes cambiar esto si usaSs una columna de imagen real
+        carreras: p.carreras, // cambia esto si tienes relación real con carreras
+        cupo: p.cantidad,
+        logo: p.logo,
+        pregunta_id: p.id_pregunta || null,
+        pregunta: p.pregunta || null ,
+        estado_proyecto: p.estado,
+        num_postulaciones: p.num,
+        periodo_nombre: p.periodo_nombre,
+        momento: p.momento
+      }));
+      setProjectsDb(adaptados);
+    });
+  }
+
+  if (sessionType === "ss" && !vistaPendientes) {
+  fetch("http://localhost:8000/proyectos")
+    .then((res) => res.json())
+    .then((proyectos) => {
+      const adaptados = proyectos.map((p) => ({
+        id: p.proyecto_id,
+        osf_id: p.osf_id,
+        // periodo_id: p.periodo_id,
+        nombre_coordinador: p.nombre_coordinador,
+        numero_coordinador: p.numero_coordinador,
+        title: p.nombre_proyecto,
+        problema_social: p.problema_social,
+        tipo_vulnerabilidad: p.tipo_vulnerabilidad,
+        rango_edad: p.rango_edad?.replace(/\[|\)/g, "").split(",")[1] || "100",
+        zona: p.zona,
+        numero_beneficiarios: p.numero_beneficiarios,
+        lista_actividades_alumno: p.lista_actividades_alumno,
+        producto_a_entregar: p.producto_a_entregar,
+        medida_impacto_social: p.medida_impacto_social,
+        modalidad: p.modalidad,
+        modalidad_desc: p.modalidad_desc,
+        competencias: p.competencias,
+        direccion: p.direccion,
+        enlace_maps: p.enlace_maps,
+        valor_promueve: p.valor_promueve?.trim() || "Sin valor",
+        surgio_unidad_formacion: p.surgio_unidad_formacion,
+        necesita_entrevista: p.necesita_entrevista,
+        notificaciones: p.notificaciones,
+        horas: p.horas,
+        images: ["/logo.jpg"], // puedes cambiar esto si usaSs una columna de imagen real
+        carreras: p.carreras, // cambia esto si tienes relación real con carreras
+        cupo: p.cantidad,
+        logo: p.logo,
+        pregunta_id: p.id_pregunta || null,
+        pregunta: p.pregunta || null ,
+        estado_proyecto: p.estado,
+        num_postulaciones: p.num,
+        periodo_nombre: p.periodo_nombre,
+        momento: p.momento
+      }));
+      setProjectsDb(adaptados);
+    });
+  }
+
+
+    fetch("http://localhost:8000/carreras")
+    .then((res) => res.json())
+    .then((data) => {
+      const nombres = data.map((c) => c.nombre); // solo nombres
+      setTodasCarreras(nombres);
+    })
+    .catch((err) => console.error("Error al cargar carreras:", err));
+
+    if (sessionType === "alumno" && userId) {
+      fetch("http://localhost:8000/postulaciones/alumno/"+userId.special_id)
+      .then((res) => res.json()) 
+      .then((data) => {
+        setPostulaciones( Object.fromEntries(data.map(e => ([e.id_proyecto, e]))))
+      })
+    }
+
+    
+}, [userId, sessionType, vistaPendientes, location.pathname]);
+
 
   const handleModalidadChange = (e) => setModalidadFilter(e.target.value);
   const handleCarreraClick = (carrera) => setCarreraFilter(carrera === carreraFilter ? "" : carrera);
 
   const filteredProjects = projectsDb.filter((project) => {
+  const matchTitle = project.title.toLowerCase().includes(searchText.toLowerCase());
+  const horas = parseInt(project.horas);
+  const edad = parseInt(project.rango_edad);
+  const matchHorasMin = horasMin === "" || horas >= parseInt(horasMin);
+  const matchHorasMax = horasMax === "" || horas <= parseInt(horasMax);
+  const matchEdad = !isNaN(edad) && edad >= edadRange[0] && edad <= edadRange[1];
+  const matchModalidad = modalidadFilter === "Todos" || project.modalidad === modalidadFilter;
+  const matchValores = valoresSeleccionados.length === 0 || valoresSeleccionados.includes(project.valor_promueve);
 
-    const matchTitle = project.title.toLowerCase().includes(searchText.toLowerCase());
-    const horas = parseInt(project.horas);
-    const edad = parseInt(project.rango_edad);
-    const matchHorasMin = horasMin === "" || horas >= parseInt(horasMin);
-    const matchHorasMax = horasMax === "" || horas <= parseInt(horasMax);
-    const matchEdad = !isNaN(edad) && edad >= edadRange[0] && edad <= edadRange[1];
-    const matchModalidad = modalidadFilter === "Todos" || project.modalidad === modalidadFilter;
-    const matchValores = valoresSeleccionados.length === 0 || valoresSeleccionados.includes(project.valor_promueve);
-    return matchTitle && matchHorasMin && matchHorasMax && matchEdad && matchModalidad && matchValores;
-  });
-  
+  // match por área
+  const matchCarreraArea = carreraFilter === "" || (
+    mapaDeAreas[carreraFilter] &&
+    project.carreras.some(carrera => mapaDeAreas[carreraFilter].includes(carrera))
+  );
 
-  useEffect(() => {
-    let interval;
-    if (hoveredId !== null) {
-      interval = setInterval(() => {
-        setImageIndexes((prev) => {
-          const currentProject = projectsDb.find((p) => p.id === hoveredId);
-          if (!currentProject) return prev;
-          const currentIndex = prev[hoveredId] || 0;
-          const nextIndex = (currentIndex + 1) % currentProject.images.length;
-          return { ...prev, [hoveredId]: nextIndex };
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [hoveredId, projectsDb]);
+  return matchTitle && matchHorasMin && matchHorasMax && matchEdad && matchModalidad && matchValores && matchCarreraArea;
+});
+
+
+
 
   return (
     <Box className="projects-page">
 
-{ sessionType === "alumno" && <Hero searchText={searchText} setSearchText={setSearchText} /> }
-
+{ sessionType == "alumno" && (<Hero searchText={searchText} setSearchText={setSearchText} /> )}
+{console.log(projectsDb)}
+{console.log(filteredProjects)}
 
       
       <Box className="projects-header">
-        <Typography variant="h4">Proyectos Solidarios - {sessionType}</Typography>
+        <Typography variant="h4">{!vistaPendientes ? "Proyectos Solidarios" : "Proyectos pendientes" } - {sessionType}</Typography>
         <Button variant="outlined" startIcon={<FilterList />} onClick={() => setDrawerOpen(true)}>Filtros Avanzados</Button>
       </Box>
 
-      <Box sx={{ display: "flex", justifyContent: "center", mb: 5 }}>
+      
+
   <Box
-    className="notch-elevated" // Clase para filtros bonitos
+  className="notch-elevated"
+  sx={{
+    display: "flex",
+    flexDirection: "column", // para separar por filas
+    alignItems: "center",
+    gap: 1.5, // espacio entre filas
+    px: 2,
+    py: 2,
+    borderRadius: 3,
+    mt: 3,
+    mb: 4,
+    backgroundColor: "rgba(255,255,255,0.4)",
+    // backdropFilter: "blur(10px)",
+    border: "1px solid rgba(255,255,255,0.25)",
+    boxShadow: "0 4px 18px rgba(0,0,0,0.06)",
+  }}
+>
+  {/* Fila de carreras */}
+  <Box
     sx={{
       display: "flex",
       flexWrap: "wrap",
       justifyContent: "center",
-      gap: 2,
-      px: 3,
-      py: 2,
-      borderRadius: 4, // 
-      backgroundColor: "rgba(255,255,255,0.5)", // glassy
-      backdropFilter: "blur(12px)", // 🔵 Blur
-      border: "1px solid rgba(255,255,255,0.3)",
-      boxShadow: "0 8px 32px rgba(0,0,0,0.1)", // Elevación bonita
-      
+      gap: 1.5,
     }}
-    
   >
-<Button className={`glass-button-projects ${modalidadFilter === "Todos" ? "active" : ""}`}>
-Todos
-    </Button>
-    <Select value={modalidadFilter} onChange={handleModalidadChange} displayEmpty className="glass-select">
-      <MenuItem value="Todos">Todos</MenuItem>
-      <MenuItem value="Presencial">Presencial</MenuItem>
-      <MenuItem value="En línea">En línea</MenuItem>
-    </Select>
-    {["ARQ", "LAD", "ISC", "MKT", "DER", "PSI"].map((carrera, idx) => (
-      <Button
-      key={carrera}
-      className={`glass-buttonProjects ${carreraFilter === carrera ? "active" : ""}`}
-      onClick={() => handleCarreraClick(carrera)}
-      sx={{ "--hue": idx * 45 }}
-    >
-      {carrera}
-    </Button>
+    {[
+      "Ambiente Construido",
+      "Derecho, Economía y Relaciones Internacionales",
+      "Estudios Creativos",
+      "Ingeniería y Ciencias",
+      "Negocios",
+      "Salud",
+    ].map((carrera) => (
+     <Button
+  key={carrera}
+  className={`glass-buttonProjects ${carreraFilter === carrera ? "active" : ""}`}
+  onClick={() => handleCarreraClick(carrera)}
+  sx={{
+    fontSize: "0.75rem",
+    fontWeight: 600,
+    px: 2,
+    py: 0.6,
+    borderRadius: 2.5,
+    minWidth: "auto",
+    whiteSpace: "nowrap",
+    backgroundColor: carreraFilter === carrera ? "#60a5fa" : "#ffffff",
+    color: carreraFilter === carrera ? "#ffffff" : "#1d4ed8", // texto azul normal
+    boxShadow: "0 2px 4px rgba(0,0,0,0.08)",
+    transition: "all 0.2s ease",
+    border: "1px solid #e2e8f0",
+    "&:hover": {
+      backgroundColor: "#60a5fa",
+      color: "#ffffff",
+      transform: "scale(1.03)",
+    },
+  }}
+>
+  {carrera}
+</Button>
 
-      
+
     ))}
-
   </Box>
 </Box>
+
+
 
 
       <Box className="cardList">
@@ -160,13 +452,13 @@ Todos
           {filteredProjects.map((project, index) => (
             <Fade in={true} timeout={500 + index * 100} key={project.id}>
               <Grid item xs={12} sm={6} md={4} lg={3}>
-              <Card
+              <Card className={project.estado_proyecto === "lleno" || project.estado_proyecto === "pendiente" ? "lleno":"" }
               //Desde ACA EMPIEZA TODA EL elemento CARD, no es posible realizar algo similar desde un CSS
           //onClick={() => navigate(`/projects/${project.id}`)} //Quitamos navigate para usar el modal
           onClick={() => setProyectoSeleccionado(project)}
 
-          onMouseEnter={() => setHoveredId(project.id)}
-          onMouseLeave={() => setHoveredId(null)}
+          // onMouseEnter={() => setHoveredId(project.id)}
+          // onMouseLeave={() => setHoveredId(null)}
           sx={{
             borderRadius: 5,
             overflow: "hidden",
@@ -234,10 +526,14 @@ Todos
         >
                   <Box sx={{ position: "relative" }}>
                     <img
+                      // src={
+                      //   hoveredId === project.id
+                        
+                      //     ? project.images[imageIndexes[project.id] || 0]
+                      //     : `/src/assets/${project.logo}`
+                      // }
                       src={
-                        hoveredId === project.id
-                          ? project.images[imageIndexes[project.id] || 0]
-                          : project.images[0]
+                        `/src/assets/${project.logo}`
                       }
                       alt={project.title}
                       style={{
@@ -269,36 +565,41 @@ Todos
 
 
 <CardContent>
-  <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-  <Avatar
+  <Box
   sx={{
-    width: 32,
-    height: 32,
-    backgroundColor: "#e0f2fe",
-    color: "#0284c7",
-    fontSize: "14px",
+    position: "absolute",
+    top: 12,
+    right: 12,
     display: "flex",
-    justifyContent: "center",
     alignItems: "center",
-    gap: 0.3, // pequeño espacio entre íconos
+    gap: 0.5,
+    px: 1.2,
+    py: "3px",
+    borderRadius: "999px",
+    fontSize: "0.65rem",
+    fontWeight: 600,
+    color: "#1e293b",
+    backgroundColor:
+      project.modalidad.toLowerCase() === "presencial"
+        ? "#dbeafe" // azul claro
+        : project.modalidad.toLowerCase() === "en linea"
+        ? "#ccfbf1" // cian claro
+        : "#ede9fe", // mixto
+    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+    zIndex: 3,
   }}
 >
-  {project.modalidad.toLowerCase() === "presencial" && <FaPerson />}
-  {project.modalidad.toLowerCase() === "en linea" && <FaChalkboardTeacher />}
+  {project.modalidad.toLowerCase() === "presencial" && <FaPerson size={12} />}
+  {project.modalidad.toLowerCase() === "en linea" && <FaChalkboardTeacher size={12} />}
   {project.modalidad.toLowerCase() === "mixto" && (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 0.2 }}>
-      <FaPerson size={10} />
-      <FaChalkboardTeacher size={10} />
-    </Box>
+    <>
+      <FaPerson size={11} />
+      <FaChalkboardTeacher size={11} />
+    </>
   )}
-</Avatar>
+  <span style={{ textTransform: "capitalize" }}>{project.modalidad}</span>
+</Box>
 
-
-
-    <Typography variant="body2" sx={{ color: "#64748b" }}>
-      {project.modalidad}
-    </Typography>
-  </Box>
 
   <Typography
   variant="h6"
@@ -328,16 +629,50 @@ Todos
     "&:hover span:nth-of-type(11)": { animationDelay: "0.4s" },
   }}
 >
-{project.title.split("").map((char, i) => (
+  {project.title.split("").map((char, i) => (
   <span key={i}>{char === " " ? "\u00A0" : char}</span>
 ))}
 
-</Typography>
+</Typography> <br />
+<Typography
+  variant="h6"
+  sx={{
+    fontWeight: 700,
+    fontSize: "1rem",
+    mb: 1,
+    color: "#1e293b",
+    display: "inline-block",
+    "& span": {
+      display: "inline-block",
+      transition: "transform 0.3s ease",
+    },
+    "&:hover span": {
+      animation: "bounceUp 0.6s ease forwards",
+    },
+    "&:hover span:nth-of-type(1)": { animationDelay: "0s" },
+    "&:hover span:nth-of-type(2)": { animationDelay: "0.04s" },
+    "&:hover span:nth-of-type(3)": { animationDelay: "0.08s" },
+    "&:hover span:nth-of-type(4)": { animationDelay: "0.12s" },
+    "&:hover span:nth-of-type(5)": { animationDelay: "0.16s" },
+    "&:hover span:nth-of-type(6)": { animationDelay: "0.2s" },
+    "&:hover span:nth-of-type(7)": { animationDelay: "0.24s" },
+    "&:hover span:nth-of-type(8)": { animationDelay: "0.28s" },
+    "&:hover span:nth-of-type(9)": { animationDelay: "0.32s" },
+    "&:hover span:nth-of-type(10)": { animationDelay: "0.36s" },
+    "&:hover span:nth-of-type(11)": { animationDelay: "0.4s" },
+  }}
+>
+  {`${project.periodo_nombre} - Periodo ${project.momento}`.split("").map((char, i) => (
+    <span key={i}>{char === " " ? "\u00A0" : char}</span>
+  ))}
+</Typography> <br />
 
 
 
     {/* Color tags carreras y efecto hover */}
     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
+
+      {/*
   {project.carreras.map((carrera, idx) => (
     <Box
       key={carrera}
@@ -374,7 +709,104 @@ Todos
       {carrera}
     </Box>
   ))}
+
+*/}
+
+
+
+
+{project.carreras.map((carrera, idx) => (
+  <Box
+    key={idx}
+    sx={{
+      fontSize: "0.65rem",
+      px: 1.6,
+      py: "4px",
+      borderRadius: "999px",
+      fontWeight: 600,
+      background: `linear-gradient(135deg, hsl(${(idx * 97) % 360}, 80%, 85%), hsl(${(idx * 97 + 30) % 360}, 80%, 75%))`,
+      color: "#334155",
+      display: "flex",
+      alignItems: "center",
+      gap: 0.5,
+      boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+      transition: "all 0.3s ease",
+      "&:hover": {
+        transform: "scale(1.05)",
+        boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
+        background: `linear-gradient(135deg, hsl(${(idx * 97 + 20) % 360}, 90%, 88%), hsl(${(idx * 97 + 50) % 360}, 90%, 78%))`,
+      },
+    }}
+  >
+    <FaUserGraduate size={10} />
+    {carrera}
+  </Box>
+))}
+
+
+
+
 </Box>
+
+
+
+
+
+{/* Campos adicionales del proyecto NUEVOS despues de estar trabajando en la mismas tarjetas, darles estilos y harcelos mas bonitos*/}
+<div className="project-attributes-grid">
+  {[
+    {
+      label: "Tipo de Vulnerabilidad",
+      value: project.tipo_vulnerabilidad,
+      icon: <FiUser size={11} />,
+    },
+    {
+      label: "Zona",
+      value: project.zona,
+      icon: <FiMapPin size={11} />,
+    },
+    {
+      label: "Beneficiarios",
+      value: project.numero_beneficiarios,
+      icon: <FiUsers size={11} />,
+    },
+    {
+      label: "Producto a Entregar",
+      value: project.producto_a_entregar,
+      icon: <FiBox size={11} />,
+    },
+    {
+      label: "Impacto Social",
+      value: project.medida_impacto_social,
+      icon: <FiTarget size={11} />,
+    },
+    {
+      label: "Competencias",
+      value: project.competencias,
+      icon: <FiActivity size={11} />,
+    },
+  ].map((item, i) => (
+    <div className="attribute-card" key={i}>
+      <div className="attribute-header">
+        {item.icon}
+        <span className="attribute-label">{item.label}</span>
+      </div>
+      <div className="attribute-value">{item.value || "Sin info"}</div>
+    </div>
+  ))}
+</div>
+
+
+
+
+{/* Vista de google maps  */}
+
+
+
+
+
+
+
 
 
 
@@ -385,29 +817,48 @@ Todos
     gap: 1,
     mb: 2,
     p: 1,
-    backgroundColor: "rgba(255,255,255,0.5)",
     borderRadius: 3,
+    background: "linear-gradient(135deg, rgba(224, 242, 255, 0.5), rgba(255,255,255,0.3))",
+    border: "1px solid rgba(203, 213, 225, 0.5)",
+    backdropFilter: "blur(10px)",
+    WebkitBackdropFilter: "blur(10px)",
+    boxShadow: "0 2px 6px rgba(0, 0, 0, 0.03)",
   }}
 >
-  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-    <FaClock size={14} style={{ color: "#475569" }} />
-    <Typography variant="caption" sx={{ fontWeight: 500, color: "#475569" }}>
-      {project.horas} horas requeridas
-    </Typography>
-  </Box>
-  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-    <FaUserFriends size={14} style={{ color: "#475569" }} />
-    <Typography variant="caption" sx={{ fontWeight: 500, color: "#475569" }}>
-      {project.rango_edad} años
-    </Typography>
-  </Box>
-  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-    <FaStar size={14} style={{ color: "#475569" }} />
-    <Typography variant="caption" sx={{ fontWeight: 500, color: "#475569" }}>
-      {project.valor_promueve}
-    </Typography>
-  </Box>
+  {[
+    {
+      icon: <FaClock size={14} style={{ color: "#1e293b" }} />,
+      text: `${project.horas} horas requeridas`,
+    },
+    {
+      icon: <FaUserFriends size={14} style={{ color: "#1e293b" }} />,
+      text: `${project.rango_edad} años`,
+    },
+    {
+      icon: <FaStar size={14} style={{ color: "#1e293b" }} />,
+      text: project.valor_promueve,
+    },
+  ].map((item, i) => (
+    <Box key={i} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+      {item.icon}
+      <Typography variant="caption" sx={{ fontWeight: 500, color: "#1e293b" }}>
+        {item.text}
+      </Typography>
+    </Box>
+  ))}
 </Box>
+
+  <div className="footer">
+    <span>Cupo: {project.num_postulaciones}/{project.cupo}</span>
+    {postulaciones[project.id] && (
+      <div className="state-container">
+      {/* {console.log(postulaciones[project.id])} */}
+      <span>{postulaciones[project.id].estado}</span>
+    </div>
+    )}
+  </div>
+
+
 
 </CardContent>
 
@@ -433,9 +884,7 @@ Todos
   }}
 >
 
-    
-    
-  
+
     <Box>
       <Typography variant="h6" fontWeight="bold" mb={3} sx={{ color: "#1e293b" }}>
         Filtros Avanzados
@@ -537,23 +986,30 @@ Todos
   </Box>
 </Drawer>
 
+
+
+
+
+
+
+
+
+
       {/*Modal para Proyectos
             <ProjectModal proyecto={proyectoSeleccionado} onClose={() => setProyectoSeleccionado(null)} />
 
       */}
 {proyectoSeleccionado && (
+  <>
+  {/* {console.log(postulaciones[proyectoSeleccionado.id] ? true : false)} */}
   <ProjectModal
     proyecto={proyectoSeleccionado}
     onClose={() => setProyectoSeleccionado(null)}
-    proyectosDisponibles={projectsDb} // ✅ Este sí es el array completo de proyectos
-  />
+    proyectosDisponibles={projectsDb} // Este sí es el array completo de proyectos
+    pos={ postulaciones[proyectoSeleccionado.id] ? true : false }
+    />
+  </>
 )}
-
-
-
-
-
-
     </Box>
   );
 };

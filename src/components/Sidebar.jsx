@@ -19,10 +19,18 @@ const Sidebar = () => {
         navigate("/proyectos_revisar");
         break;
       case "Exportar":
-        navigate("/exportar");
+        navigate("/export");
         break;
       case "Crear Proyecto":
         navigate("/projects/new")
+        break
+      case "Mis Postulaciones":
+        navigate("/mis_postulaciones")
+        break
+      case "Ver Postulaciones":
+        navigate("/mis_postulaciones")
+      case "Dashboard":
+        navigate("/dashboard")
         break
       default:
         break;
@@ -41,7 +49,7 @@ const Sidebar = () => {
       {console.log(sessionType)}
       {sessionType === "ss" && (
       <ul className="sidebar-list">
-        {["Proyectos Overview", "Respuestas Alumnos", "Proyectos a revisar", "Exportar"].map(
+        {["Dashboard", "Proyectos Overview", "Respuestas Alumnos", "Proyectos a revisar", "Exportar"].map(
           (text) => (
             <li
               key={text}
@@ -57,7 +65,24 @@ const Sidebar = () => {
 
       {sessionType === "osf" && (
       <ul className="sidebar-list">
-        {["Crear Proyecto"].map(
+        {["Proyectos Overview", "Crear Proyecto", "Ver Postulaciones"].map(
+          (text) => (
+            <li
+              key={text}
+              className="sidebar-item"
+              onClick={() => handleNavigation(text)}
+            >
+              {text}
+            </li>
+          )
+        )}
+      </ul>
+      )}
+
+
+      {sessionType === "alumno" && (
+      <ul className="sidebar-list">
+        {["Proyectos Overview", "Mis Postulaciones"].map(
           (text) => (
             <li
               key={text}
