@@ -206,7 +206,7 @@
   }
 
   /* === Colores para el estado de postulaciones === */
-.estado-declinadx {
+.estado-inscritx {
   background-color: #e0e7ff; /* azul claro */
   color: #3730a3;
   font-weight: bold;
@@ -229,6 +229,12 @@
 .estado-confirmadx {
   background-color: #f0fdf4; /* verde muy claro */
   color: #166534;
+  font-weight: bold;
+}
+
+.estado-declinadx {
+  background-color: #f3f4f6; /* gris claro */
+  color: #374151;            /* gris oscuro */
   font-weight: bold;
 }
 
