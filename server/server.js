@@ -536,6 +536,7 @@ app.get('/postulaciones', upload.none(), (req, res) => {
     SELECT 
     p.*, 
     a.*,
+    u.correo,
     c.nombre AS carrera,
     pr.nombre_proyecto AS proyecto,
     pr.estado AS estado_proyecto,
@@ -551,6 +552,7 @@ app.get('/postulaciones', upload.none(), (req, res) => {
     LEFT JOIN pregunta pre ON pre.id_proyecto=p.id_proyecto
     LEFT JOIN momentos_periodo m ON pr.momento_id = m.momento_id
     LEFT JOIN periodo_academico periodo ON periodo.periodo_id = m.periodo_id
+    LEFT JOIN public.user u ON a.user_id = u.user_id
     `)
     .then((data) => res.json(data))
     .catch((error) => console.log('ERROR', error))
@@ -594,8 +596,11 @@ app.get('/postulaciones/:osf_id', upload.none(), (req, res) => {
 app.patch('/postulaciones/update', upload.none(), async (req, res) => {
   const postulacion = JSON.parse(req.body.postulacion)
   const alumno = JSON.parse(req.body.alumno)
-  const respuesta = req.body.respuesta_descarte
+  const respuesta = JSON.parse(req.body.respuesta_descarte)
+  const correo = JSON.parse(req.body.correo)
   const toChange = JSON.parse(req.body.toChange)
+
+  console.log(postulacion, alumno, respuesta, correo, toChange)
 
   const promises = [];
 
@@ -621,10 +626,24 @@ app.patch('/postulaciones/update', upload.none(), async (req, res) => {
     );
   }
 
-  if (respuesta !== 'null') {
+  if (respuesta) {
     promises.push(
       db.none(`UPDATE respuesta SET respuesta = $1 WHERE id_postulacion = $2`,
         [respuesta, toChange.id_postulacion]
+      )
+    );
+  }
+
+  if (correo) {
+    promises.push(
+      db.none(`
+UPDATE public.user SET correo = $1 WHERE user_id = (
+SELECT u.user_id FROM public.user u
+JOIN alumno a ON a.user_id = u.user_id
+WHERE a.alumno_id = $2
+)
+          `,
+        [correo, toChange.alumno_id]
       )
     );
   }
