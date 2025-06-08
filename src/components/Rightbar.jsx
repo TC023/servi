@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import "./RightBar.css";
+import { useNavigate } from "react-router-dom";
 
 const lupiFramesRight = [
   "lupi1.png",
@@ -20,6 +21,7 @@ const RightBar = ({ isOpen, onClose, setShowCharacter, setShowAICharacter, setSh
   //Sea Teus/Usuario
   const [vista, setVista] = useState("usuario"); //como inicia teus/usuario
 
+  const navigate = useNavigate();
 
   //Mostrar nombre usuario
   const { sessionType, sessionId } = useContext(SessionContext);
@@ -341,8 +343,9 @@ useEffect(() => {
             cursor: "pointer",
           }}
           onClick={() => {
-            sessionStorage.clear(); // o localStorage.clear()
-            window.location.href = "/login";
+            // sessionStorage.clear(); // o localStorage.clear()
+            // window.location.href = "/login";
+            navigate('/logout') 
           }}
         >
            Cerrar sesión

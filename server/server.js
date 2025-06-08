@@ -39,7 +39,7 @@ const cn = {
     port: 5432,
     database: 'servi',
     user: 'postgres',
-    password: 'yahelito346',
+    password: 'postgres',
     allowExitOnIdle: true
 }
 const db = pgp(cn);
@@ -291,17 +291,6 @@ app.get('/proyectos/:id', (req, res) => {
     });
 });
 
-app.get('/proyectos/preguntas/:id', (req, res) => {
-  const proyectoId = req.params.id;
-  db.oneOrNone('SELECT * FROM pregunta WHERE id_proyecto = $1', [proyectoId])
-    .then((data) => {
-      if (data) {
-        res.json(data);
-      } else {
-        res.status(400).json({error: 'Error en la DB'})
-      }
-    })
-})
 
 // fetch a todas las carreras
 app.get('/carreras', (req, res) => {
@@ -436,11 +425,7 @@ app.patch('/osf_institucional/:osf_id', upload.none(), async (req, res) => {
 
 
 // fetch de las carreras asociadas con un proyecto :$
-app.get('/proyecto_carrera/:proyecto_id', (req, res) => {
-    db.any('SELECT c.nombre FROM proyecto_carrera pc JOIN carrera c ON pc.carrera_id = c.carrera_id WHERE pc.proyecto_id = $1;', [req.params.proyecto_id])
-    .then((data) => res.json(data)) 
-    .catch((error) => console.log('ERROR:', error));
-})
+
 
 // fetch de los ods :$
 app.get('/ods', (req, res) => {

@@ -73,16 +73,15 @@ const RespuestasAlumnos = ( {test = ''} ) => {
 
   // Centraliza la lógica de estados según sessionType
   useEffect(() => {
-    if (sessionType === "alumno") {
-      setFilters({ "alumno": `${userId.special_id}`, "proyecto": "Todos", "periodo":"Todos" })
-      setEstados(['ACEPTADX', 'DECLINADX', "CONFIRMADX"])
-    } else if (sessionType === "osf") {
-      setEstados(['POSTULADX', 'ACEPTADX', "RECHAZADX"])
-    } else if (sessionType === "ss") {
-      setEstados(['POSTULADX', 'ACEPTADX', 'RECHAZADX', 'DECLINADX', 'CONFIRMADX'])
-    } else {
-      setEstados([])
+    const estadosMap = {
+      alumno: ['ACEPTADX', 'DECLINADX', 'CONFIRMADX'],
+      osf: ['POSTULADX', 'ACEPTADX', 'NO ACEPTADX'],
+      ss: ['POSTULADX', 'ACEPTADX', 'NO ACEPTADX', 'DECLINADX', 'CONFIRMADX', 'INSCRITX'],
+    };
+    if (sessionType === 'alumno') {
+      setFilters({ alumno: `${userId.special_id}`, proyecto: 'Todos', periodo: 'Todos' });
     }
+    setEstados(estadosMap[sessionType] || []);
   }, [sessionType, userId])
 
   const carreras = ["Todas", ...Array.from(new Set(Object.values(postulaciones).map((a) => a.carrera)))];
@@ -95,7 +94,7 @@ const RespuestasAlumnos = ( {test = ''} ) => {
   const dataFiltrada = Object.values(postulaciones).filter((alumno) => {
     // console.log(alumno)
     const coincideCarrera = filtroCarrera === "Todas" || alumno.carrera === filtroCarrera;
-    const coincideAlumno = ((alumno["nombre"]).toLowerCase().includes(filters["alumno"].toLowerCase())) || (alumno["id_alumno"].includes(filters.alumno))
+    const coincideAlumno = ((alumno["nombre"]).toLowerCase().includes(filters["alumno"].toLowerCase())) || ((alumno["id_alumno"]).toLowerCase().includes((filters.alumno).toLowerCase()))
     const coincideProyecto = filters.proyecto === "Todos" || alumno.proyecto === filters.proyecto  || alumno.id_proyecto === filters.proyecto
     const coincidePeriodo = filters.periodo === "Todos" || alumno.periodo === filters.periodo;
     // console.log(alumno["nombre"], filters)
@@ -182,6 +181,10 @@ const RespuestasAlumnos = ( {test = ''} ) => {
         setSavedPostulaciones(result);
         console.log(result);
       });
+
+      setChanges({})
+      setChangesAlumno({})
+      setResDescarte({})
   }
 
   const handleCancel = () => {
@@ -241,12 +244,15 @@ const RespuestasAlumnos = ( {test = ''} ) => {
     switch (estado) {
       case 'ACEPTADX':
         return 'estado-aceptadx';
-      case 'RECHAZADX':
+      case 'NO ACEPTADX':
         return 'estado-rechazadx';
       case 'DECLINADX':
         return 'estado-declinadx';
       case 'CONFIRMADX':
         return 'estado-confirmadx';
+      case 'INSCRITX':
+        return 'estado-inscritx'
+
       case 'POSTULADX':
       default:
         return 'estado-postuladx';
@@ -314,12 +320,12 @@ const RespuestasAlumnos = ( {test = ''} ) => {
     <>
         {showPopUp && (
         <div className="overlay">
-          <div class="popup">
-            <div class="popup-header">
-              <span class="popup-icon"><FiInfo></FiInfo></span>
-              <span class="popup-title">Advertencia</span>
+          <div className="popup">
+            <div className="popup-header">
+              <span className="popup-icon"><FiInfo></FiInfo></span>
+              <span className="popup-title">Advertencia</span>
             </div>
-            <div class="popup-message">
+            <div className="popup-message">
               Los cambios que realices serán <strong>irreversibles</strong>.
               {sessionType === "alumno" ? (
                 <>
@@ -333,9 +339,9 @@ const RespuestasAlumnos = ( {test = ''} ) => {
                 </>
               )}
               </div>
-            <div class="popup-buttons">
-              <button class="btn-outline" onClick={() => setShowPopUp(false)} >Regresar</button>
-              <button class="btn-primary" onClick={() => {
+            <div className="popup-buttons">
+              <button className="btn-outline" onClick={() => setShowPopUp(false)} >Regresar</button>
+              <button className="btn-primary" onClick={() => {
               setShowPopUp(false)
               handleSave()
               }} >Guardar</button>
@@ -444,7 +450,7 @@ const RespuestasAlumnos = ( {test = ''} ) => {
                 key={idx}
                 id={postulacion.id_postulacion}
                 onDoubleClick={(e) => {
-                  if (!isEditing && ((sessionType === "alumno" && postulacion.estado === "ACEPTADX") || (sessionType === "osf" && postulacion.estado === "POSTULADX")) || (sessionType == "ss")  )  {
+                  if (!isEditing && ((sessionType === "alumno" && postulacion.estado === "ACEPTADX") || (sessionType === "osf" && postulacion.estado === "POSTULADX") || (sessionType == "ss"))  )  {
                     console.log(estados)
                     setCurrEdit(postulacion.id_postulacion);
                     setToChange({
