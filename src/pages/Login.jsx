@@ -17,13 +17,19 @@ export default function Login() {
   function handleSubmit() {
     const formInfo = new FormData();
 
-    const regex = /^[Aa]\d{8}$/ // Expresión regular para validar si el username es un número de matrícula
-    console.log(regex.test(username))
-    if (regex.test(username)) {
-      formInfo.append("username", username.toUpperCase()+"@tec.mx");
+    let newUsername;
+    if (username.endsWith("@tec.mx")) {
+      newUsername = username.slice(0, username.length - 7);
+    } else {
+      newUsername = username;
+    }
+    
+    const regex = /^[Aa]\d{8}$/; // Expresión regular para validar si el username es un número de matrícula
+    if (regex.test(newUsername)) {
+      formInfo.append("username", newUsername.toUpperCase()+"@tec.mx");
     }
     else{
-      formInfo.append("username", username);
+      formInfo.append("username", newUsername);
     }
     
     formInfo.append("password", password);
