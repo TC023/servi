@@ -635,6 +635,9 @@ app.patch('/postulaciones/update', upload.none(), async (req, res) => {
   const alumno = JSON.parse(req.body.alumno)
   const respuesta = req.body.respuesta_descarte
   const toChange = JSON.parse(req.body.toChange)
+  console.log(alumno)
+  console.log(postulacion)
+  console.log(toChange)
 
   const promises = [];
 
@@ -642,6 +645,7 @@ app.patch('/postulaciones/update', upload.none(), async (req, res) => {
 
     if (postulacion.estado) {
       console.log('se cambió el estado de la postulacion a: ', postulacion.estado)
+
     }
     
     const keys = Object.keys(postulacion)
@@ -675,8 +679,66 @@ app.patch('/postulaciones/update', upload.none(), async (req, res) => {
 
   await Promise.all(promises);
 
-  res.status(200).send('ok')
+    
+
+  // Enviar correo si hubo cambio de estado o comentario
+  if (postulacion.estado || postulacion.comentarios) {
+    const matricula = toChange.alumno_id;
+    const email = `${matricula}@tec.mx`;
+
+    
+    // 1. Get alumno info
+    const alumnoData = await db.oneOrNone(
+      'SELECT nombre FROM alumno WHERE alumno_id = $1',
+      [toChange.alumno_id]
+    );
+
+    const nombre = alumnoData?.nombre;
+
+    
+    // 2. Get project name from postulacion
+    const proyectoData = await db.oneOrNone(
+      `SELECT p.nombre_proyecto
+      FROM postulacion pos
+      JOIN proyecto p ON pos.id_proyecto = p.proyecto_id
+      WHERE pos.id_postulacion = $1`,
+      [toChange.id_postulacion]
+    );
+
+    const nombreProyecto = proyectoData?.nombre_proyecto 
+
+    // 3. Prepare email content
+    let subject = `Actualización en tu postulación al proyecto "${nombreProyecto}"`;
+    let content = `Hola ${nombre},\n\n`;
+
+    if (postulacion.estado) {
+      if (postulacion.estado === 'ACEPTADX') {
+        content += `¡Felicidades! Tu postulación al proyecto "${nombreProyecto}" ha sido aceptada.\n\n`;
+      } else if (postulacion.estado === 'NO ACEPTADX') {
+        content += `Lamentamos informarte que tu postulación al proyecto "${nombreProyecto}" no ha sido aceptada.\n\n`;
+      } else if (postulacion.estado === 'CONFIRMADX') {
+        content += `Tu participación en el proyecto "${nombreProyecto}" ha sido confirmada. ¡Gracias por unirte!\n\n`;
+      } else {
+        content += `Tu postulación al proyecto "${nombreProyecto}" ha cambiado de estado a: ${nuevoEstado}.\n\n`;
+      }
+    }
+
+    if (postulacion.comentarios) {
+      content += `Comentario del equipo:\n"${postulacion.comentarios}"\n\n`;
+    }
+
+    content += 'Puedes revisar más detalles en la plataforma.\n\nSaludos,\nEquipo de Soporte';
+
+    try {
+    await sendEmail(email, nombre, subject, content);
+    } catch (err) {
+    console.error('Error al enviar correo:', err);
+    }
+  }
+
+  res.status(200).send('ok');
 });
+
 
 app.post('/projects/newProject', upload.none(), async (req, res) => {
   try {
