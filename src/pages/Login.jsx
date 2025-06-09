@@ -20,7 +20,7 @@ export default function Login() {
     const regex = /^[Aa]\d{8}$/ // Expresión regular para validar si el username es un número de matrícula
     console.log(regex.test(username))
     if (regex.test(username)) {
-      formInfo.append("username", username+"@tec.mx");
+      formInfo.append("username", username.toUpperCase()+"@tec.mx");
     }
     else{
       formInfo.append("username", username);
