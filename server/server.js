@@ -645,7 +645,6 @@ app.patch('/postulaciones/update', upload.none(), async (req, res) => {
 
     if (postulacion.estado) {
       console.log('se cambió el estado de la postulacion a: ', postulacion.estado)
-
     }
     
     const keys = Object.keys(postulacion)
