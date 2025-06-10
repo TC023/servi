@@ -132,10 +132,10 @@ export default function App() {
               </ProtectedRoute>
             } />
             <Route path="/dashboard" element={  <MainLayout> <Dashboard /> </MainLayout> } />
-            <Route path="/respuesta_alumnos" element={ <MainLayout> <RespuestasAlumnos /> </MainLayout> } />
+            <Route path="/respuesta_alumnos" element={ <MainLayout> <ProtectedRoute><RespuestasAlumnos /></ProtectedRoute> </MainLayout> } />
             <Route path="/projects/:id" element={ <MainLayout> <ProjectDetail /> </MainLayout> } />
-            <Route path="/projects/new" element={ <MainLayout> <NewProject /> </MainLayout> } />
-            <Route path="/export" element={ <MainLayout> <Export /> </MainLayout> } />
+            <Route path="/projects/new" element={ <MainLayout> <ProtectedRoute><NewProject /> </ProtectedRoute> </MainLayout> } />
+            <Route path="/export" element={ <MainLayout> <ProtectedRoute><Export /> </ProtectedRoute></MainLayout> } />
             <Route path="/proyectos_revisar" element={ 
               <ProtectedRoute>
                 <MainLayout> <Projects vP={true} /> </MainLayout> 
@@ -155,7 +155,7 @@ export default function App() {
             <Route path="/signup" element={<SignUp></SignUp>}></Route>
             <Route path="/mis_postulaciones" element={ <MainLayout>  <ProtectedRoute><RespuestasAlumnos /></ProtectedRoute>  </MainLayout>   }></Route>
             {/* <Route path="/mis_postulaciones_osf" element={ <MainLayout>  <ProtectedRoute><RespuestasAlumnos filter={  } /></ProtectedRoute>  </MainLayout>   }></Route> */}
-            <Route path="/test" element={<Test></Test>}></Route>
+            {/* <Route path="/test" element={<Test></Test>}></Route> */}
           </Routes>
         </Router>
       </BallProvider>

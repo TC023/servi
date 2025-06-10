@@ -94,6 +94,26 @@ const Projects = ( {vP = false} ) => {
 
   const location = useLocation();
 
+    const getEstadoClass = (estado) => {
+    switch (estado) {
+      case 'ACEPTADX':
+        return 'estado-aceptadx';
+      case 'NO ACEPTADX':
+        return 'estado-rechazadx';
+      case 'DECLINADX':
+        return 'estado-declinadx';
+      case 'CONFIRMADX':
+        return 'estado-confirmadx';
+      case 'INSCRITX':
+        return 'estado-inscritx'
+
+      case 'POSTULADX':
+      default:
+        return 'estado-postuladx';
+    }
+  }
+  
+
   // Sincroniza vistaPendientes con el prop vP cuando cambia la ruta
   useEffect(() => {
     setVistaPendientes(vP);
@@ -137,6 +157,7 @@ useEffect(() => {
     .then((res) => res.json())
     .then((proyectos) => {
       console.log(userId)
+      console.log("auida", proyectos)
       const adaptados = proyectos.map((p) => ({
         id: p.proyecto_id,
         osf_id: p.osf_id,
@@ -171,7 +192,8 @@ useEffect(() => {
         estado_proyecto: p.estado,
         num_postulaciones: p.num,
         periodo_nombre: p.periodo_nombre,
-        momento: p.momento
+        momento: p.momento,
+        osf_nombre: p.osf_nombre
       }));
       setProjectsDb(adaptados);
     });
@@ -215,7 +237,8 @@ useEffect(() => {
         estado_proyecto: p.estado,
         num_postulaciones: p.num,
         periodo_nombre: p.periodo_nombre,
-        momento: p.momento
+        momento: p.momento,
+        osf_nombre: p.osf_nombre
       }));
       setProjectsDb(adaptados);
     });
@@ -259,7 +282,8 @@ useEffect(() => {
         estado_proyecto: p.estado,
         num_postulaciones: p.num,
         periodo_nombre: p.periodo_nombre,
-        momento: p.momento
+        momento: p.momento,
+        osf_nombre: p.osf_nombre
       }));
       setProjectsDb(adaptados);
     });
@@ -303,7 +327,8 @@ useEffect(() => {
         estado_proyecto: p.estado,
         num_postulaciones: p.num,
         periodo_nombre: p.periodo_nombre,
-        momento: p.momento
+        momento: p.momento,
+        osf_nombre: p.osf_nombre
       }));
       setProjectsDb(adaptados);
     });
@@ -749,11 +774,6 @@ useEffect(() => {
 <div className="project-attributes-grid">
   {[
     {
-      label: "Tipo de Vulnerabilidad",
-      value: project.tipo_vulnerabilidad,
-      icon: <FiUser size={11} />,
-    },
-    {
       label: "Zona",
       value: project.zona,
       icon: <FiMapPin size={11} />,
@@ -762,21 +782,11 @@ useEffect(() => {
       label: "Beneficiarios",
       value: project.numero_beneficiarios,
       icon: <FiUsers size={11} />,
-    },
+    },    
     {
-      label: "Producto a Entregar",
-      value: project.producto_a_entregar,
-      icon: <FiBox size={11} />,
-    },
-    {
-      label: "Impacto Social",
-      value: project.medida_impacto_social,
-      icon: <FiTarget size={11} />,
-    },
-    {
-      label: "Competencias",
-      value: project.competencias,
-      icon: <FiActivity size={11} />,
+      label: "Organización:",
+      value: project.osf_nombre,
+      icon: <FiUsers size={11} />,
     },
   ].map((item, i) => (
     <div className="attribute-card" key={i}>
@@ -821,11 +831,7 @@ useEffect(() => {
   {[
     {
       icon: <FaClock size={14} style={{ color: "#1e293b" }} />,
-      text: `${project.horas} horas requeridas`,
-    },
-    {
-      icon: <FaUserFriends size={14} style={{ color: "#1e293b" }} />,
-      text: `${project.rango_edad} años`,
+      text: `hasta ${project.horas} horas`,
     },
     {
       icon: <FaStar size={14} style={{ color: "#1e293b" }} />,
@@ -846,7 +852,7 @@ useEffect(() => {
     {postulaciones[project.id] && (
       <div className="state-container">
       {/* {console.log(postulaciones[project.id])} */}
-      <span>{postulaciones[project.id].estado}</span>
+      <span className={getEstadoClass(postulaciones[project.id].estado)}>{postulaciones[project.id].estado}</span>
     </div>
     )}
   </div>

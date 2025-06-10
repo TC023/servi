@@ -39,7 +39,7 @@ const cn = {
     port: 5432,
     database: 'servi',
     user: 'postgres',
-    password: 'yahelito346',
+    password: 'postgres',
     allowExitOnIdle: true
 }
 const db = pgp(cn);
@@ -90,6 +90,7 @@ app.get('/proyectos', (req, res) => {
     db.any(`
 SELECT 
   p.*, 
+  osf.nombre AS osf_nombre,
   array_remove(array_agg(c.nombre), NULL) AS carreras,
   m.horas,
   CASE 
@@ -116,7 +117,7 @@ LEFT JOIN osf_institucional osf_i ON osf_i.osf_id = osf.osf_id
 LEFT JOIN pregunta q ON q.id_proyecto = p.proyecto_id
 LEFT JOIN periodo_academico periodo ON m.periodo_id = periodo.periodo_id
 WHERE (p.estado <> 'pendiente') 
-GROUP BY p.proyecto_id, m.horas, osf.tipo, osf_i.logo, q.id_pregunta, q.pregunta, periodo.nombre, m.momento
+GROUP BY p.proyecto_id, m.horas, osf.tipo, osf_i.logo, q.id_pregunta, q.pregunta, periodo.nombre, m.momento, osf.nombre
 ORDER BY 
   CASE 
     WHEN p.estado = 'visible' THEN 1
@@ -135,6 +136,7 @@ app.get('/proyectos/alumnos/:alumno_id', (req, res) => {
     db.any(`
 SELECT 
   p.*, 
+  osf.nombre AS osf_nombre,
   array_remove(array_agg(c.nombre), NULL) AS carreras,
   m.horas,
   CASE 
@@ -142,6 +144,7 @@ SELECT
     ELSE NULL
   END AS logo,
   q.id_pregunta,
+  q.pregunta,
   (
     SELECT COUNT(*) 
     FROM postulacion pos 
@@ -167,7 +170,7 @@ LEFT JOIN osf_institucional osf_i ON osf_i.osf_id = osf.osf_id
 LEFT JOIN pregunta q ON q.id_proyecto = p.proyecto_id
 LEFT JOIN periodo_academico periodo ON m.periodo_id = periodo.periodo_id
 WHERE (p.estado = 'visible' OR p.estado = 'lleno')
-GROUP BY p.proyecto_id, m.horas, osf.tipo, osf_i.logo, q.id_pregunta, periodo.nombre, m.momento
+GROUP BY p.proyecto_id, m.horas, osf.tipo, osf_i.logo, q.id_pregunta, periodo.nombre, m.momento, osf.nombre
 ORDER BY 
   CASE 
     WHEN (
@@ -192,6 +195,7 @@ app.get('/proyectos/revisar', (req, res) => {
     db.any(`
 SELECT 
   p.*, 
+  osf.nombre AS osf_nombre,
   array_remove(array_agg(c.nombre), NULL) AS carreras,
   m.horas,
   CASE 
@@ -218,7 +222,7 @@ LEFT JOIN osf_institucional osf_i ON osf_i.osf_id = osf.osf_id
 LEFT JOIN pregunta q ON q.id_proyecto = p.proyecto_id
 LEFT JOIN periodo_academico periodo ON m.periodo_id = periodo.periodo_id
 WHERE (p.estado = 'pendiente') 
-GROUP BY p.proyecto_id, m.horas, osf.tipo, osf_i.logo, q.id_pregunta, q.pregunta, periodo.nombre, m.momento
+GROUP BY p.proyecto_id, m.horas, osf.tipo, osf_i.logo, q.id_pregunta, q.pregunta, periodo.nombre, m.momento, osf.nombre
 ORDER BY 
   CASE 
     WHEN p.estado = 'visible' THEN 1

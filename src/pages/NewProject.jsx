@@ -651,8 +651,8 @@ beneficiadas, cambio esperado en la comunidad, antes y después, etc.)
 
             <button type="submit" className="submit-btn">Create Project</button>
             </form>
-            <button onClick={test}>test</button>
-            <button onClick={test2}>test2</button>
+            {/* <button onClick={test}>test</button>
+            <button onClick={test2}>test2</button> */}
         </div>
     );
 };

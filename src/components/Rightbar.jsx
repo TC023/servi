@@ -174,7 +174,7 @@ const RightBar = ({
             <>
               <div className="perfil-avatar-circulo" style={{ margin: "1.5rem auto" }}>
                 <div className="avatar-circle-border">
-                  <img src="/avatar.png" alt="Avatar" />
+                  <img src="/src/assets/user.jpg" alt="Avatar" />
                 </div>
               </div>
               <ul className="user-menu">
