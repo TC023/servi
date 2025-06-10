@@ -377,7 +377,6 @@ useEffect(() => {
     <div className="respuestas-container" ref={containerRef}>
 
       <div className="respuestas-header">
-        <FiArrowLeft />
         <h1>Postulaciones - {sessionType} {test}</h1>
       </div>
 

@@ -355,7 +355,6 @@ const handleSave = async () => {
           <div className="chips">
             <span><FiClock /> {proyecto.horas} hrs</span>
             <span><FiUsers /> {proyecto.carreras.join(", ")}</span>
-            <span><FiKey /> WA1058</span>
             <span><FiCalendar /> {proyecto.rango_edad || "Edad no definida"}</span>
             <span><FiStar /> {proyecto.valor_promueve || "Sin valor"}</span>
           </div>
