@@ -13,10 +13,13 @@ const SignUp = () => {
     <div className="signup-page-centered">
       <div className="signup-card-wide">
         {/* Agente pixelado a la izquierda */}
-        <div className="signup-card-left">
-  <img src="/sslogo_black.png" alt="Logo Servicio Social" className="signup-logo-left" />
-  <PixelCharacter userType={userType} hoveredType={hoveredType} />
+       <div className="signup-card-left">
+  <div className="signup-card-left-inner">
+    <img src="/sslogo_black.png" alt="Logo Servicio Social" className="signup-logo-left" />
+    <PixelCharacter userType={userType} hoveredType={hoveredType} />
+  </div>
 </div>
+
 
 
         {/* Formulario a la derecha */}

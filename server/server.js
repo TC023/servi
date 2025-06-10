@@ -18,7 +18,7 @@ const fs = require('fs');
 // const { sendWelcomeEmail } = require('./emailService');
 
 // Needed for the endpoints to work with Gmail API
-const { sendWelcomeEmail } = require('./gmailService');
+const { sendEmail } = require('./gmailService');
 const e = require('express');
 const { Upload } = require('@mui/icons-material');
 
@@ -37,9 +37,9 @@ const pgp = require('pg-promise')();
 const cn = {
     host: 'localhost',
     port: 5432,
-    database: 'serviv11',
+    database: 'servi',
     user: 'postgres',
-    password: '3166',
+    password: 'yahelito346',
     allowExitOnIdle: true
 }
 const db = pgp(cn);
@@ -291,17 +291,6 @@ app.get('/proyectos/:id', (req, res) => {
     });
 });
 
-app.get('/proyectos/preguntas/:id', (req, res) => {
-  const proyectoId = req.params.id;
-  db.oneOrNone('SELECT * FROM pregunta WHERE id_proyecto = $1', [proyectoId])
-    .then((data) => {
-      if (data) {
-        res.json(data);
-      } else {
-        res.status(400).json({error: 'Error en la DB'})
-      }
-    })
-})
 
 // fetch a todas las carreras
 app.get('/carreras', (req, res) => {
@@ -379,16 +368,44 @@ app.get('/osf_institucional/:osf_id', async (req, res) => {
 });
 
 // PATCH para actualizar OSF institucional y sus datos relacionados
-app.patch('/osf_institucional/:osf_id', upload.none(), async (req, res) => {
+const fileFields = upload.fields([
+    { name: 'logo_institucion', maxCount: 1 },
+    { name: 'fotos_instalaciones', maxCount: 3 },
+    { name: 'comprobante_domicilio', maxCount: 1 },
+    { name: 'RFC', maxCount: 1 },
+    { name: 'acta_constitutiva', maxCount: 1 },
+    { name: 'ine_encargado', maxCount: 1 },
+]);
+
+app.patch('/osf_institucional/:osf_id', fileFields, async (req, res) => {
   const { osf_id } = req.params;
-  // const { user, osf, institucional, encargado } = req.body;
   const user = JSON.parse(req.body.user || '{}');
   const osf = JSON.parse(req.body.osf || '{}');
   const encargado = JSON.parse(req.body.encargado || '{}');
   const institucional = JSON.parse(req.body.institucional || '{}');
-  console.log(osf, user, encargado)
   const dbOps = [];
   try {
+    // Procesar archivos si existen
+    if (req.files) {
+      if (req.files.logo_institucion && req.files.logo_institucion[0]) {
+        institucional.logo = req.files.logo_institucion[0].filename;
+      }
+      if (req.files.fotos_instalaciones && req.files.fotos_instalaciones.length > 0) {
+        institucional.fotos_instalaciones = req.files.fotos_instalaciones.map(f => f.filename);
+      }
+      if (req.files.comprobante_domicilio && req.files.comprobante_domicilio[0]) {
+        institucional.comprobante_domicilio = req.files.comprobante_domicilio[0].filename;
+      }
+      if (req.files.RFC && req.files.RFC[0]) {
+        institucional.RFC = req.files.RFC[0].filename;
+      }
+      if (req.files.acta_constitutiva && req.files.acta_constitutiva[0]) {
+        institucional.acta_constitutiva = req.files.acta_constitutiva[0].filename;
+      }
+      if (req.files.ine_encargado && req.files.ine_encargado[0]) {
+        encargado.ine_encargado = req.files.ine_encargado[0].filename;
+      }
+    }
     // Actualizar user
     if (user && Object.keys(user).length > 0) {
       const keys = Object.keys(user);
@@ -401,7 +418,6 @@ app.patch('/osf_institucional/:osf_id', upload.none(), async (req, res) => {
       const keys = Object.keys(osf);
       const values = Object.values(osf);
       const sets = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
-      console.log(`UPDATE osf SET ${sets} WHERE osf_id = $${keys.length + 1}`, [...values, osf_id])
       dbOps.push(db.none(`UPDATE osf SET ${sets} WHERE osf_id = $${keys.length + 1}`, [...values, osf_id]));
     }
     // Actualizar osf_institucional
@@ -436,11 +452,7 @@ app.patch('/osf_institucional/:osf_id', upload.none(), async (req, res) => {
 
 
 // fetch de las carreras asociadas con un proyecto :$
-app.get('/proyecto_carrera/:proyecto_id', (req, res) => {
-    db.any('SELECT c.nombre FROM proyecto_carrera pc JOIN carrera c ON pc.carrera_id = c.carrera_id WHERE pc.proyecto_id = $1;', [req.params.proyecto_id])
-    .then((data) => res.json(data)) 
-    .catch((error) => console.log('ERROR:', error));
-})
+
 
 // fetch de los ods :$
 app.get('/ods', (req, res) => {
@@ -507,50 +519,90 @@ app.post('/login', upload.none(), async (req, res, next) => {
   }
 });
 
-app.post('/postulaciones/newPostulacion', upload.none(), (req, res) => {
-  console.log(req.body)
-  console.log(req.session)
-  const form = req.body
-  if (form.id_pregunta !== 'null') {
-    db.none(`
-      CALL insertar_postulacion($1, $2::TEXT, $3::TEXT, $4::TEXT, $5::TEXT, $6)
-      `,[
-        Number(form.id_proyecto),
-        req.session.info.alumno_id,
-        form.confirmacion_lectura,
-        form.respuesta_habilidades,
-        form.respuesta_descarte,
-        Number(form.id_pregunta)
-      ])
-      .then(() => res.status(200).send('Postulación creada!'))
-      .catch((error) => {
-        res.status(400).send(error)
-        console.log(error)
-    })
-  } else {
-    db.none(`
-      CALL insertar_postulacion($1, $2::TEXT, $3::TEXT, $4::TEXT, NULL, NULL)
-      `,[
-        Number(form.id_proyecto),
-        req.session.info.alumno_id,
-        form.confirmacion_lectura,
-        form.respuesta_habilidades,
-        form.respuesta_descarte,
-        Number(form.id_pregunta)
-      ])
-      .then(() => res.status(200).send('Postulación creada!'))
-      .catch((error) => {
-        res.status(400).send(error)
-        console.log(error)
-    })  }
+// app.post('/postulaciones/newPostulacion', upload.none(), (req, res) => {
+//   console.log(req.body)
+//   console.log(req.session)
+//   const form = req.body
+//   if (form.id_pregunta !== 'null') {
+//     db.none(`
+//       CALL insertar_postulacion($1, $2::TEXT, $3::TEXT, $4::TEXT, $5::TEXT, $6)
+//       `,[
+//         Number(form.id_proyecto),
+//         req.session.info.alumno_id,
+//         form.confirmacion_lectura,
+//         form.respuesta_habilidades,
+//         form.respuesta_descarte,
+//         Number(form.id_pregunta)
+//       ])
+//       .then(() => res.status(200).send('Postulación creada!'))
+//       .catch((error) => {
+//         res.status(400).send(error)
+//         console.log(error)
+//     })
+//   } else {
+//     db.none(`
+//       CALL insertar_postulacion($1, $2::TEXT, $3::TEXT, $4::TEXT, NULL, NULL)
+//       `,[
+//         Number(form.id_proyecto),
+//         req.session.info.alumno_id,
+//         form.confirmacion_lectura,
+//         form.respuesta_habilidades,
+//         form.respuesta_descarte,
+//         Number(form.id_pregunta)
+//       ])
+//       .then(() => res.status(200).send('Postulación creada!'))
+//       .catch((error) => {
+//         res.status(400).send(error)
+//         console.log(error)
+//     })  }
+// })
 
-})
+app.post('/postulaciones/newPostulacion', upload.none(), async (req, res) => {
+  const form = req.body;
+  const alumnoId = req.session.info.alumno_id;
+  const proyectoId = Number(form.id_proyecto);
+
+  try {
+    // 1. Insert the postulación
+    const query = form.id_pregunta !== 'null'
+      ? `CALL insertar_postulacion($1, $2::TEXT, $3::TEXT, $4::TEXT, $5::TEXT, $6)`
+      : `CALL insertar_postulacion($1, $2::TEXT, $3::TEXT, $4::TEXT, NULL, NULL)`;
+
+    const params = form.id_pregunta !== 'null'
+      ? [proyectoId, alumnoId, form.confirmacion_lectura, form.respuesta_habilidades, form.respuesta_descarte, Number(form.id_pregunta)]
+      : [proyectoId, alumnoId, form.confirmacion_lectura, form.respuesta_habilidades, form.respuesta_descarte, null];
+
+    await db.none(query, params);
+
+    // 2. Check if the project has notifications enabled
+    const proyecto = await db.oneOrNone(`SELECT notificaciones, osf_id, nombre_proyecto FROM proyecto WHERE proyecto_id = $1`, [proyectoId]);
+
+    if (proyecto?.notificaciones) {
+      // 3. Get the OSF contact email
+      const osf = await db.oneOrNone(`SELECT correo_responsable, nombre_responsable FROM osf_institucional WHERE osf_id = $1`, [proyecto.osf_id]);
+
+      if (osf?.correo_responsable) {
+        const subject = `Nueva postulación a tu proyecto "${proyecto.nombre_proyecto}"`;
+        const content = `Hola ${osf.nombre_responsable},\n\nUn estudiante se ha postulado a tu proyecto "${proyecto.nombre_proyecto}".\n\nPuedes revisar los detalles en la plataforma.\n\nSaludos,\nEquipo de Soporte`;
+
+        await sendEmail(osf.correo_responsable, osf.nombre_responsable, subject, content);
+      }
+    }
+
+    res.status(200).send('Postulación creada!');
+  } catch (error) {
+    console.error('Error en postulación:', error);
+    res.status(400).send(error);
+  }
+});
+
 
 app.get('/postulaciones', upload.none(), (req, res) => {
   db.any(`
     SELECT 
     p.*, 
     a.*,
+    u.correo,
     c.nombre AS carrera,
     pr.nombre_proyecto AS proyecto,
     pr.estado AS estado_proyecto,
@@ -566,6 +618,7 @@ app.get('/postulaciones', upload.none(), (req, res) => {
     LEFT JOIN pregunta pre ON pre.id_proyecto=p.id_proyecto
     LEFT JOIN momentos_periodo m ON pr.momento_id = m.momento_id
     LEFT JOIN periodo_academico periodo ON periodo.periodo_id = m.periodo_id
+    LEFT JOIN public.user u ON a.user_id = u.user_id
     `)
     .then((data) => res.json(data))
     .catch((error) => console.log('ERROR', error))
@@ -609,12 +662,24 @@ app.get('/postulaciones/:osf_id', upload.none(), (req, res) => {
 app.patch('/postulaciones/update', upload.none(), async (req, res) => {
   const postulacion = JSON.parse(req.body.postulacion)
   const alumno = JSON.parse(req.body.alumno)
-  const respuesta = req.body.respuesta_descarte
+  const respuesta = JSON.parse(req.body.respuesta_descarte)
+  const correo = JSON.parse(req.body.correo)
   const toChange = JSON.parse(req.body.toChange)
+  console.log(alumno)
+  console.log(postulacion)
+  console.log(toChange)
+
+  console.log(postulacion, alumno, respuesta, correo, toChange)
 
   const promises = [];
 
   if (Object.entries(postulacion).length > 0) {
+
+    if (postulacion.estado) {
+      console.log('se cambió el estado de la postulacion a: ', postulacion.estado)
+
+    }
+    
     const keys = Object.keys(postulacion)
     const values = Object.values(postulacion)
     const sets = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
@@ -636,7 +701,7 @@ app.patch('/postulaciones/update', upload.none(), async (req, res) => {
     );
   }
 
-  if (respuesta !== 'null') {
+  if (respuesta) {
     promises.push(
       db.none(`UPDATE respuesta SET respuesta = $1 WHERE id_postulacion = $2`,
         [respuesta, toChange.id_postulacion]
@@ -644,10 +709,82 @@ app.patch('/postulaciones/update', upload.none(), async (req, res) => {
     );
   }
 
+  if (correo) {
+    promises.push(
+      db.none(`
+UPDATE public.user SET correo = $1 WHERE user_id = (
+SELECT u.user_id FROM public.user u
+JOIN alumno a ON a.user_id = u.user_id
+WHERE a.alumno_id = $2
+)
+          `,
+        [correo, toChange.alumno_id]
+      )
+    );
+  }
+
   await Promise.all(promises);
 
-  res.status(200).send('ok')
+    
+
+  // Enviar correo si hubo cambio de estado o comentario
+  if (postulacion.estado || postulacion.comentarios) {
+    const matricula = toChange.alumno_id;
+    const email = `${matricula}@tec.mx`;
+
+    
+    // 1. Get alumno info
+    const alumnoData = await db.oneOrNone(
+      'SELECT nombre FROM alumno WHERE alumno_id = $1',
+      [toChange.alumno_id]
+    );
+
+    const nombre = alumnoData?.nombre;
+
+    
+    // 2. Get project name from postulacion
+    const proyectoData = await db.oneOrNone(
+      `SELECT p.nombre_proyecto
+      FROM postulacion pos
+      JOIN proyecto p ON pos.id_proyecto = p.proyecto_id
+      WHERE pos.id_postulacion = $1`,
+      [toChange.id_postulacion]
+    );
+
+    const nombreProyecto = proyectoData?.nombre_proyecto 
+
+    // 3. Prepare email content
+    let subject = `Actualización en tu postulación al proyecto "${nombreProyecto}"`;
+    let content = `Hola ${nombre},\n\n`;
+
+    if (postulacion.estado) {
+      if (postulacion.estado === 'ACEPTADX') {
+        content += `¡Felicidades! Tu postulación al proyecto "${nombreProyecto}" ha sido aceptada.\n\n`;
+      } else if (postulacion.estado === 'NO ACEPTADX') {
+        content += `Lamentamos informarte que tu postulación al proyecto "${nombreProyecto}" no ha sido aceptada.\n\n`;
+      } else if (postulacion.estado === 'CONFIRMADX') {
+        content += `Tu participación en el proyecto "${nombreProyecto}" ha sido confirmada. ¡Gracias por unirte!\n\n`;
+      } else {
+        content += `Tu postulación al proyecto "${nombreProyecto}" ha cambiado de estado a: ${nuevoEstado}.\n\n`;
+      }
+    }
+
+    if (postulacion.comentarios) {
+      content += `Comentario del equipo:\n"${postulacion.comentarios}"\n\n`;
+    }
+
+    content += 'Puedes revisar más detalles en la plataforma.\n\nSaludos,\nEquipo de Soporte';
+
+    try {
+    await sendEmail(email, nombre, subject, content);
+    } catch (err) {
+    console.error('Error al enviar correo:', err);
+    }
+  }
+
+  res.status(200).send('ok');
 });
+
 
 app.post('/projects/newProject', upload.none(), async (req, res) => {
   try {
@@ -764,15 +901,6 @@ app.get('/users/checkMatricula/:matricula', (req, res) => {
   .catch((error) => console.log('ERROR: ', error));
 });
 
-const fileFields = upload.fields([
-    { name: 'logo_institucion', maxCount: 1 },
-    { name: 'fotos_instalaciones', maxCount: 3 },
-    { name: 'comprobante_domicilio', maxCount: 1 },
-    { name: 'RFC', maxCount: 1 },
-    { name: 'acta_constitutiva', maxCount: 1 },
-    { name: 'ine_encargado', maxCount: 1 },
-]);
-
 app.post('/users/osfNuevo', fileFields, function (req, res) {
     console.log('Processing /users/osfNuevo request...');
     // console.log('Body:', req.body);
@@ -838,7 +966,7 @@ app.put('/api/proyectos/:id/detalles', async (req, res) => {
       zona, tipo_vulnerabilidad, numero_beneficiarios, producto_a_entregar,
       medida_impacto_social, competencias, direccion, carreras, enlace_maps,
       problema_social, valor_promueve, rango_edad,
-      lista_actividades_alumno, modalidad_desc, pregunta_descarte,
+      lista_actividades_alumno, modalidad_desc,
       objetivo_general, estado, cantidad,
     } = req.body;
 
@@ -862,16 +990,15 @@ app.put('/api/proyectos/:id/detalles', async (req, res) => {
           rango_edad = int4range($11, $11 + 1),
           lista_actividades_alumno = $12,
           modalidad_desc = $13,
-          pregunta_descarte = $14,
-          objetivo_general = $15,
-          estado = $16,
-          cantidad = $17
+          objetivo_general = $14,
+          estado = $15,
+          cantidad = $16
         WHERE proyecto_id = $17
       `, [
         zona, tipo_vulnerabilidad, numero_beneficiarios, producto_a_entregar,
         medida_impacto_social, competencias, direccion, enlace_maps,
         problema_social, valor_promueve, rango_edad,
-        lista_actividades_alumno, modalidad_desc, pregunta_descarte,
+        lista_actividades_alumno, modalidad_desc,
         objetivo_general, estado,cantidad ,proyectoId
       ]);
 
@@ -946,17 +1073,7 @@ app.get('/alumnos/user/:user_id', (req, res) => {
     });
 });
 
-
-
-
 //Fin endpoins Rey
-
-
-
-
-
-
-
 
 // Endpoint to export projects to Google Sheets in Nacional Sheet format
 app.post('/sheets/export', async (req, res) => {
@@ -1020,7 +1137,7 @@ app.post('/sheets/export', async (req, res) => {
       LEFT JOIN proyecto_carrera pc ON p.proyecto_id = pc.proyecto_id
       LEFT JOIN carrera c ON pc.carrera_id = c.carrera_id
       LEFT JOIN momentos_periodo mp ON p.momento_id = mp.momento_id
-      LEFT JOIN periodo_academico pa ON mp.periodo_id = pa.periodo_id
+      LEFT JOIN periodo_academico pa ON mp.periodo_id = periodo.periodo_id
       GROUP BY 
         p.proyecto_id, osf.nombre, oi.mision, oi.vision, oi.objetivos, oi.poblacion, 
         oi.num_beneficiarios, oi.nombre_responsable, oi.puesto_responsable, oi.correo_responsable, 
@@ -1039,7 +1156,7 @@ app.post('/sheets/export', async (req, res) => {
   const fechaImplementacion = `${new Date(project.fecha_inicio).toLocaleDateString('es-MX')} al ${new Date(project.fecha_final).toLocaleDateString('es-MX')}`;
   const modalidadMap = {
     'presencial': 'PSP | Proyecto Solidario Presencial',
-    'en línea': 'CLIN | Proyecto Solidario Línea',
+    'en linea': 'CLIN | Proyecto Solidario Línea',
     'mixto': 'CLIP | Proyecto Solidario Mixto'
   };
   const nomenclatura = `PS ${project.momento || ""} ${project.nombre_proyecto} - ${project.osf_nombre} ${project.periodo_nombre}`;
@@ -1150,7 +1267,25 @@ app.post('/sheets/export-programacion', async (req, res) => {
       JOIN osf ON p.osf_id = osf.osf_id
       JOIN momentos_periodo mp ON p.momento_id = mp.momento_id
       JOIN periodo_academico pa ON mp.periodo_id = pa.periodo_id
-      ORDER BY p.proyecto_id;
+      ORDER BY 
+      CASE 
+        WHEN pa.tipo = 'semestral' AND mp.momento = 1 THEN 1
+        WHEN pa.tipo = 'semestral' AND mp.momento = 2 THEN 2
+        WHEN pa.tipo = 'semestral' AND mp.momento = 3 THEN 3
+        WHEN pa.tipo = 'semestral' AND mp.momento = 4 THEN 4
+        WHEN pa.tipo = 'semestral' AND mp.momento = 5 THEN 5
+        WHEN pa.tipo = 'semestral' AND mp.momento = 6 THEN 6
+        WHEN pa.tipo = 'intensivo' AND mp.momento = 1 THEN 7
+        WHEN pa.tipo = 'intensivo' AND mp.momento = 2 THEN 8
+        WHEN pa.tipo = 'intensivo' AND mp.momento = 3 THEN 9
+        ELSE 99
+      END,
+        CASE 
+        WHEN p.modalidad = 'presencial' THEN 1
+        WHEN p.modalidad = 'mixto' THEN 2
+        WHEN p.modalidad = 'en linea' THEN 3
+        ELSE 99
+        END
     `);
 
     const modalidadIrisMap = {
@@ -1162,7 +1297,7 @@ app.post('/sheets/export-programacion', async (req, res) => {
     const modalidadLabelMap = {
       'presencial': 'Presencial',
       'mixto': 'Mixto',
-      'en línea': 'En línea'
+      'en linea': 'En línea'
     };
 
     const claveMap = {
@@ -1216,7 +1351,7 @@ app.post('/sheets/export-programacion', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error exporting to Programación sheet:', error);
+    console.error('Error exporting to Programación sheet:', error);
     res.status(500).json({ error: 'Failed to export to Programación sheet' });
   }
 });
@@ -1228,7 +1363,9 @@ app.post('/users/alumnoNuevo', upload.none(), async function(req, res){
     await db.none("CALL registrar_alumno($1, $2, $3, $4, $5);", [matricula, carrera, nombre, numero, password]);
 
     const email = `${matricula}@tec.mx`;
-    await sendWelcomeEmail(email, nombre);
+    subject = 'Bienvenido al Programa de Proyectos Solidarios';
+    content = `Hola ${nombre}, \n\n¡Bienvenido! Tu registro fue exitoso.\n\nSaludos,\nEquipo de Soporte`
+    await sendEmail(email, nombre, subject, content);
     // await sendWelcomeEmail('dextroc346.d3@gmail.com', nombre);
 
     res.status(200).send('Usuario creado y correo enviado');

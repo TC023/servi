@@ -7,16 +7,84 @@ import "./sparkle.css";
 
 import { useContext } from "react";
 
+// o
+
+
 
 
 //Numero de proyectos (DummyData)
 //import { projects } from "../data/projects";
+// ----- IMPORT ICONS AL INICIO DEL ARCHIVO -----
+
+
+// Frases random expresivas y visuales para el mini modal de proyectos
+
+function getRandomProyectoFrase(proyecto) {
+  if (!proyecto) return "Este proyecto no existe... ¿será secreto?";
+
+  // Numeritos de informacion alta importancia
+  const numeroRojo = (n) => (
+    <span style={{
+      color: "#e11d48",
+      fontWeight: 900,
+      fontSize: 18,
+      padding: "0 3px"
+    }}>{n}</span>
+  );
+  const zona = (zona) => (
+    <span style={{
+      background: "#e0f2fe",
+      color: "#0284c7",
+      borderRadius: 10,
+      padding: "2px 12px",
+      fontSize: 13,
+      margin: "0 4px",
+      fontWeight: 700,
+      border: "1px solid #7dd3fc",
+      display: "inline-block"
+    }}>{zona}</span>
+  );
+
+  // Frases expresivas y con formato visual
+  const frases = [
+    proyecto.title && <>Proyecto destacado: <b style={{ color: "#6366f1" }}>{proyecto.title}</b>. ¡Podría ser tu próxima meta!</>,
+    proyecto.horas && <>Para completar este reto, se requieren {numeroRojo(proyecto.horas)} horas. ¿Aceptas?</>,
+    proyecto.valor_promueve && <>Aquí se promueve el valor de <b style={{ color: "#16a34a" }}>{proyecto.valor_promueve}</b>. ¿Te identificas con esto?</>,
+    proyecto.objetivo_general && <>Objetivo: <span style={{ color: "#f59e42", fontWeight: 600 }}>{proyecto.objetivo_general.slice(0, 70)}{proyecto.objetivo_general.length > 70 ? "..." : ""}</span></>,
+    proyecto.problema_social && <>¿Sabías esto? <b style={{ color: "#64748b" }}>{proyecto.problema_social.slice(0, 70)}{proyecto.problema_social.length > 70 ? "..." : ""}</b></>,
+    proyecto.carreras && <>Abierto para: <b style={{ color: "#0ea5e9" }}>{Array.isArray(proyecto.carreras) ? proyecto.carreras.join(", ") : proyecto.carreras}</b>.</>,
+    proyecto.zona && <>Zona disponible: {zona(proyecto.zona)}</>,
+    proyecto.estado && <>Estado actual: <b style={{
+      color: proyecto.estado.toUpperCase() === "ACTIVO" ? "#22c55e"
+        : proyecto.estado.toUpperCase() === "LLENO" ? "#f59e42"
+        : proyecto.estado.toUpperCase() === "FINALIZADO" ? "#a3a3a3"
+        : "#64748b",
+      fontWeight: 700
+    }}>{proyecto.estado[0] + proyecto.estado.slice(1).toLowerCase()}</b>.</>,
+    proyecto.producto_a_entregar && <>Producto final: <span style={{ color: "#be185d", fontWeight: 600 }}>{proyecto.producto_a_entregar}</span>.</>,
+    proyecto.competencias && <>Competencias a desarrollar: <span style={{ color: "#6366f1" }}>{proyecto.competencias}</span>.</>,
+
+    //frases extra
+    <>Este proyecto está esperando a alguien como tú para hacerlo realidad.</>,
+    <>¿Listo para dejar tu huella en un nuevo reto? ¡Atrévete a postularte!</>,
+    <>Cada experiencia suma a tu historia. ¿Sumamos juntos en este proyecto?</>
+  ].filter(Boolean);
+
+  if (frases.length === 0) return "Sin datos disponibles del proyecto.";
+
+  // return frase
+  return frases[Math.floor(Math.random() * frases.length)];
+}
+
+
 
 
 
 
 
 const noFlipSprites = ["jetpack", "fall", "climb", "lupi"]; 
+
+
 
 
 // SPRITES
@@ -29,7 +97,7 @@ const jetpackFrames = ["jetpackx1.png", "jetpackx2.png", "jetpackx3.png", "jetpa
 const fallFrames = [
   "fall1.png","fall2.png","fall3.png","fall4.png","fall5.png"];
 
-  const PixelCharacter = ({ userType, hoveredType }) => {
+  const PixelCharacter = ({ userType, hoveredType , proyectosDisponibles}) => {
     const { ballPos, depositPoint, entregando, setBallPos, setDepositPoint, setEntregando,ballLanded,
     setBallLanded, } = useContext(BallContext);
 
@@ -54,6 +122,12 @@ const fallFrames = [
   const initialYRef = useRef(null);
   const [currentLevel, setCurrentLevel] = useState(0);
   const targetStep = 495; //317 cards pevias //Var de valor de bajada
+
+  //Tiempo de texto
+  const isOverRow = useRef(false);
+
+  const SpeechTime = useRef(null);
+
 
 
   //Estado para detectar scrolls y evitar bugs
@@ -110,7 +184,7 @@ useEffect(() => {
     try {
       const res = await fetch("http://localhost:8000/proyectos", { credentials: "include" });
       const data = await res.json();
-      setNumProyectos(data.length); // supondremos que te regresa un array de proyectos
+      setNumProyectos(data.length); 
     } catch (error) {
       console.error("Error al obtener proyectos:", error);
       setNumProyectos(0);
@@ -145,7 +219,7 @@ useEffect(() => {
 }, [lastMouseX]);
 
 useEffect(() => {
-  if (zigzagCounter >= 10 && !falling) { // después de 5 zigzags se caera el teus
+  if (zigzagCounter >= 10 && !falling) { //después de 5 zigzags se caera el teus
     iniciarCaida();
   }
 }, [zigzagCounter]);
@@ -163,13 +237,13 @@ const iniciarCaida = () => {
     setFallOffset(offset);
 
     frame++;
-    offset += 8; // baja 8px cuando se cae (para que no flotexd)
+    offset += 8; //baja 8pixeles cuando se cae (para que no flotexd)
 
     if (frame >= fallFrames.length) {
       clearInterval(interval);
       setFalling(false);
       setFallFrame(0);
-      setFallOffset(0); // vuelve a su posicion original
+      setFallOffset(0); //vuelve a su posicion original
     }
   }, 150); // velocidad de frames
 };
@@ -195,13 +269,14 @@ const frasesFormularios = [
 ];
 
 const frasesAtencion = [
-  "Algunos alumnos necesitan orientación especial. ",
-  "¡No los dejes esperando! Ayudémoslos. ",
+  "Algunos alumnos necesitan ayuda. ",
+  "No los dejes esperando ",
   "Estos alumnos requieren tu apoyo para avanzar. ",
 ];
 
 
 
+//COpiar y pegar para otras rutas
 
   // =============================== //
 // OTRA RUTA: (Plantilla)
@@ -297,7 +372,7 @@ useEffect(() => {
 useEffect(() => {
   if (!location.pathname.startsWith("/projects/")) return;
 
-  console.log("IA activada en vista de detalle");
+  console.log("Pytorch conectado");
 
   const interval = setInterval(async () => {
     try {
@@ -338,7 +413,6 @@ useEffect(() => {
 
   let interval = null;
 
-  //si hay pelota y aan no hay deposito, ir hacia ella
   if (ballPos && ballLanded && !depositPoint && !entregando)
     {
     interval = setInterval(() => {
@@ -347,7 +421,6 @@ useEffect(() => {
         if (Math.abs(dx) < 4) {
           clearInterval(interval);
   
-          // Esperar un poqco antes de empezar a entregar  (efecto de recoger)
           setTimeout(() => {
             const tabla = document.querySelector(".respuestas-tabla table");
             if (tabla) {
@@ -634,8 +707,8 @@ useEffect(() => {
   
     setTargetX(centerX);
   
-    // Mostrar globos dinámicos
-    const text = e.currentTarget.innerText.toLowerCase(); // <-- Convertimos a minúsculas para comparar
+    //mostrar teus hablaxd
+    const text = e.currentTarget.innerText.toLowerCase(); //minuscular
   
     if (text.includes("proyecto")) {
       setSpeechText(frasesProyectos[Math.floor(Math.random() * frasesProyectos.length)]);
@@ -657,7 +730,7 @@ useEffect(() => {
   
   const handleMouseLeave = () => {
     setIsMoving(false);
-    setShowSpeech(false); // Ocultar globo cuando deja la tarjeta
+    setShowSpeech(false); //hide globo cuando deja la tarjeta
   };
   
 
@@ -706,7 +779,7 @@ useEffect(() => {
   // =============================== //
 
 // =============================== //
-const Y_BARRA_ODS = 470; //donde aparecera teus en Acerca_de
+const Y_BARRA_ODS = 545; //donde aparecera teus en Acerca_de
 
 
 
@@ -748,7 +821,7 @@ useEffect(() => {
 }, [targetX, location]);
 
 // =============================== //
-// ACERCA DE: hover sobre ODS (hablar + inspección)
+// ACERCA DE: hover sobre ODS (hablar y lupi)
 // =============================== //
 useEffect(() => {
   if (location.pathname !== "/acerca_de") return;
@@ -789,6 +862,135 @@ useEffect(() => {
 //FIN TEUS ACERCA DE
 //
 
+
+//Inicio Teus mis_postulaciones
+//Movimiento general
+useEffect(() => {
+  if (location.pathname !== "/mis_postulaciones") return;
+
+  const handleMouseMove = (e) => setTargetX(e.clientX);
+  window.addEventListener("mousemove", handleMouseMove);
+  return () => window.removeEventListener("mousemove", handleMouseMove);
+}, [location]);
+
+useEffect(() => {
+  if (location.pathname !== "/mis_postulaciones") return;
+
+  const interval = setInterval(() => {
+    setPosition((prev) => {
+      const dx = targetX - prev.x;
+      const speed = 3;
+      if (Math.abs(dx) < 3) {
+        setIsMoving(false);
+        return prev;
+      }
+      setIsMoving(true);
+      const dir = dx > 0 ? 1 : -1;
+      setDirection(dir > 0 ? "right" : "left");
+      return { x: prev.x + dir * speed };
+    });
+  }, 30);
+
+  return () => clearInterval(interval);
+}, [targetX, location]);
+
+
+
+
+
+
+
+// =============================== //
+// MIS_POSTULACIONES: hover en filas, hablar info de proyecto
+// =============================== //
+
+useEffect(() => {
+  if (location.pathname !== "/mis_postulaciones") return;
+
+  const rows = document.querySelectorAll(".respuestas-tabla tbody tr");
+  if (!rows.length) return;
+
+  //Para manejar timeout y evitar encimados
+  let showTimer = null;
+
+  const handleMouseEnter = (e) => {
+    setShowSpeech(false);
+    setIsInspecting(false);
+
+    //se limpian timers pasados
+    if (showTimer) clearTimeout(showTimer);
+
+    const idProyecto = e.currentTarget.getAttribute("data-id");
+    const proyectoInfo = proyectosDisponibles.find(
+      (p) =>
+        String(p.id) === String(idProyecto) ||
+        String(p.id_proyecto) === String(idProyecto) ||
+        String(p.proyecto_id) === String(idProyecto)
+    );
+
+    // Un pequeño delay
+    showTimer = setTimeout(() => {
+      if (!proyectoInfo) {
+        setSpeechText(
+          <div style={{ minWidth: 260, padding: 14 }}>
+            <b>Proyecto no encontrado </b>
+            <div style={{ fontSize: 13, marginTop: 5, color: "#64748b" }}>
+              Este proyecto ya no existe.
+            </div>
+          </div>
+        );
+      } else {
+        setSpeechText(getRandomProyectoFrase(proyectoInfo));
+      }
+      setShowSpeech(true);
+      setIsInspecting(true);
+    }, 50);
+  };
+
+  const handleMouseLeave = () => {
+    setShowSpeech(false);
+    setIsInspecting(false);
+    if (showTimer) clearTimeout(showTimer);
+  };
+
+  rows.forEach(row => {
+    row.addEventListener("mouseenter", handleMouseEnter);
+    row.addEventListener("mouseleave", handleMouseLeave);
+  });
+
+  return () => {
+    rows.forEach(row => {
+      row.removeEventListener("mouseenter", handleMouseEnter);
+      row.removeEventListener("mouseleave", handleMouseLeave);
+    });
+    if (showTimer) clearTimeout(showTimer); 
+  };
+}, [location, proyectosDisponibles]);
+
+
+
+
+
+
+
+//Lugar teus en mis_postulaciones
+
+useEffect(() => {
+  if (location.pathname === "/mis_postulaciones") {
+    const tabla = document.querySelector(".respuestas-tabla table");
+    if (tabla) {
+      const rect = tabla.getBoundingClientRect();
+      const scrollTop = window.scrollY || window.pageYOffset;
+      setGroundY(rect.top + scrollTop - 160); //subir si queremos que suba o no
+    }
+  }
+}, [location]);
+
+
+
+//
+//Fin teus mis_postulaciones
+//
 
 
 
@@ -845,7 +1047,7 @@ useEffect(() => {
     }, 150); // puedes ajustar la velocidad aquí
   
     return () => clearInterval(animInterval);
-  }, [isMoving, isInspecting, direction, location, userType]); // ESTA ES LA ÚNICA CIERRE QUE NECESITAS
+  }, [isMoving, isInspecting, direction, location, userType]); //animacion
   
 
   // =============================== //
@@ -898,10 +1100,10 @@ useEffect(() => {
   const shouldFlip = (sprite) => {
     if (!sprite) return false;
   
-    // Sprites que SIEMPRE queremos voltear si dirección === left
+    // Sprites que siempre se voltean si la direeccion es left
     const flipAlways = ["jetpack", "climb"];
   
-    // sprites que NUNCA debemos voltear porque ya están hechos para left
+    // sprites que que no se voltean
     const noFlipSprites = ["_left", "lupi", "fall"];
   
     if (flipAlways.some(keyword => sprite.includes(keyword))) {
@@ -1003,6 +1205,12 @@ const isBigSignup = isSignup && !userType;
       whiteSpace: "normal",
       wordWrap: "break-word",
       textAlign: "right",
+
+       //MiniModal
+       maxWidth: "380px",      
+    minWidth: "260px",      
+    padding: isBigSignup ? "12px 20px" : "14px 16px", //mas padding para mini modal
+    //Mini modal fin
     }}
   >
     {speechText}

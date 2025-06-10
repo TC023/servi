@@ -7,8 +7,8 @@
     overflow: hidden;
     z-index: 1000;
     transition: width 0.4s ease;
-    border-top-left-radius: 20px; /* Esquinas redondeadas arriba */
-    border-bottom-left-radius: 20px; /* Esquinas redondeadas abajo */
+    border-top-left-radius: 20px;
+    border-bottom-left-radius: 20px; 
   }
   
   .rightbar-overlay.visible {
@@ -26,9 +26,9 @@
     color: white;
     display: flex;
     flex-direction: column;
-    overflow-y: scroll;  /* Permite scroll dentro del panel */
-    max-height: 90vh;  /* Limitar la altura máxima */
-    border-radius: 20px; /* Bordes redondeados del panel */
+    overflow-y: scroll;  /* permite scroll dentro del panel */
+    max-height: 90vh;  /* limitar la altura máxima */
+    border-radius: 20px; /*bordes suaves y redondos */
   }
   
   .rightbar-close {

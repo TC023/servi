@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Importa useNavigate
 
 const FormsOSF = ({ osf = {} }) => {
-    const [files, setFiles] = useState([]);
+    const [files, setFiles] = useState({}); // Cambiado de [] a {}
     const [odsList, setOdsList] = useState([])
     const [formDataOsf, setFormDataOsf] = useState({
         correo: '',
@@ -87,13 +87,10 @@ const FormsOSF = ({ osf = {} }) => {
             ...prev,
             [name]: selectedFiles
         }));
-
-        console.log(files)
     };
 
     const handleSubmitOsf = (e) => {
         e.preventDefault();
-        console.log(formDataOsf);
         const formInfOsf = new FormData();
 
         // Append form data
@@ -108,8 +105,10 @@ const FormsOSF = ({ osf = {} }) => {
         // Append files
         for (const field in files) {
             const fileList = files[field];
-            for (let i = 0; i < fileList.length; i++) {
-                formInfOsf.append(field, fileList[i]);
+            if (fileList && fileList.length) {
+                for (let i = 0; i < fileList.length; i++) {
+                    formInfOsf.append(field, fileList[i]);
+                }
             }
         }
 
@@ -140,7 +139,6 @@ const FormsOSF = ({ osf = {} }) => {
     const handleUpdateOsf = async (e) => {
         e.preventDefault();
         setSuccessMessage("");
-        console.log(formDataOsf)
         const formInf = new FormData();
         // Construye el objeto osf solo con los campos correspondientes a osf/institucional
         const institucional = {
@@ -148,7 +146,6 @@ const FormsOSF = ({ osf = {} }) => {
             mision: formDataOsf.mision,
             vision: formDataOsf.vision,
             objetivos: formDataOsf.objetivo,
-            // ods: formDataOsf.ods,
             poblacion: formDataOsf.poblacion,
             num_beneficiarios: formDataOsf.num_beneficiarios,
             nombre_responsable: formDataOsf.nombre_responsable,
@@ -170,16 +167,23 @@ const FormsOSF = ({ osf = {} }) => {
             telefono: formDataOsf.telefono_encargado,
             correo: formDataOsf.correo_encargado,
         };
-
         const osfData = {
             nombre: formDataOsf.nombre,
             tipo: 'institucional',
         }
-
         formInf.append("osf", JSON.stringify(osfData));
         formInf.append("user", JSON.stringify(userData));
         formInf.append("encargado", JSON.stringify(encargadoData));
         formInf.append("institucional", JSON.stringify(institucional));
+        // Adjuntar archivos si hay nuevos seleccionados
+        for (const field in files) {
+            const fileList = files[field];
+            if (fileList && fileList.length) {
+                for (let i = 0; i < fileList.length; i++) {
+                    formInf.append(field, fileList[i]);
+                }
+            }
+        }
         try {
             // Suponiendo que tienes el osf_id en el prop osf.osf_id o similar
             const osfId = osf.osf?.osf_id || osf.osf_id || osf.institucional?.osf_id;
@@ -242,7 +246,7 @@ const FormsOSF = ({ osf = {} }) => {
                     <h2>Datos de la organización y su responsable</h2>
                     <div>
                         <label htmlFor="subtipo">Selecciona el tipo de OSF a registrar:</label>
-                        <select value={formDataOsf.subtipo} onChange={handleChangeOsf} name="subtipo" >
+                        <select value={formDataOsf.subtipo} onChange={handleChangeOsf} name="subtipo" required>
                             <option value="" disabled>-- selecciona --</option>
                             <option value="organización">Organización</option>
                             <option value="gobierno">Gobierno</option>
@@ -254,27 +258,27 @@ const FormsOSF = ({ osf = {} }) => {
                         <div>
                             <div>
                                 <label htmlFor="correo">Ingresa un correo que usarás como usuario en este sitema:</label>
-                                <input type="email" name='correo' value={formDataOsf.correo} onChange={handleChangeOsf} />
+                                <input type="email" name='correo' value={formDataOsf.correo} onChange={handleChangeOsf} required />
                             </div>
                             <div>
                                 <label htmlFor="contrasena"> Ingresa una contraseña</label>
-                                <input type="password" name='contrasena' value={formDataOsf.contrasena} onChange={handleChangeOsf} />
+                                <input type="password" name='contrasena' value={formDataOsf.contrasena} onChange={handleChangeOsf} required />
                             </div>
                             <div>
                                 <label htmlFor="nombre">1. Nombre oficial de la organización:</label>
-                                <input type="text" value={formDataOsf.nombre} onChange={handleChangeOsf} name='nombre' />
+                                <input type="text" value={formDataOsf.nombre} onChange={handleChangeOsf} name='nombre' required />
                             </div>
                             <div>
                                 <label htmlFor="mision">1.1 Misión:</label>
-                                <textarea value={formDataOsf.mision} onChange={handleChangeOsf} name="mision" ></textarea>
+                                <textarea value={formDataOsf.mision} onChange={handleChangeOsf} name="mision" required></textarea>
                             </div>
                             <div>
                                 <label htmlFor="vision">1.2 Visión:</label>
-                                <textarea value={formDataOsf.vision} onChange={handleChangeOsf} name="vision" ></textarea>
+                                <textarea value={formDataOsf.vision} onChange={handleChangeOsf} name="vision" required></textarea>
                             </div>
                             <div>
                                 <label htmlFor="objetivo">1.3 Objetivos:</label>
-                                <textarea value={formDataOsf.objetivo} onChange={handleChangeOsf} name="objetivo" ></textarea>
+                                <textarea value={formDataOsf.objetivo} onChange={handleChangeOsf} name="objetivo" required></textarea>
                             </div>
                             <div>
                                 <label htmlFor="ods">1.4 Objetivo de Desarrollo Sostenible (ODS) en el que se enfoca la organización </label> <br />
@@ -286,6 +290,7 @@ const FormsOSF = ({ osf = {} }) => {
                                             value={ods.ods_id}
                                             onChange={handleChangeOsf}
                                             checked={String(formDataOsf.ods) === String(ods.ods_id)}
+                                            required
                                         />
                                         {ods.nombre}
                                         <br />
@@ -303,6 +308,7 @@ const FormsOSF = ({ osf = {} }) => {
                                                 value={item}
                                                 onChange={handleChangePoblacion}
                                                 checked={poblacionSelect.includes(item)}
+                                                required={poblacionSelect.length === 0 && index === 0}
                                             />
                                             {item}
                                         </label> <br />
@@ -311,92 +317,169 @@ const FormsOSF = ({ osf = {} }) => {
                             </div>
                             <div>
                                 <label htmlFor="num_beneficiarios">1.6 Número aproximado de beneficiarios que atiende la Organización anualmente </label>
-                                <input type="number" value={formDataOsf.num_beneficiarios} onChange={handleChangeOsf} name="num_beneficiarios" />
+                                <input type="number" value={formDataOsf.num_beneficiarios} onChange={handleChangeOsf} name="num_beneficiarios" required />
                             </div>
                             <div>
                                 <label htmlFor="nombre_responsable">2. Nombre completo del(a) responsable:</label>
-                                <input type="text" value={formDataOsf.nombre_responsable} onChange={handleChangeOsf} name="nombre_responsable" />
+                                <input type="text" value={formDataOsf.nombre_responsable} onChange={handleChangeOsf} name="nombre_responsable" required />
                             </div>
                             <div>
                                 <label htmlFor="puesto_responsable">3. Puesto del(a) responsable:</label>
-                                <input type="text" value={formDataOsf.puesto_responsable} onChange={handleChangeOsf} name="puesto_responsable" />
+                                <input type="text" value={formDataOsf.puesto_responsable} onChange={handleChangeOsf} name="puesto_responsable" required />
                             </div>
                             <div>
                                 <label htmlFor="correo_responsable">4. Correo electrónico del(a) responsable:</label>
-                                <input type="email" value={formDataOsf.correo_responsable} onChange={handleChangeOsf} name="correo_responsable" />
+                                <input type="email" value={formDataOsf.correo_responsable} onChange={handleChangeOsf} name="correo_responsable" required />
                             </div>
                             <div>
                                 <label htmlFor="telefono">5. Número de teléfono de la Organización:</label>
-                                <input type="text" value={formDataOsf.telefono} onChange={handleChangeOsf} name="telefono" />
+                                <input type="text" value={formDataOsf.telefono} onChange={handleChangeOsf} name="telefono" required />
                             </div>
                             <div>
                                 <label htmlFor="direccion">6. Dirección de oficina de la Organización</label>
-                                <textarea value={formDataOsf.direccion} onChange={handleChangeOsf} name="direccion" ></textarea>
+                                <textarea value={formDataOsf.direccion} onChange={handleChangeOsf} name="direccion" required></textarea>
                             </div>
                             <div>
                                 <label htmlFor="horario">6.1 Horario de oficina de la Organización</label>
-                                <input type="text" value={formDataOsf.horario} onChange={handleChangeOsf} name="horario" />
+                                <input type="text" value={formDataOsf.horario} onChange={handleChangeOsf} name="horario" required />
                             </div>
                             <div>
                                 <label htmlFor="pagina_web_redes">7. Página web o redes sociales oficiales de la Organización</label>
-                                <input type="text" value={formDataOsf.pagina_web_redes} onChange={handleChangeOsf} name="pagina_web_redes" />
+                                <input type="text" value={formDataOsf.pagina_web_redes} onChange={handleChangeOsf} name="pagina_web_redes" required />
                             </div>
                             <div>
                                 <label htmlFor="correo_registro">8. Correo electrónico de la persona que realiza el registro</label>
-                                <input type="email" value={formDataOsf.correo_registro} onChange={handleChangeOsf} name="correo_registro" />
+                                <input type="email" value={formDataOsf.correo_registro} onChange={handleChangeOsf} name="correo_registro" required />
                             </div>
                             <div className="título-documentacion">
                                 <h1>Documentación de la organización</h1>
                                 <h3>En este apartado se solicita adjuntar archivos digitalizados, en caso de no contar con alguno, continuar con los sucesivos. </h3>
                             </div>
-
                             <div>
                                 <label htmlFor="foto1">1. Adjuntar 3 fotografías de sus instalaciones u oficinas:</label>
-                                <input type="file" id="foto1" multiple accept='image/*' onChange={handleFileChange} name="fotos_instalaciones" />
+                                <input type="file" id="foto1" multiple accept='image/*' onChange={handleFileChange} name="fotos_instalaciones" required />
+                                {Object.entries(osf).length > 0 && osf.institucional?.fotos_instalaciones && Array.isArray(osf.institucional.fotos_instalaciones) && osf.institucional.fotos_instalaciones.length > 0 && (
+                                    <div>
+                                        {osf.institucional.fotos_instalaciones.map((foto, idx) => (
+                                            <button key={idx} className='descargar' onClick={e => {
+                                                e.preventDefault();
+                                                const link = document.createElement('a');
+                                                link.href = `/src/assets/${foto}`;
+                                                link.download = `${foto}`;
+                                                document.body.appendChild(link);
+                                                link.click();
+                                                document.body.removeChild(link);
+                                            }}>Descargar foto {idx + 1}</button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                             <div>
                                 <label htmlFor="logo_institucion">2. Adjuntar Logo de la Organización</label>
-                                <input type="file" onChange={handleFileChange} name="logo_institucion" />
+                                <input type="file" onChange={handleFileChange} accept='image/*' name="logo_institucion" required />
+                                {Object.entries(osf).length > 0 && osf.institucional?.logo && (
+                                    <div>
+                                        <button className='descargar' onClick={ (e) => {
+                                            e.preventDefault()
+                                            const link = document.createElement('a');
+                                            link.href = `/src/assets/${osf.institucional.logo}`;
+                                            link.download = `${osf.institucional.logo}`;
+                                            document.body.appendChild(link);
+                                            link.click();
+                                            document.body.removeChild(link);
+                                        } } > Descargar logo </button>
+                                    </div>
+                                )}
                             </div>
                             <div>
                                 <label htmlFor="comprobante_domicilio">3. Adjuntar Comprobante de domicilio actualizado:</label>
-                                <input type="file" onChange={handleFileChange} name="comprobante_domicilio" />
+                                <input type="file" onChange={handleFileChange} name="comprobante_domicilio" required />
+                                {Object.entries(osf).length > 0 && osf.institucional?.comprobante_domicilio && (
+                                    <div>
+                                        <button className='descargar' onClick={ (e) => {
+                                            e.preventDefault()
+                                            const link = document.createElement('a');
+                                            link.href = `/src/assets/${osf.institucional.comprobante_domicilio}`;
+                                            link.download = `${osf.institucional.comprobante_domicilio}`;
+                                            document.body.appendChild(link);
+                                            link.click();
+                                            document.body.removeChild(link);
+                                        } } > Descargar comprobante </button>
+                                    </div>
+                                )}
                             </div>
                             <div>
                                 <label htmlFor="RFC">4. Adjuntar RFC</label>
-                                <input type="file" onChange={handleFileChange} name="RFC" />
+                                <input type="file" onChange={handleFileChange} name="RFC" required />
+                                {Object.entries(osf).length > 0 && osf.institucional?.RFC && (
+                                    <div>
+                                        <button className='descargar' onClick={ (e) => {
+                                            e.preventDefault()
+                                            const link = document.createElement('a');
+                                            link.href = `/src/assets/${osf.institucional.RFC}`;
+                                            link.download = `${osf.institucional.RFC}`;
+                                            document.body.appendChild(link);
+                                            link.click();
+                                            document.body.removeChild(link);
+                                        } } > Descargar RFC </button>
+                                    </div>
+                                )}
                             </div>
-
                             {formDataOsf.subtipo == "organización" && (
                                 <div>
                                     <label htmlFor="acta_constitutiva">5. Adjuntar Acta Constitutiva:</label>
-                                    <input type="file" onChange={handleFileChange} name="acta_constitutiva" />
+                                    <input type="file" onChange={handleFileChange} name="acta_constitutiva" required />
+                                    {Object.entries(osf).length > 0 && osf.institucional?.acta_constitutiva && (
+                                        <div>
+                                            <button className='descargar' onClick={ (e) => {
+                                                e.preventDefault()
+                                                const link = document.createElement('a');
+                                                link.href = `/src/assets/${osf.institucional.acta_constitutiva}`;
+                                                link.download = `${osf.institucional.acta_constitutiva}`;
+                                                document.body.appendChild(link);
+                                                link.click();
+                                                document.body.removeChild(link);
+                                            } } > Descargar acta </button>
+                                        </div>
+                                    )}
                                 </div>
                             )}
-
                             <div className="título-encargado">
                                 <h1>DATOS DEL ENCARGADO(A) QUE DARÁ SEGUIMIENTO:</h1>
                                 <h3>Para el proceso de colaboración, es necesario designar a un miembro que fungirá como contacto principal y dará seguimiento al proceso. </h3>
                             </div>
                             <div>
                                 <label htmlFor="nombre_encargado">1. Nombre completo:</label>
-                                <input type="text" value={formDataOsf.nombre_encargado} onChange={handleChangeOsf} name="nombre_encargado" />
+                                <input type="text" value={formDataOsf.nombre_encargado} onChange={handleChangeOsf} name="nombre_encargado" required />
                             </div>
                             <div>
                                 <label htmlFor="puesto_encargado">2. Puesto que desmpeña:</label>
-                                <input type="text" value={formDataOsf.puesto_encargado} onChange={handleChangeOsf} name="puesto_encargado" />
+                                <input type="text" value={formDataOsf.puesto_encargado} onChange={handleChangeOsf} name="puesto_encargado" required />
                             </div>
                             <div>
                                 <label htmlFor="telefono_encargado">3. Número de teléfono celular:</label>
-                                <input type="text" value={formDataOsf.telefono_encargado} onChange={handleChangeOsf} name="telefono_encargado" />
+                                <input type="text" value={formDataOsf.telefono_encargado} onChange={handleChangeOsf} name="telefono_encargado" required />
                             </div>
                             <div>
                                 <label htmlFor="correo_encargado">4. Correo electrónico</label>
-                                <input type="email" value={formDataOsf.correo_encargado} onChange={handleChangeOsf} name="correo_encargado" />
+                                <input type="email" value={formDataOsf.correo_encargado} onChange={handleChangeOsf} name="correo_encargado" required />
                             </div>
                             <div>
                                 <label htmlFor="ine_encargado">5. Adjuntar Credencial INE</label>
-                                <input type="file" onChange={handleFileChange} name="ine_encargado" />
+                                <input type="file" onChange={handleFileChange} name="ine_encargado" required />
+                                {Object.entries(osf).length > 0 && osf.encargado?.ine_encargado && (
+                                    <div>
+                                        <button className='descargar' onClick={ (e) => {
+                                            e.preventDefault()
+                                            const link = document.createElement('a');
+                                            link.href = `/src/assets/${osf.encargado.ine_encargado}`;
+                                            link.download = `${osf.encargado.ine_encargado}`;
+                                            document.body.appendChild(link);
+                                            link.click();
+                                            document.body.removeChild(link);
+                                        } } > Descargar INE </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}

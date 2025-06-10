@@ -5,6 +5,11 @@ import { BallContext } from "../Contexts/BallContext";
 import { SessionContext } from "../Contexts/SessionContext";
 import { UserIdContext } from "../Contexts/UserIdContext";
 
+
+import PixelCharacter from "../components/PixelCharacter";
+
+
+
 const dummyData = [
   { carrera: "IMT", matricula: "A01736813", telefono: "2311535986", dispuesto: false },
   { carrera: "ITC", matricula: "A01736813", telefono: "2311535986", dispuesto: true },
@@ -13,6 +18,8 @@ const dummyData = [
   { carrera: "ITC", matricula: "A01736813", telefono: "2311535986", dispuesto: true },
   { carrera: "IMT", matricula: "A01736813", telefono: "2311535986", dispuesto: false },
 ];
+
+
 
 const RespuestasAlumnos = ( {test = ''} ) => {
   const [filtroCarrera, setFiltroCarrera] = useState("Todas");
@@ -26,11 +33,23 @@ const RespuestasAlumnos = ( {test = ''} ) => {
   const [changesAlumno, setChangesAlumno] = useState({})
   const [toChange, setToChange] = useState({})
   const [resDescarte, setResDescarte] = useState(null)
+  const [changeCorreo, setChangeCorreo] = useState(null)
   const [filters, setFilters] = useState({ "alumno": "", "proyecto": "Todos", "periodo": "Todos" })
   const { userId, setUserId } = useContext(UserIdContext)
   const { sessionType, setSessionType } = useContext(SessionContext)
   const [showPopUp, setShowPopUp] = useState(false)
   
+ //Borrar
+const [proyectosDisponibles, setProyectosDisponibles] = useState([]);
+
+useEffect(() => {
+  fetch('http://localhost:8000/proyectos')
+    .then(res => res.json())
+    .then(setProyectosDisponibles);
+}, []);
+
+//Borrar
+
 
   const {
     ballPos,
@@ -73,16 +92,15 @@ const RespuestasAlumnos = ( {test = ''} ) => {
 
   // Centraliza la lógica de estados según sessionType
   useEffect(() => {
-    if (sessionType === "alumno") {
-      setFilters({ "alumno": `${userId.special_id}`, "proyecto": "Todos", "periodo":"Todos" })
-      setEstados(['ACEPTADX', 'DECLINADX', "CONFIRMADX"])
-    } else if (sessionType === "osf") {
-      setEstados(['POSTULADX', 'ACEPTADX', "RECHAZADX"])
-    } else if (sessionType === "ss") {
-      setEstados(['POSTULADX', 'ACEPTADX', 'RECHAZADX', 'DECLINADX', 'CONFIRMADX'])
-    } else {
-      setEstados([])
+    const estadosMap = {
+      alumno: ['ACEPTADX', 'DECLINADX', 'CONFIRMADX'],
+      osf: ['POSTULADX', 'ACEPTADX', 'NO ACEPTADX'],
+      ss: ['POSTULADX', 'ACEPTADX', 'NO ACEPTADX', 'DECLINADX', 'CONFIRMADX', 'INSCRITX'],
+    };
+    if (sessionType === 'alumno') {
+      setFilters({ alumno: `${userId.special_id}`, proyecto: 'Todos', periodo: 'Todos' });
     }
+    setEstados(estadosMap[sessionType] || []);
   }, [sessionType, userId])
 
   const carreras = ["Todas", ...Array.from(new Set(Object.values(postulaciones).map((a) => a.carrera)))];
@@ -95,7 +113,7 @@ const RespuestasAlumnos = ( {test = ''} ) => {
   const dataFiltrada = Object.values(postulaciones).filter((alumno) => {
     // console.log(alumno)
     const coincideCarrera = filtroCarrera === "Todas" || alumno.carrera === filtroCarrera;
-    const coincideAlumno = ((alumno["nombre"]).toLowerCase().includes(filters["alumno"].toLowerCase())) || (alumno["id_alumno"].includes(filters.alumno))
+    const coincideAlumno = ((alumno["nombre"]).toLowerCase().includes(filters["alumno"].toLowerCase())) || ((alumno["id_alumno"]).toLowerCase().includes((filters.alumno).toLowerCase()))
     const coincideProyecto = filters.proyecto === "Todos" || alumno.proyecto === filters.proyecto  || alumno.id_proyecto === filters.proyecto
     const coincidePeriodo = filters.periodo === "Todos" || alumno.periodo === filters.periodo;
     // console.log(alumno["nombre"], filters)
@@ -153,14 +171,16 @@ const RespuestasAlumnos = ( {test = ''} ) => {
     setSavedPostulaciones(postulaciones)
     setIsEditing(false)
     setCurrEdit(null)
-    console.log(changes)
-    console.log(changesAlumno)
-    console.log(resDescarte)
+    console.log("changes", changes)
+    console.log("changesAlumno", changesAlumno)
+    console.log("resDescarte", resDescarte)
+    console.log("toChange", toChange)
 
     const formInfo = new FormData()
     formInfo.append("postulacion", JSON.stringify(changes))
     formInfo.append("alumno", JSON.stringify(changesAlumno))
-    formInfo.append("respuesta_descarte", resDescarte)
+    formInfo.append("respuesta_descarte", JSON.stringify(resDescarte))
+    formInfo.append("correo", JSON.stringify(changeCorreo))
     formInfo.append("toChange", JSON.stringify(toChange))
     await fetch('http://localhost:8000/postulaciones/update', {
       method: "PATCH",
@@ -182,6 +202,11 @@ const RespuestasAlumnos = ( {test = ''} ) => {
         setSavedPostulaciones(result);
         console.log(result);
       });
+
+      setChanges({})
+      setChangesAlumno({})
+      setResDescarte(null)
+      setChangeCorreo(null)
   }
 
   const handleCancel = () => {
@@ -199,7 +224,10 @@ const RespuestasAlumnos = ( {test = ''} ) => {
 
     if (name === 'respuesta_descarte') {
       setResDescarte(value)
-    } else if (alumnoFields.has(name)) {
+    } else if (name === 'correo') {
+      setChangeCorreo(value)
+    } 
+    else if (alumnoFields.has(name)) {
         setChangesAlumno(prev => ({
             ...prev,
             [name]: value
@@ -241,12 +269,15 @@ const RespuestasAlumnos = ( {test = ''} ) => {
     switch (estado) {
       case 'ACEPTADX':
         return 'estado-aceptadx';
-      case 'RECHAZADX':
+      case 'NO ACEPTADX':
         return 'estado-rechazadx';
       case 'DECLINADX':
         return 'estado-declinadx';
       case 'CONFIRMADX':
         return 'estado-confirmadx';
+      case 'INSCRITX':
+        return 'estado-inscritx'
+
       case 'POSTULADX':
       default:
         return 'estado-postuladx';
@@ -314,12 +345,12 @@ const RespuestasAlumnos = ( {test = ''} ) => {
     <>
         {showPopUp && (
         <div className="overlay">
-          <div class="popup">
-            <div class="popup-header">
-              <span class="popup-icon"><FiInfo></FiInfo></span>
-              <span class="popup-title">Advertencia</span>
+          <div className="popup">
+            <div className="popup-header">
+              <span className="popup-icon"><FiInfo></FiInfo></span>
+              <span className="popup-title">Advertencia</span>
             </div>
-            <div class="popup-message">
+            <div className="popup-message">
               Los cambios que realices serán <strong>irreversibles</strong>.
               {sessionType === "alumno" ? (
                 <>
@@ -333,9 +364,9 @@ const RespuestasAlumnos = ( {test = ''} ) => {
                 </>
               )}
               </div>
-            <div class="popup-buttons">
-              <button class="btn-outline" onClick={() => setShowPopUp(false)} >Regresar</button>
-              <button class="btn-primary" onClick={() => {
+            <div className="popup-buttons">
+              <button className="btn-outline" onClick={() => setShowPopUp(false)} >Regresar</button>
+              <button className="btn-primary" onClick={() => {
               setShowPopUp(false)
               handleSave()
               }} >Guardar</button>
@@ -344,6 +375,7 @@ const RespuestasAlumnos = ( {test = ''} ) => {
         </div>
       )}
     <div className="respuestas-container" ref={containerRef}>
+
       <div className="respuestas-header">
         <FiArrowLeft />
         <h1>Postulaciones - {sessionType} {test}</h1>
@@ -365,6 +397,10 @@ const RespuestasAlumnos = ( {test = ''} ) => {
           </>
       )}
         </div>
+
+
+     
+      
 
       <div className="respuestas-filtros">
         { sessionType !== "alumno" && (
@@ -444,7 +480,7 @@ const RespuestasAlumnos = ( {test = ''} ) => {
                 key={idx}
                 id={postulacion.id_postulacion}
                 onDoubleClick={(e) => {
-                  if (!isEditing && ((sessionType === "alumno" && postulacion.estado === "ACEPTADX") || (sessionType === "osf" && postulacion.estado === "POSTULADX")) || (sessionType == "ss")  )  {
+                  if (!isEditing && ((sessionType === "alumno" && postulacion.estado === "ACEPTADX") || (sessionType === "osf" && postulacion.estado === "POSTULADX") || (sessionType == "ss"))  )  {
                     console.log(estados)
                     setCurrEdit(postulacion.id_postulacion);
                     setToChange({
@@ -468,7 +504,7 @@ const RespuestasAlumnos = ( {test = ''} ) => {
                       maxWidth: "500px"
                     }}>{postulacion.proyecto}</td>
                     <ExpandableCell>{postulacion.carrera}</ExpandableCell>
-                    <ExpandableCell>{`${postulacion.alumno_id}@tec.mx`}</ExpandableCell>
+                    <ExpandableCell>{postulacion.correo}</ExpandableCell>
                     <ExpandableCell>{postulacion.telefono}</ExpandableCell>
                     <ExpandableCell>{postulacion.confirmacion_lectura}</ExpandableCell>
                     <ExpandableCell>{postulacion.respuesta_habilidades}</ExpandableCell>
@@ -566,7 +602,19 @@ const RespuestasAlumnos = ( {test = ''} ) => {
                         postulacion.carrera
                       )}
                     </td>
-                    <td>{`${postulacion.id_alumno}@tec.mx`}</td>
+                    <td>
+                      {checkPermission(sessionType, "correo") ? (
+                        <input
+                          type="text"
+                          name="correo"
+                          id={postulacion.id_postulacion}
+                          value={postulaciones[postulacion.id_postulacion].correo}
+                          onChange={handleChange}
+                        />
+                      ) : (
+                        postulacion.correo
+                      )}
+                    </td>
                     <td>
                       {checkPermission(sessionType, "telefono") ? (
                         <input

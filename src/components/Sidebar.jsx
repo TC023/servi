@@ -29,6 +29,7 @@ const Sidebar = () => {
         break
       case "Ver Postulaciones":
         navigate("/mis_postulaciones")
+        break
       case "Dashboard":
         navigate("/dashboard")
         break

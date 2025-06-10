@@ -50,6 +50,7 @@ const cleanIframeHtml = (html) => {
 
 
 
+
 const ProjectModal = ({ proyecto, onClose, proyectosDisponibles, pos = false }) => {
   const carouselRef = useRef(null);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -88,7 +89,8 @@ const ProjectModal = ({ proyecto, onClose, proyectosDisponibles, pos = false }) 
   const [editedCompetencias, setEditedCompetencias] = useState(proyecto.competencias);
   const [editedDireccion, setEditedDireccion] = useState(proyecto.direccion);
 
-  const [editedCupo, setEditedCupo] = useState(proyecto.cantidad);
+  const [editedCupo, setEditedCupo] = useState(proyecto.cupo);
+  console.log("hola edited", proyecto.cupo)
 
 
 
@@ -98,7 +100,7 @@ const ProjectModal = ({ proyecto, onClose, proyectosDisponibles, pos = false }) 
 
 
   //Restantes que faltaban
-  // ✅ 1. ESTADOS AÑADIDOS EN COMPONENTE
+  // ESTADOS AÑADIDOS EN COMPONENTE
   const [editedProblemaSocial, setEditedProblemaSocial] = useState(proyecto.problema_social || "");
   const [editedValorPromueve, setEditedValorPromueve] = useState(proyecto.valor_promueve || "");
   const [editedRangoEdad, setEditedRangoEdad] = useState(proyecto.rango_edad || "");
@@ -238,7 +240,7 @@ const handleSave = async () => {
   }
 
   try {
-    setIsSaving(true); // 👈 Mostrar spinner
+    setIsSaving(true); // Mostrar spinner
 
     const proyectoId = proyecto.id;
 
@@ -300,7 +302,7 @@ const handleSave = async () => {
     setIsEditing(false);
     alert("¡Proyecto actualizado!");
   } catch (error) {
-    console.error("❌ Error en handleSave:", error);
+    console.error("Error en handleSave:", error);
     alert("Error al actualizar el proyecto");
   } finally {
     setIsSaving(false); 
@@ -362,7 +364,7 @@ const handleSave = async () => {
     
 
 
-{/* Tarjetas compactas estilo Zillow */}
+{/*cards chiquitas */}
 <div
   style={{
     display: "flex",
@@ -558,7 +560,7 @@ Coméntanos con tus propias palabras: ¿Qué buscamos? ¿Qué es lo que crees qu
   <div className="act-title">Actividades del Alumno</div>
   <ul className="act-list">
     {(editedActividadesAlumno || "")
-      .split(/\n|;/) // Por salto de línea O punto y coma
+      .split(/\n|;/) // salto de linea para mejor estructuracion
       .map((act, i) => act.trim() && <li key={i}>{act.trim()}</li>)
     }
   </ul>
@@ -585,7 +587,7 @@ Coméntanos con tus propias palabras: ¿Qué buscamos? ¿Qué es lo que crees qu
 
 
 
-{/* === Periodos de Ejecución === */}
+{/* === Periodos de Ejecucion === */}
 <section style={{ textAlign: "center", margin: "3rem 0" }}>
   <h3 style={{
     fontSize: "1.6rem",
