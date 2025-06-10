@@ -18,7 +18,7 @@ const fs = require('fs');
 // const { sendWelcomeEmail } = require('./emailService');
 
 // Needed for the endpoints to work with Gmail API
-const { sendWelcomeEmail } = require('./gmailService');
+const { sendEmail } = require('./gmailService');
 const e = require('express');
 const { Upload } = require('@mui/icons-material');
 
@@ -39,7 +39,7 @@ const cn = {
     port: 5432,
     database: 'servi',
     user: 'postgres',
-    password: 'postgres',
+    password: 'yahelito346',
     allowExitOnIdle: true
 }
 const db = pgp(cn);
@@ -519,44 +519,83 @@ app.post('/login', upload.none(), async (req, res, next) => {
   }
 });
 
-app.post('/postulaciones/newPostulacion', upload.none(), (req, res) => {
-  console.log(req.body)
-  console.log(req.session)
-  const form = req.body
-  if (form.id_pregunta !== 'null') {
-    db.none(`
-      CALL insertar_postulacion($1, $2::TEXT, $3::TEXT, $4::TEXT, $5::TEXT, $6)
-      `,[
-        Number(form.id_proyecto),
-        req.session.info.alumno_id,
-        form.confirmacion_lectura,
-        form.respuesta_habilidades,
-        form.respuesta_descarte,
-        Number(form.id_pregunta)
-      ])
-      .then(() => res.status(200).send('Postulación creada!'))
-      .catch((error) => {
-        res.status(400).send(error)
-        console.log(error)
-    })
-  } else {
-    db.none(`
-      CALL insertar_postulacion($1, $2::TEXT, $3::TEXT, $4::TEXT, NULL, NULL)
-      `,[
-        Number(form.id_proyecto),
-        req.session.info.alumno_id,
-        form.confirmacion_lectura,
-        form.respuesta_habilidades,
-        form.respuesta_descarte,
-        Number(form.id_pregunta)
-      ])
-      .then(() => res.status(200).send('Postulación creada!'))
-      .catch((error) => {
-        res.status(400).send(error)
-        console.log(error)
-    })  }
+// app.post('/postulaciones/newPostulacion', upload.none(), (req, res) => {
+//   console.log(req.body)
+//   console.log(req.session)
+//   const form = req.body
+//   if (form.id_pregunta !== 'null') {
+//     db.none(`
+//       CALL insertar_postulacion($1, $2::TEXT, $3::TEXT, $4::TEXT, $5::TEXT, $6)
+//       `,[
+//         Number(form.id_proyecto),
+//         req.session.info.alumno_id,
+//         form.confirmacion_lectura,
+//         form.respuesta_habilidades,
+//         form.respuesta_descarte,
+//         Number(form.id_pregunta)
+//       ])
+//       .then(() => res.status(200).send('Postulación creada!'))
+//       .catch((error) => {
+//         res.status(400).send(error)
+//         console.log(error)
+//     })
+//   } else {
+//     db.none(`
+//       CALL insertar_postulacion($1, $2::TEXT, $3::TEXT, $4::TEXT, NULL, NULL)
+//       `,[
+//         Number(form.id_proyecto),
+//         req.session.info.alumno_id,
+//         form.confirmacion_lectura,
+//         form.respuesta_habilidades,
+//         form.respuesta_descarte,
+//         Number(form.id_pregunta)
+//       ])
+//       .then(() => res.status(200).send('Postulación creada!'))
+//       .catch((error) => {
+//         res.status(400).send(error)
+//         console.log(error)
+//     })  }
+// })
 
-})
+app.post('/postulaciones/newPostulacion', upload.none(), async (req, res) => {
+  const form = req.body;
+  const alumnoId = req.session.info.alumno_id;
+  const proyectoId = Number(form.id_proyecto);
+
+  try {
+    // 1. Insert the postulación
+    const query = form.id_pregunta !== 'null'
+      ? `CALL insertar_postulacion($1, $2::TEXT, $3::TEXT, $4::TEXT, $5::TEXT, $6)`
+      : `CALL insertar_postulacion($1, $2::TEXT, $3::TEXT, $4::TEXT, NULL, NULL)`;
+
+    const params = form.id_pregunta !== 'null'
+      ? [proyectoId, alumnoId, form.confirmacion_lectura, form.respuesta_habilidades, form.respuesta_descarte, Number(form.id_pregunta)]
+      : [proyectoId, alumnoId, form.confirmacion_lectura, form.respuesta_habilidades, form.respuesta_descarte, null];
+
+    await db.none(query, params);
+
+    // 2. Check if the project has notifications enabled
+    const proyecto = await db.oneOrNone(`SELECT notificaciones, osf_id, nombre_proyecto FROM proyecto WHERE proyecto_id = $1`, [proyectoId]);
+
+    if (proyecto?.notificaciones) {
+      // 3. Get the OSF contact email
+      const osf = await db.oneOrNone(`SELECT correo_responsable, nombre_responsable FROM osf_institucional WHERE osf_id = $1`, [proyecto.osf_id]);
+
+      if (osf?.correo_responsable) {
+        const subject = `Nueva postulación a tu proyecto "${proyecto.nombre_proyecto}"`;
+        const content = `Hola ${osf.nombre_responsable},\n\nUn estudiante se ha postulado a tu proyecto "${proyecto.nombre_proyecto}".\n\nPuedes revisar los detalles en la plataforma.\n\nSaludos,\nEquipo de Soporte`;
+
+        await sendEmail(osf.correo_responsable, osf.nombre_responsable, subject, content);
+      }
+    }
+
+    res.status(200).send('Postulación creada!');
+  } catch (error) {
+    console.error('Error en postulación:', error);
+    res.status(400).send(error);
+  }
+});
+
 
 app.get('/postulaciones', upload.none(), (req, res) => {
   db.any(`
@@ -626,12 +665,21 @@ app.patch('/postulaciones/update', upload.none(), async (req, res) => {
   const respuesta = JSON.parse(req.body.respuesta_descarte)
   const correo = JSON.parse(req.body.correo)
   const toChange = JSON.parse(req.body.toChange)
+  console.log(alumno)
+  console.log(postulacion)
+  console.log(toChange)
 
   console.log(postulacion, alumno, respuesta, correo, toChange)
 
   const promises = [];
 
   if (Object.entries(postulacion).length > 0) {
+
+    if (postulacion.estado) {
+      console.log('se cambió el estado de la postulacion a: ', postulacion.estado)
+
+    }
+    
     const keys = Object.keys(postulacion)
     const values = Object.values(postulacion)
     const sets = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
@@ -677,8 +725,66 @@ WHERE a.alumno_id = $2
 
   await Promise.all(promises);
 
-  res.status(200).send('ok')
+    
+
+  // Enviar correo si hubo cambio de estado o comentario
+  if (postulacion.estado || postulacion.comentarios) {
+    const matricula = toChange.alumno_id;
+    const email = `${matricula}@tec.mx`;
+
+    
+    // 1. Get alumno info
+    const alumnoData = await db.oneOrNone(
+      'SELECT nombre FROM alumno WHERE alumno_id = $1',
+      [toChange.alumno_id]
+    );
+
+    const nombre = alumnoData?.nombre;
+
+    
+    // 2. Get project name from postulacion
+    const proyectoData = await db.oneOrNone(
+      `SELECT p.nombre_proyecto
+      FROM postulacion pos
+      JOIN proyecto p ON pos.id_proyecto = p.proyecto_id
+      WHERE pos.id_postulacion = $1`,
+      [toChange.id_postulacion]
+    );
+
+    const nombreProyecto = proyectoData?.nombre_proyecto 
+
+    // 3. Prepare email content
+    let subject = `Actualización en tu postulación al proyecto "${nombreProyecto}"`;
+    let content = `Hola ${nombre},\n\n`;
+
+    if (postulacion.estado) {
+      if (postulacion.estado === 'ACEPTADX') {
+        content += `¡Felicidades! Tu postulación al proyecto "${nombreProyecto}" ha sido aceptada.\n\n`;
+      } else if (postulacion.estado === 'NO ACEPTADX') {
+        content += `Lamentamos informarte que tu postulación al proyecto "${nombreProyecto}" no ha sido aceptada.\n\n`;
+      } else if (postulacion.estado === 'CONFIRMADX') {
+        content += `Tu participación en el proyecto "${nombreProyecto}" ha sido confirmada. ¡Gracias por unirte!\n\n`;
+      } else {
+        content += `Tu postulación al proyecto "${nombreProyecto}" ha cambiado de estado a: ${nuevoEstado}.\n\n`;
+      }
+    }
+
+    if (postulacion.comentarios) {
+      content += `Comentario del equipo:\n"${postulacion.comentarios}"\n\n`;
+    }
+
+    content += 'Puedes revisar más detalles en la plataforma.\n\nSaludos,\nEquipo de Soporte';
+
+    try {
+    await sendEmail(email, nombre, subject, content);
+    } catch (err) {
+    console.error('Error al enviar correo:', err);
+    }
+  }
+
+  res.status(200).send('ok');
 });
+
 
 app.post('/projects/newProject', upload.none(), async (req, res) => {
   try {
@@ -967,17 +1073,7 @@ app.get('/alumnos/user/:user_id', (req, res) => {
     });
 });
 
-
-
-
 //Fin endpoins Rey
-
-
-
-
-
-
-
 
 // Endpoint to export projects to Google Sheets in Nacional Sheet format
 app.post('/sheets/export', async (req, res) => {
