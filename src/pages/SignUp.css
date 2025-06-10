@@ -1,3 +1,9 @@
+html, body, #root {
+  height: 100%;
+  overflow: hidden; /* evita poder hacer scroll */
+}
+
+
 /* Fondo claro y limpio */
 .signup-page-centered {
     height: 100vh;
@@ -277,3 +283,38 @@
     text-align: center;
   }
   
+
+
+
+
+  /*center */
+
+  .signup-card-left {
+  flex: 1;
+  background: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.signup-card-left-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.signup-logo-left {
+  width: 100%;
+  max-width: 220px;
+  margin-bottom: 2rem; /* espacio entre logo y personaje */
+}
+
+/* Ajusta el personaje para que NO se expanda verticalmente fuera del cuadro */
+.signup-card-left-inner > *:last-child {
+  /* O dale una clase especial al personaje */
+  max-height: 180px;
+  object-fit: contain;
+}
