@@ -5,6 +5,11 @@ import { BallContext } from "../Contexts/BallContext";
 import { SessionContext } from "../Contexts/SessionContext";
 import { UserIdContext } from "../Contexts/UserIdContext";
 
+
+import PixelCharacter from "../components/PixelCharacter";
+
+
+
 const dummyData = [
   { carrera: "IMT", matricula: "A01736813", telefono: "2311535986", dispuesto: false },
   { carrera: "ITC", matricula: "A01736813", telefono: "2311535986", dispuesto: true },
@@ -13,6 +18,8 @@ const dummyData = [
   { carrera: "ITC", matricula: "A01736813", telefono: "2311535986", dispuesto: true },
   { carrera: "IMT", matricula: "A01736813", telefono: "2311535986", dispuesto: false },
 ];
+
+
 
 const RespuestasAlumnos = ( {test = ''} ) => {
   const [filtroCarrera, setFiltroCarrera] = useState("Todas");
@@ -32,6 +39,17 @@ const RespuestasAlumnos = ( {test = ''} ) => {
   const { sessionType, setSessionType } = useContext(SessionContext)
   const [showPopUp, setShowPopUp] = useState(false)
   
+ //Borrar
+const [proyectosDisponibles, setProyectosDisponibles] = useState([]);
+
+useEffect(() => {
+  fetch('http://localhost:8000/proyectos')
+    .then(res => res.json())
+    .then(setProyectosDisponibles);
+}, []);
+
+//Borrar
+
 
   const {
     ballPos,
@@ -357,6 +375,7 @@ const RespuestasAlumnos = ( {test = ''} ) => {
         </div>
       )}
     <div className="respuestas-container" ref={containerRef}>
+
       <div className="respuestas-header">
         <FiArrowLeft />
         <h1>Postulaciones - {sessionType} {test}</h1>
@@ -378,6 +397,10 @@ const RespuestasAlumnos = ( {test = ''} ) => {
           </>
       )}
         </div>
+
+
+     
+      
 
       <div className="respuestas-filtros">
         { sessionType !== "alumno" && (

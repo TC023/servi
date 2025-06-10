@@ -17,15 +17,15 @@ const Header = ({
     { text: "Perfil de usuario", link: "/perfil_usuario" },
     { text: "Acerca de", link: "/acerca_de" },
     { text: "FAQ", link: "/Faq" },
-    { text: "Referencias" },
+
   ];
 
   return (
-    <header className={`apple-header ${className}`}>
-      {/* Boton izquierdo original */}
+    <header className={`ray-header ${className}`}>
+      {/* Boton izquierdo */}
       <button className="menu-toggle" onClick={onMenuClick}>☰</button>
 
-      <img src={appleLogo} alt="Logo" className="apple-logo" />
+      <img src={appleLogo} alt="Logo" className="ray-logo" />
 
       <nav className="nav-buttons">
         {buttons.map((btn, index) =>
@@ -39,7 +39,7 @@ const Header = ({
         )}
       </nav>
 
-      {/* Botones de personaje + botón de RightBar */}
+      {/*Botones de personaje + botón de RightBar */}
       <div
         className="sprite-buttons"
         style={{
@@ -57,7 +57,7 @@ const Header = ({
           <FaBars />
         </button>
 
-        {
+        {/*
         <button
           className="sprite-toggle-button"
           title="Activar Lupi"
