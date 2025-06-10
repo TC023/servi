@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Importa useNavigate
 
 const FormsOSF = ({ osf = {} }) => {
-    const [files, setFiles] = useState([]);
+    const [files, setFiles] = useState({}); // Cambiado de [] a {}
     const [odsList, setOdsList] = useState([])
     const [formDataOsf, setFormDataOsf] = useState({
         correo: '',
@@ -87,13 +87,10 @@ const FormsOSF = ({ osf = {} }) => {
             ...prev,
             [name]: selectedFiles
         }));
-
-        console.log(files)
     };
 
     const handleSubmitOsf = (e) => {
         e.preventDefault();
-        console.log(formDataOsf);
         const formInfOsf = new FormData();
 
         // Append form data
@@ -108,8 +105,10 @@ const FormsOSF = ({ osf = {} }) => {
         // Append files
         for (const field in files) {
             const fileList = files[field];
-            for (let i = 0; i < fileList.length; i++) {
-                formInfOsf.append(field, fileList[i]);
+            if (fileList && fileList.length) {
+                for (let i = 0; i < fileList.length; i++) {
+                    formInfOsf.append(field, fileList[i]);
+                }
             }
         }
 
@@ -140,7 +139,6 @@ const FormsOSF = ({ osf = {} }) => {
     const handleUpdateOsf = async (e) => {
         e.preventDefault();
         setSuccessMessage("");
-        console.log(formDataOsf)
         const formInf = new FormData();
         // Construye el objeto osf solo con los campos correspondientes a osf/institucional
         const institucional = {
@@ -148,7 +146,6 @@ const FormsOSF = ({ osf = {} }) => {
             mision: formDataOsf.mision,
             vision: formDataOsf.vision,
             objetivos: formDataOsf.objetivo,
-            // ods: formDataOsf.ods,
             poblacion: formDataOsf.poblacion,
             num_beneficiarios: formDataOsf.num_beneficiarios,
             nombre_responsable: formDataOsf.nombre_responsable,
@@ -170,16 +167,23 @@ const FormsOSF = ({ osf = {} }) => {
             telefono: formDataOsf.telefono_encargado,
             correo: formDataOsf.correo_encargado,
         };
-
         const osfData = {
             nombre: formDataOsf.nombre,
             tipo: 'institucional',
         }
-
         formInf.append("osf", JSON.stringify(osfData));
         formInf.append("user", JSON.stringify(userData));
         formInf.append("encargado", JSON.stringify(encargadoData));
         formInf.append("institucional", JSON.stringify(institucional));
+        // Adjuntar archivos si hay nuevos seleccionados
+        for (const field in files) {
+            const fileList = files[field];
+            if (fileList && fileList.length) {
+                for (let i = 0; i < fileList.length; i++) {
+                    formInf.append(field, fileList[i]);
+                }
+            }
+        }
         try {
             // Suponiendo que tienes el osf_id en el prop osf.osf_id o similar
             const osfId = osf.osf?.osf_id || osf.osf_id || osf.institucional?.osf_id;
@@ -354,23 +358,90 @@ const FormsOSF = ({ osf = {} }) => {
                             <div>
                                 <label htmlFor="foto1">1. Adjuntar 3 fotografías de sus instalaciones u oficinas:</label>
                                 <input type="file" id="foto1" multiple accept='image/*' onChange={handleFileChange} name="fotos_instalaciones" required />
+                                {Object.entries(osf).length > 0 && osf.institucional?.fotos_instalaciones && Array.isArray(osf.institucional.fotos_instalaciones) && osf.institucional.fotos_instalaciones.length > 0 && (
+                                    <div>
+                                        {osf.institucional.fotos_instalaciones.map((foto, idx) => (
+                                            <button key={idx} className='descargar' onClick={e => {
+                                                e.preventDefault();
+                                                const link = document.createElement('a');
+                                                link.href = `/src/assets/${foto}`;
+                                                link.download = `${foto}`;
+                                                document.body.appendChild(link);
+                                                link.click();
+                                                document.body.removeChild(link);
+                                            }}>Descargar foto {idx + 1}</button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                             <div>
                                 <label htmlFor="logo_institucion">2. Adjuntar Logo de la Organización</label>
-                                <input type="file" onChange={handleFileChange} name="logo_institucion" required />
+                                <input type="file" onChange={handleFileChange} accept='image/*' name="logo_institucion" required />
+                                {Object.entries(osf).length > 0 && osf.institucional?.logo && (
+                                    <div>
+                                        <button className='descargar' onClick={ (e) => {
+                                            e.preventDefault()
+                                            const link = document.createElement('a');
+                                            link.href = `/src/assets/${osf.institucional.logo}`;
+                                            link.download = `${osf.institucional.logo}`;
+                                            document.body.appendChild(link);
+                                            link.click();
+                                            document.body.removeChild(link);
+                                        } } > Descargar logo </button>
+                                    </div>
+                                )}
                             </div>
                             <div>
                                 <label htmlFor="comprobante_domicilio">3. Adjuntar Comprobante de domicilio actualizado:</label>
                                 <input type="file" onChange={handleFileChange} name="comprobante_domicilio" required />
+                                {Object.entries(osf).length > 0 && osf.institucional?.comprobante_domicilio && (
+                                    <div>
+                                        <button className='descargar' onClick={ (e) => {
+                                            e.preventDefault()
+                                            const link = document.createElement('a');
+                                            link.href = `/src/assets/${osf.institucional.comprobante_domicilio}`;
+                                            link.download = `${osf.institucional.comprobante_domicilio}`;
+                                            document.body.appendChild(link);
+                                            link.click();
+                                            document.body.removeChild(link);
+                                        } } > Descargar comprobante </button>
+                                    </div>
+                                )}
                             </div>
                             <div>
                                 <label htmlFor="RFC">4. Adjuntar RFC</label>
                                 <input type="file" onChange={handleFileChange} name="RFC" required />
+                                {Object.entries(osf).length > 0 && osf.institucional?.RFC && (
+                                    <div>
+                                        <button className='descargar' onClick={ (e) => {
+                                            e.preventDefault()
+                                            const link = document.createElement('a');
+                                            link.href = `/src/assets/${osf.institucional.RFC}`;
+                                            link.download = `${osf.institucional.RFC}`;
+                                            document.body.appendChild(link);
+                                            link.click();
+                                            document.body.removeChild(link);
+                                        } } > Descargar RFC </button>
+                                    </div>
+                                )}
                             </div>
                             {formDataOsf.subtipo == "organización" && (
                                 <div>
                                     <label htmlFor="acta_constitutiva">5. Adjuntar Acta Constitutiva:</label>
                                     <input type="file" onChange={handleFileChange} name="acta_constitutiva" required />
+                                    {Object.entries(osf).length > 0 && osf.institucional?.acta_constitutiva && (
+                                        <div>
+                                            <button className='descargar' onClick={ (e) => {
+                                                e.preventDefault()
+                                                const link = document.createElement('a');
+                                                link.href = `/src/assets/${osf.institucional.acta_constitutiva}`;
+                                                link.download = `${osf.institucional.acta_constitutiva}`;
+                                                document.body.appendChild(link);
+                                                link.click();
+                                                document.body.removeChild(link);
+                                            } } > Descargar acta </button>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                             <div className="título-encargado">
@@ -396,6 +467,19 @@ const FormsOSF = ({ osf = {} }) => {
                             <div>
                                 <label htmlFor="ine_encargado">5. Adjuntar Credencial INE</label>
                                 <input type="file" onChange={handleFileChange} name="ine_encargado" required />
+                                {Object.entries(osf).length > 0 && osf.encargado?.ine_encargado && (
+                                    <div>
+                                        <button className='descargar' onClick={ (e) => {
+                                            e.preventDefault()
+                                            const link = document.createElement('a');
+                                            link.href = `/src/assets/${osf.encargado.ine_encargado}`;
+                                            link.download = `${osf.encargado.ine_encargado}`;
+                                            document.body.appendChild(link);
+                                            link.click();
+                                            document.body.removeChild(link);
+                                        } } > Descargar INE </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}

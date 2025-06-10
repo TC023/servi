@@ -26,6 +26,7 @@ const RespuestasAlumnos = ( {test = ''} ) => {
   const [changesAlumno, setChangesAlumno] = useState({})
   const [toChange, setToChange] = useState({})
   const [resDescarte, setResDescarte] = useState(null)
+  const [changeCorreo, setChangeCorreo] = useState(null)
   const [filters, setFilters] = useState({ "alumno": "", "proyecto": "Todos", "periodo": "Todos" })
   const { userId, setUserId } = useContext(UserIdContext)
   const { sessionType, setSessionType } = useContext(SessionContext)
@@ -152,14 +153,16 @@ const RespuestasAlumnos = ( {test = ''} ) => {
     setSavedPostulaciones(postulaciones)
     setIsEditing(false)
     setCurrEdit(null)
-    console.log(changes)
-    console.log(changesAlumno)
-    console.log(resDescarte)
+    console.log("changes", changes)
+    console.log("changesAlumno", changesAlumno)
+    console.log("resDescarte", resDescarte)
+    console.log("toChange", toChange)
 
     const formInfo = new FormData()
     formInfo.append("postulacion", JSON.stringify(changes))
     formInfo.append("alumno", JSON.stringify(changesAlumno))
-    formInfo.append("respuesta_descarte", resDescarte)
+    formInfo.append("respuesta_descarte", JSON.stringify(resDescarte))
+    formInfo.append("correo", JSON.stringify(changeCorreo))
     formInfo.append("toChange", JSON.stringify(toChange))
     await fetch('http://localhost:8000/postulaciones/update', {
       method: "PATCH",
@@ -184,7 +187,8 @@ const RespuestasAlumnos = ( {test = ''} ) => {
 
       setChanges({})
       setChangesAlumno({})
-      setResDescarte({})
+      setResDescarte(null)
+      setChangeCorreo(null)
   }
 
   const handleCancel = () => {
@@ -202,7 +206,10 @@ const RespuestasAlumnos = ( {test = ''} ) => {
 
     if (name === 'respuesta_descarte') {
       setResDescarte(value)
-    } else if (alumnoFields.has(name)) {
+    } else if (name === 'correo') {
+      setChangeCorreo(value)
+    } 
+    else if (alumnoFields.has(name)) {
         setChangesAlumno(prev => ({
             ...prev,
             [name]: value
@@ -474,7 +481,7 @@ const RespuestasAlumnos = ( {test = ''} ) => {
                       maxWidth: "500px"
                     }}>{postulacion.proyecto}</td>
                     <ExpandableCell>{postulacion.carrera}</ExpandableCell>
-                    <ExpandableCell>{`${postulacion.alumno_id}@tec.mx`}</ExpandableCell>
+                    <ExpandableCell>{postulacion.correo}</ExpandableCell>
                     <ExpandableCell>{postulacion.telefono}</ExpandableCell>
                     <ExpandableCell>{postulacion.confirmacion_lectura}</ExpandableCell>
                     <ExpandableCell>{postulacion.respuesta_habilidades}</ExpandableCell>
@@ -572,7 +579,19 @@ const RespuestasAlumnos = ( {test = ''} ) => {
                         postulacion.carrera
                       )}
                     </td>
-                    <td>{`${postulacion.id_alumno}@tec.mx`}</td>
+                    <td>
+                      {checkPermission(sessionType, "correo") ? (
+                        <input
+                          type="text"
+                          name="correo"
+                          id={postulacion.id_postulacion}
+                          value={postulaciones[postulacion.id_postulacion].correo}
+                          onChange={handleChange}
+                        />
+                      ) : (
+                        postulacion.correo
+                      )}
+                    </td>
                     <td>
                       {checkPermission(sessionType, "telefono") ? (
                         <input

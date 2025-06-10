@@ -368,16 +368,44 @@ app.get('/osf_institucional/:osf_id', async (req, res) => {
 });
 
 // PATCH para actualizar OSF institucional y sus datos relacionados
-app.patch('/osf_institucional/:osf_id', upload.none(), async (req, res) => {
+const fileFields = upload.fields([
+    { name: 'logo_institucion', maxCount: 1 },
+    { name: 'fotos_instalaciones', maxCount: 3 },
+    { name: 'comprobante_domicilio', maxCount: 1 },
+    { name: 'RFC', maxCount: 1 },
+    { name: 'acta_constitutiva', maxCount: 1 },
+    { name: 'ine_encargado', maxCount: 1 },
+]);
+
+app.patch('/osf_institucional/:osf_id', fileFields, async (req, res) => {
   const { osf_id } = req.params;
-  // const { user, osf, institucional, encargado } = req.body;
   const user = JSON.parse(req.body.user || '{}');
   const osf = JSON.parse(req.body.osf || '{}');
   const encargado = JSON.parse(req.body.encargado || '{}');
   const institucional = JSON.parse(req.body.institucional || '{}');
-  console.log(osf, user, encargado)
   const dbOps = [];
   try {
+    // Procesar archivos si existen
+    if (req.files) {
+      if (req.files.logo_institucion && req.files.logo_institucion[0]) {
+        institucional.logo = req.files.logo_institucion[0].filename;
+      }
+      if (req.files.fotos_instalaciones && req.files.fotos_instalaciones.length > 0) {
+        institucional.fotos_instalaciones = req.files.fotos_instalaciones.map(f => f.filename);
+      }
+      if (req.files.comprobante_domicilio && req.files.comprobante_domicilio[0]) {
+        institucional.comprobante_domicilio = req.files.comprobante_domicilio[0].filename;
+      }
+      if (req.files.RFC && req.files.RFC[0]) {
+        institucional.RFC = req.files.RFC[0].filename;
+      }
+      if (req.files.acta_constitutiva && req.files.acta_constitutiva[0]) {
+        institucional.acta_constitutiva = req.files.acta_constitutiva[0].filename;
+      }
+      if (req.files.ine_encargado && req.files.ine_encargado[0]) {
+        encargado.ine_encargado = req.files.ine_encargado[0].filename;
+      }
+    }
     // Actualizar user
     if (user && Object.keys(user).length > 0) {
       const keys = Object.keys(user);
@@ -390,7 +418,6 @@ app.patch('/osf_institucional/:osf_id', upload.none(), async (req, res) => {
       const keys = Object.keys(osf);
       const values = Object.values(osf);
       const sets = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
-      console.log(`UPDATE osf SET ${sets} WHERE osf_id = $${keys.length + 1}`, [...values, osf_id])
       dbOps.push(db.none(`UPDATE osf SET ${sets} WHERE osf_id = $${keys.length + 1}`, [...values, osf_id]));
     }
     // Actualizar osf_institucional
@@ -536,6 +563,7 @@ app.get('/postulaciones', upload.none(), (req, res) => {
     SELECT 
     p.*, 
     a.*,
+    u.correo,
     c.nombre AS carrera,
     pr.nombre_proyecto AS proyecto,
     pr.estado AS estado_proyecto,
@@ -551,6 +579,7 @@ app.get('/postulaciones', upload.none(), (req, res) => {
     LEFT JOIN pregunta pre ON pre.id_proyecto=p.id_proyecto
     LEFT JOIN momentos_periodo m ON pr.momento_id = m.momento_id
     LEFT JOIN periodo_academico periodo ON periodo.periodo_id = m.periodo_id
+    LEFT JOIN public.user u ON a.user_id = u.user_id
     `)
     .then((data) => res.json(data))
     .catch((error) => console.log('ERROR', error))
@@ -594,8 +623,11 @@ app.get('/postulaciones/:osf_id', upload.none(), (req, res) => {
 app.patch('/postulaciones/update', upload.none(), async (req, res) => {
   const postulacion = JSON.parse(req.body.postulacion)
   const alumno = JSON.parse(req.body.alumno)
-  const respuesta = req.body.respuesta_descarte
+  const respuesta = JSON.parse(req.body.respuesta_descarte)
+  const correo = JSON.parse(req.body.correo)
   const toChange = JSON.parse(req.body.toChange)
+
+  console.log(postulacion, alumno, respuesta, correo, toChange)
 
   const promises = [];
 
@@ -621,10 +653,24 @@ app.patch('/postulaciones/update', upload.none(), async (req, res) => {
     );
   }
 
-  if (respuesta !== 'null') {
+  if (respuesta) {
     promises.push(
       db.none(`UPDATE respuesta SET respuesta = $1 WHERE id_postulacion = $2`,
         [respuesta, toChange.id_postulacion]
+      )
+    );
+  }
+
+  if (correo) {
+    promises.push(
+      db.none(`
+UPDATE public.user SET correo = $1 WHERE user_id = (
+SELECT u.user_id FROM public.user u
+JOIN alumno a ON a.user_id = u.user_id
+WHERE a.alumno_id = $2
+)
+          `,
+        [correo, toChange.alumno_id]
       )
     );
   }
@@ -748,15 +794,6 @@ app.get('/users/checkMatricula/:matricula', (req, res) => {
   })
   .catch((error) => console.log('ERROR: ', error));
 });
-
-const fileFields = upload.fields([
-    { name: 'logo_institucion', maxCount: 1 },
-    { name: 'fotos_instalaciones', maxCount: 3 },
-    { name: 'comprobante_domicilio', maxCount: 1 },
-    { name: 'RFC', maxCount: 1 },
-    { name: 'acta_constitutiva', maxCount: 1 },
-    { name: 'ine_encargado', maxCount: 1 },
-]);
 
 app.post('/users/osfNuevo', fileFields, function (req, res) {
     console.log('Processing /users/osfNuevo request...');
@@ -1004,7 +1041,7 @@ app.post('/sheets/export', async (req, res) => {
       LEFT JOIN proyecto_carrera pc ON p.proyecto_id = pc.proyecto_id
       LEFT JOIN carrera c ON pc.carrera_id = c.carrera_id
       LEFT JOIN momentos_periodo mp ON p.momento_id = mp.momento_id
-      LEFT JOIN periodo_academico pa ON mp.periodo_id = pa.periodo_id
+      LEFT JOIN periodo_academico pa ON mp.periodo_id = periodo.periodo_id
       GROUP BY 
         p.proyecto_id, osf.nombre, oi.mision, oi.vision, oi.objetivos, oi.poblacion, 
         oi.num_beneficiarios, oi.nombre_responsable, oi.puesto_responsable, oi.correo_responsable, 

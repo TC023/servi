@@ -46,7 +46,7 @@ const FormsAlumno = () => {
 
     // Validación de duplicados en matrícula
     const handleMatriculaChange = async (e) => {
-        const value = e.target.value.toLowerCase();
+        const value = e.target.value.toUpperCase()
         setMatricula(value);
 
         const regex = /^[Aa]\d{8}$/;
