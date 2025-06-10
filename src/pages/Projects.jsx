@@ -68,13 +68,6 @@ const getCoordsFromIframe = (iframeHtml) => {
 
 const Projects = ( {vP = false} ) => {
 
-//Carreras random
-const getCarrerasRandom = () => {
-  if (todasCarreras.length === 0) return [];
-  const barajadas = [...todasCarreras].sort(() => 0.5 - Math.random());
-  const cantidad = Math.floor(Math.random() * 2) + 2; // 2 o 3
-  return barajadas.slice(0, cantidad);
-};
 
   //Carreras random cards temporal
   const [todasCarreras, setTodasCarreras] = useState([]);
@@ -453,7 +446,7 @@ useEffect(() => {
             <Fade in={true} timeout={500 + index * 100} key={project.id}>
               <Grid item xs={12} sm={6} md={4} lg={3}>
               <Card className={project.estado_proyecto === "lleno" || project.estado_proyecto === "pendiente" ? "lleno":"" }
-              //Desde ACA EMPIEZA TODA EL elemento CARD, no es posible realizar algo similar desde un CSS
+              //Desde ACA EMPIEZA TODA EL elemento CARD, se uso MUI material
           //onClick={() => navigate(`/projects/${project.id}`)} //Quitamos navigate para usar el modal
           onClick={() => setProyectoSeleccionado(project)}
 
@@ -986,15 +979,6 @@ useEffect(() => {
   </Box>
 </Drawer>
 
-
-
-
-
-
-
-
-
-
       {/*Modal para Proyectos
             <ProjectModal proyecto={proyectoSeleccionado} onClose={() => setProyectoSeleccionado(null)} />
 
@@ -1005,7 +989,7 @@ useEffect(() => {
   <ProjectModal
     proyecto={proyectoSeleccionado}
     onClose={() => setProyectoSeleccionado(null)}
-    proyectosDisponibles={projectsDb} // Este sí es el array completo de proyectos
+    proyectosDisponibles={projectsDb} // array de proyectos
     pos={ postulaciones[proyectoSeleccionado.id] ? true : false }
     />
   </>
@@ -1013,7 +997,7 @@ useEffect(() => {
     </Box>
   );
 };
-     //Desde ACA TERMINA TODA EL elemento CARD, no es posible realizar algo similar desde un CSS
+     //Desde ACA TERMINA TODA EL elemento CARD, se uso mui materials
 
 
 export default Projects;

@@ -1,4 +1,4 @@
-.apple-header {
+.ray-header {
   position: sticky;
   
   top: 0;
@@ -23,7 +23,7 @@
   cursor: pointer;
 }
 
-.apple-logo {
+.ray-logo {
   position: absolute;
   left: 48px;
   height: 20px;

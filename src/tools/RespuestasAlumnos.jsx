@@ -5,6 +5,11 @@ import { BallContext } from "../Contexts/BallContext";
 import { SessionContext } from "../Contexts/SessionContext";
 import { UserIdContext } from "../Contexts/UserIdContext";
 
+
+import PixelCharacter from "../components/PixelCharacter";
+
+
+
 const dummyData = [
   { carrera: "IMT", matricula: "A01736813", telefono: "2311535986", dispuesto: false },
   { carrera: "ITC", matricula: "A01736813", telefono: "2311535986", dispuesto: true },
@@ -13,6 +18,8 @@ const dummyData = [
   { carrera: "ITC", matricula: "A01736813", telefono: "2311535986", dispuesto: true },
   { carrera: "IMT", matricula: "A01736813", telefono: "2311535986", dispuesto: false },
 ];
+
+
 
 const RespuestasAlumnos = ( {test = ''} ) => {
   const [filtroCarrera, setFiltroCarrera] = useState("Todas");
@@ -31,6 +38,17 @@ const RespuestasAlumnos = ( {test = ''} ) => {
   const { sessionType, setSessionType } = useContext(SessionContext)
   const [showPopUp, setShowPopUp] = useState(false)
   
+ //Borrar
+const [proyectosDisponibles, setProyectosDisponibles] = useState([]);
+
+useEffect(() => {
+  fetch('http://localhost:8000/proyectos')
+    .then(res => res.json())
+    .then(setProyectosDisponibles);
+}, []);
+
+//Borrar
+
 
   const {
     ballPos,
@@ -344,6 +362,7 @@ const RespuestasAlumnos = ( {test = ''} ) => {
         </div>
       )}
     <div className="respuestas-container" ref={containerRef}>
+
       <div className="respuestas-header">
         <FiArrowLeft />
         <h1>Postulaciones - {sessionType} {test}</h1>
@@ -361,6 +380,10 @@ const RespuestasAlumnos = ( {test = ''} ) => {
           </>
       )}
         </div>
+
+
+     
+      
 
       <div className="respuestas-filtros">
         { sessionType !== "alumno" && (
@@ -434,192 +457,64 @@ const RespuestasAlumnos = ( {test = ''} ) => {
               <th>Pregunta descarte</th>
             </tr>
           </thead>
-          <tbody>
-            {dataFiltrada.map((postulacion, idx) => (
-              <tr
-                key={idx}
-                id={postulacion.id_postulacion}
-                onDoubleClick={(e) => {
-                  if (!isEditing && ((sessionType === "alumno" && postulacion.estado === "ACEPTADX") || (sessionType === "osf" && postulacion.estado === "POSTULADX")) || (sessionType == "ss")  )  {
-                    console.log(estados)
-                    setCurrEdit(postulacion.id_postulacion);
-                    setToChange({
-                      "id_postulacion": postulacion.id_postulacion,
-                      "alumno_id": postulacion.id_alumno
-                    })
-                    setIsEditing(true);
-                  }
-                }}
-              >
-                {/* {console.log(postulacion)} */}
-                {currEdit !== postulacion.id_postulacion && (
-                  <>
-                    <td>{postulacion.lastupdate}</td>
-                    <ExpandableCell>{postulacion.nombre}</ExpandableCell>
-                    <ExpandableCell>{postulacion.alumno_id}</ExpandableCell>
-                    <td className={getEstadoClass(postulacion.estado)}>{postulacion.estado}</td>
-                    <ExpandableCell>{postulacion.comentarios}</ExpandableCell>
-                    <td style={{
-                      textOverflow: "unset",
-                      maxWidth: "500px"
-                    }}>{postulacion.proyecto}</td>
-                    <ExpandableCell>{postulacion.carrera}</ExpandableCell>
-                    <ExpandableCell>{`${postulacion.alumno_id}@tec.mx`}</ExpandableCell>
-                    <ExpandableCell>{postulacion.telefono}</ExpandableCell>
-                    <ExpandableCell>{postulacion.confirmacion_lectura}</ExpandableCell>
-                    <ExpandableCell>{postulacion.respuesta_habilidades}</ExpandableCell>
-                    <ExpandableCell>{postulacion.respuesta_descarte || ''}</ExpandableCell>
-                  </>
-                )}
-                {currEdit === postulacion.id_postulacion && (
-                  <>
-                    <td>{postulacion.lastupdate}</td>
-                    <td>
-                      {checkPermission(sessionType, "nombre") ? (
-                        <input
-                          type="text"
-                          name="nombre"
-                          id={postulacion.id_postulacion}
-                          value={postulaciones[postulacion.id_postulacion].nombre}
-                          onChange={handleChange}
-                        />
-                      ) : (
-                        postulacion.nombre
-                      )}
-                    </td>
-                    <td>
-                      {checkPermission(sessionType, "alumno_id") ? (
-                        <input
-                          type="text"
-                          name="alumno_id"
-                          id={postulacion.id_postulacion}
-                          value={postulaciones[postulacion.id_postulacion].alumno_id}
-                          onChange={handleChange}
-                        />
-                      ) : (
-                        postulacion.alumno_id
-                      )}
-                    </td>
-                    <td className={getEstadoClass(postulacion.estado)}>
-                      {checkPermission(sessionType, "estado", savedPostulaciones[postulacion.id_postulacion].estado) ? (
-                        <select
-                          name="estado"
-                          id={postulacion.id_postulacion}
-                          value={postulaciones[postulacion.id_postulacion].estado}
-                          onChange={handleChange}
-                        >
-                          {estados.map((estado, index) => (
-                            <option key={index} value={estado}>
-                              {estado}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        postulacion.estado
-                      )}
-                    </td>
-                    <td>
-                      {checkPermission(sessionType, "comentarios") ? (
-                        <textarea
-                          name="comentarios"
-                          id={postulacion.id_postulacion}
-                          value={postulaciones[postulacion.id_postulacion].comentarios || ''}
-                          onChange={handleChange}
-                        />
-                      ) : (
-                        postulacion.comentarios
-                      )}
-                    </td>
-                    <td>{postulacion.proyecto}</td>
-                    <td>
-                      {checkPermission(sessionType, "carrera_id") ? (
-                        <select
-                          name="carrera_id"
-                          id={postulacion.id_postulacion}
-                          value={postulaciones[postulacion.id_postulacion].carrera_id}
-                          onChange={e => {
-                            const { value, name, id } = e.target;
-                            const selectedOption = carrerasArr.find(c => String(c.carrera_id) === value);
-                            const newPos = {
-                              ...postulaciones[id],
-                              carrera_id: value,
-                              carrera: selectedOption ? selectedOption.nombre : '',
-                            };
-                            setPostulaciones({ ...postulaciones, [id]: newPos });
-                            setChangesAlumno(prev => ({
-                              ...prev,
-                              [name]: value
-                            }));
-                          }}
-                        >
-                          {carrerasArr.map((carrera) => (
-                            <option value={carrera.carrera_id} key={carrera.carrera_id}>
-                              {carrera.nombre}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        postulacion.carrera
-                      )}
-                    </td>
-                    <td>{`${postulacion.id_alumno}@tec.mx`}</td>
-                    <td>
-                      {checkPermission(sessionType, "telefono") ? (
-                        <input
-                          type="text"
-                          name="telefono"
-                          id={postulacion.id_postulacion}
-                          value={postulaciones[postulacion.id_postulacion].telefono}
-                          onChange={handleChange}
-                        />
-                      ) : (
-                        postulacion.telefono
-                      )}
-                    </td>
-                    <td>
-                      {checkPermission(sessionType, "confirmacion_lectura") ? (
-                        <input
-                          type="text"
-                          name="confirmacion_lectura"
-                          id={postulacion.id_postulacion}
-                          value={postulaciones[postulacion.id_postulacion].confirmacion_lectura}
-                          onChange={handleChange}
-                        />
-                      ) : (
-                        postulacion.confirmacion_lectura
-                      )}
-                    </td>
-                    <td>
-                      {checkPermission(sessionType, "respuesta_habilidades") ? (
-                        <input
-                          type="text"
-                          name="respuesta_habilidades"
-                          id={postulacion.id_postulacion}
-                          value={postulaciones[postulacion.id_postulacion].respuesta_habilidades}
-                          onChange={handleChange}
-                        />
-                      ) : (
-                        postulacion.respuesta_habilidades
-                      )}
-                    </td>
-                    <td>
-                      {postulacion.id_pregunta && checkPermission(sessionType, "respuesta_descarte") ? (
-                        <input
-                          type="text"
-                          name="respuesta_descarte"
-                          id={postulacion.id_postulacion}
-                          value={postulaciones[postulacion.id_postulacion].respuesta_descarte || ''}
-                          onChange={handleChange}
-                        />
-                      ) : (
-                        postulacion.respuesta_descarte || ''
-                      )}
-                    </td>
-                  </>
-                )}
-              </tr>
-            ))}
-          </tbody>
+         <tbody>
+  {dataFiltrada.map((postulacion, idx) => {
+    // debugs
+    // console.log("POSTULACION:", postulacion);
+
+    // Busca el campo de id del proyecto real
+    const idProyecto =
+      postulacion.id_proyecto ||
+      postulacion.proyecto_id ||
+      postulacion.proyecto ||
+      null;
+
+    // return
+    return (
+      <tr
+        key={idx}
+        id={postulacion.id_postulacion}
+        data-id={idProyecto}
+        onDoubleClick={(e) => {
+          if (
+            !isEditing &&
+            ((sessionType === "alumno" && postulacion.estado === "ACEPTADX") ||
+              (sessionType === "osf" && postulacion.estado === "POSTULADX")) ||
+            sessionType === "ss"
+          ) {
+            setCurrEdit(postulacion.id_postulacion);
+            setToChange({
+              id_postulacion: postulacion.id_postulacion,
+              alumno_id: postulacion.id_alumno,
+            });
+            setIsEditing(true);
+          }
+        }}
+      >
+        <td>{postulacion.lastupdate}</td>
+        <ExpandableCell>{postulacion.nombre}</ExpandableCell>
+        <ExpandableCell>{postulacion.alumno_id}</ExpandableCell>
+        <td className={getEstadoClass(postulacion.estado)}>{postulacion.estado}</td>
+        <ExpandableCell>{postulacion.comentarios}</ExpandableCell>
+        <td
+          style={{
+            textOverflow: "unset",
+            maxWidth: "500px",
+          }}
+        >
+          {postulacion.proyecto}
+        </td>
+        <ExpandableCell>{postulacion.carrera}</ExpandableCell>
+        <ExpandableCell>{`${postulacion.alumno_id}@tec.mx`}</ExpandableCell>
+        <ExpandableCell>{postulacion.telefono}</ExpandableCell>
+        <ExpandableCell>{postulacion.confirmacion_lectura}</ExpandableCell>
+        <ExpandableCell>{postulacion.respuesta_habilidades}</ExpandableCell>
+        <ExpandableCell>{postulacion.respuesta_descarte || ""}</ExpandableCell>
+      </tr>
+    );
+  })}
+</tbody>
+
         </table>
       </div>
 
