@@ -474,10 +474,17 @@ useEffect(() => {
             </tr>
           </thead>
           <tbody>
-            {dataFiltrada.map((postulacion, idx) => (
+            {dataFiltrada.map((postulacion, idx) => {
+                  const idProyecto =
+                  postulacion.id_proyecto ||
+                  postulacion.proyecto_id ||
+                  postulacion.proyecto ||
+                  null;
+              return(
               <tr
                 key={idx}
                 id={postulacion.id_postulacion}
+                data-id={idProyecto}
                 onDoubleClick={(e) => {
                   if (!isEditing && ((sessionType === "alumno" && postulacion.estado === "ACEPTADX") || (sessionType === "osf" && postulacion.estado === "POSTULADX") || (sessionType == "ss"))  )  {
                     console.log(estados)
@@ -669,7 +676,8 @@ useEffect(() => {
                   </>
                 )}
               </tr>
-            ))}
+              )
+})}
           </tbody>
         </table>
       </div>
