@@ -18,31 +18,7 @@ const Hero = ({ searchText, setSearchText }) => {
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
         />
-        <div className="hero-filters">
-          {[
-            "Servicio social comunitario",
-            "Servicio social ambiental",
-            "Servicio social en hospitales y centros de salud",
-            "Servicio social digital",
-          ].map((label, index) => (
-            <Button
-              key={index}
-              sx={{
-                borderRadius: "100px",
-                padding: "6px 20px",
-                textTransform: "none",
-                fontWeight: "500",
-                backgroundColor: "#0052CC",
-                color: "white",
-                '&:hover': {
-                  backgroundColor: "#0747A6"
-                }
-              }}
-            >
-              {label}
-            </Button>
-          ))}
-        </div>
+
       </div>
     </div>
   );

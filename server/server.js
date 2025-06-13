@@ -1141,7 +1141,7 @@ app.post('/sheets/export', async (req, res) => {
       LEFT JOIN proyecto_carrera pc ON p.proyecto_id = pc.proyecto_id
       LEFT JOIN carrera c ON pc.carrera_id = c.carrera_id
       LEFT JOIN momentos_periodo mp ON p.momento_id = mp.momento_id
-      LEFT JOIN periodo_academico pa ON mp.periodo_id = periodo.periodo_id
+      LEFT JOIN periodo_academico pa ON mp.periodo_id = pa.periodo_id
       GROUP BY 
         p.proyecto_id, osf.nombre, oi.mision, oi.vision, oi.objetivos, oi.poblacion, 
         oi.num_beneficiarios, oi.nombre_responsable, oi.puesto_responsable, oi.correo_responsable, 

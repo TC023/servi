@@ -50,7 +50,7 @@ const Sidebar = () => {
       {console.log(sessionType)}
       {sessionType === "ss" && (
       <ul className="sidebar-list">
-        {["Dashboard", "Proyectos Overview", "Respuestas Alumnos", "Proyectos a revisar", "Exportar"].map(
+        {[ "Proyectos Overview", "Respuestas Alumnos", "Proyectos a revisar", "Exportar"].map(
           (text) => (
             <li
               key={text}

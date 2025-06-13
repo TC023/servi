@@ -389,7 +389,7 @@ useEffect(() => {
 
       
       <Box className="projects-header">
-        <Typography variant="h4">{!vistaPendientes ? "Proyectos Solidarios" : "Proyectos pendientes" } - {sessionType}</Typography>
+        <Typography variant="h4">{!vistaPendientes ? "Proyectos Solidarios" : "Proyectos pendientes" }</Typography>
         <Button variant="outlined" startIcon={<FilterList />} onClick={() => setDrawerOpen(true)}>Filtros Avanzados</Button>
       </Box>
 

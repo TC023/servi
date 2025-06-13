@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { FiExternalLink, FiCopy } from "react-icons/fi";
+import { SessionContext } from "../Contexts/SessionContext";
+
 import "./Export.css";
 
 const Export = () => {
@@ -7,6 +9,7 @@ const Export = () => {
   const [exportInfo, setExportInfo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { sessionType } = useContext(SessionContext)
 
   const sheetLinks = {
     nacional: "https://docs.google.com/spreadsheets/d/1lMG8Gk2_RUWxE94hqO-d57jLc6iLqf7tWgJ5YrqhhMQ/edit#gid=0",
@@ -34,6 +37,14 @@ const Export = () => {
   const handleCopyLink = () => {
     navigator.clipboard.writeText(sheetLinks[activeTab]);
   };
+
+    if (sessionType !== "ss") {
+        return (
+            <div>
+                Acceso denegado a esta página - {sessionType}
+            </div>
+        )
+    }
 
   return (
     <div className="export-container">
