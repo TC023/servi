@@ -22,6 +22,27 @@ import {
   FiActivity
 } from "react-icons/fi";
 
+//Filtros de areas diccionario
+const mapaDeAreas = {
+  "Negocios": ["BGB","LAE", "LCPF","LDE","LAF","LIT"], //(EN la BD esta como BGB, pero es LIN = Lic en Negocios internacionales)
+  //Falta (LDO = Licenciatura en desarrollo y talento y cultura organizacional) //Falta (LEM = Lic en Mercadotecnia)
+
+  "Salud": [],
+  //Faltan todas xd
+
+  "Ingeniería y Ciencias": ["ITC","IC" ,"IMT","IM", "IIS", "IRS", "IBT", "IQ"], //Falta (IMD = Ingenieria biomedica), Falta (IE = Ingenieria electronica)
+  //Falta (IID = Ingenieria en innovacion y desarrollo), Falta (ITD = Ingenieria en transformacion  digital de negocios)
+  //Falta (IAL = Ingenieria en alimentos), falta IAG (Ingenieria en Biosistemas Agroalimentarios), Falta (IDS = Ing en desarrollo sustentable)
+  //Falta (IDM = Ingenieria en ciencia de datos y maticamtics), Falta (IFI = Ing Fisica industrial), Falta (INA = Ing nanotecnologia)
+
+  "Estudios Creativos": ["ARQ", "LAD", "LC", "LDI", "LTM"], //Falta (LEI = Licenciatura en innovacion educativa), 
+  // Falta (LLE = Licenciatura en letras hispanicas)
+
+  "Derecho, Economía y Relaciones Internacionales": [, "LED", "LRI", "LEC"], //Falta (LTP = Licenciatura en gobierno y transformacion publica)
+  "Ambiente Construido": ["ARQ", "IC"], //Falta (LUB = Licenciatura en urbanismo)
+};
+
+
 
 const getSrcFromIframe = (iframeHtml) => {
   const match = iframeHtml.match(/src=["']([^"']+)["']/);
@@ -47,13 +68,6 @@ const getCoordsFromIframe = (iframeHtml) => {
 
 const Projects = ( {vP = false} ) => {
 
-//Carreras random
-const getCarrerasRandom = () => {
-  if (todasCarreras.length === 0) return [];
-  const barajadas = [...todasCarreras].sort(() => 0.5 - Math.random());
-  const cantidad = Math.floor(Math.random() * 2) + 2; // 2 o 3
-  return barajadas.slice(0, cantidad);
-};
 
   //Carreras random cards temporal
   const [todasCarreras, setTodasCarreras] = useState([]);
@@ -117,7 +131,7 @@ const getCarrerasRandom = () => {
 
 
 useEffect(() => {
-  if (sessionType === "alumno" && userId.special_id) {
+  if (sessionType === "alumno" && userId && userId.special_id) {
   console.log(userId)
   fetch("http://localhost:8000/proyectos/alumnos/"+userId.special_id)
     .then((res) => res.json())
@@ -163,7 +177,7 @@ useEffect(() => {
     });
   }
 
-  if (sessionType === "osf" && userId) {
+  if (sessionType === "osf" && userId && userId.special_id) {
   fetch("http://localhost:8000/proyectos/"+userId.special_id)
     .then((res) => res.json())
     .then((proyectos) => {
@@ -316,25 +330,28 @@ useEffect(() => {
 }, [userId, sessionType, vistaPendientes, location.pathname]);
 
 
-
- 
-
   const handleModalidadChange = (e) => setModalidadFilter(e.target.value);
   const handleCarreraClick = (carrera) => setCarreraFilter(carrera === carreraFilter ? "" : carrera);
 
   const filteredProjects = projectsDb.filter((project) => {
+  const matchTitle = project.title.toLowerCase().includes(searchText.toLowerCase());
+  const horas = parseInt(project.horas);
+  const edad = parseInt(project.rango_edad);
+  const matchHorasMin = horasMin === "" || horas >= parseInt(horasMin);
+  const matchHorasMax = horasMax === "" || horas <= parseInt(horasMax);
+  const matchEdad = !isNaN(edad) && edad >= edadRange[0] && edad <= edadRange[1];
+  const matchModalidad = modalidadFilter === "Todos" || project.modalidad === modalidadFilter;
+  const matchValores = valoresSeleccionados.length === 0 || valoresSeleccionados.includes(project.valor_promueve);
 
-    const matchTitle = project.title.toLowerCase().includes(searchText.toLowerCase());
-    const horas = parseInt(project.horas);
-    const edad = parseInt(project.rango_edad);
-    const matchHorasMin = horasMin === "" || horas >= parseInt(horasMin);
-    const matchHorasMax = horasMax === "" || horas <= parseInt(horasMax);
-    const matchEdad = !isNaN(edad) && edad >= edadRange[0] && edad <= edadRange[1];
-    const matchModalidad = modalidadFilter === "Todos" || project.modalidad === modalidadFilter;
-    const matchValores = valoresSeleccionados.length === 0 || valoresSeleccionados.includes(project.valor_promueve);
-    return matchTitle && matchHorasMin && matchHorasMax && matchEdad && matchModalidad && matchValores;
-  });
-  
+  // match por área
+  const matchCarreraArea = carreraFilter === "" || (
+    mapaDeAreas[carreraFilter] &&
+    project.carreras.some(carrera => mapaDeAreas[carreraFilter].includes(carrera))
+  );
+
+  return matchTitle && matchHorasMin && matchHorasMax && matchEdad && matchModalidad && matchValores && matchCarreraArea;
+});
+
 
 
 
@@ -342,7 +359,8 @@ useEffect(() => {
     <Box className="projects-page">
 
 { sessionType == "alumno" && (<Hero searchText={searchText} setSearchText={setSearchText} /> )}
-
+{console.log(projectsDb)}
+{console.log(filteredProjects)}
 
       
       <Box className="projects-header">
@@ -427,8 +445,8 @@ useEffect(() => {
           {filteredProjects.map((project, index) => (
             <Fade in={true} timeout={500 + index * 100} key={project.id}>
               <Grid item xs={12} sm={6} md={4} lg={3}>
-              <Card className={project.estado_proyecto === "lleno" ? "lleno":"" }
-              //Desde ACA EMPIEZA TODA EL elemento CARD, no es posible realizar algo similar desde un CSS
+              <Card className={project.estado_proyecto === "lleno" || project.estado_proyecto === "pendiente" ? "lleno":"" }
+              //Desde ACA EMPIEZA TODA EL elemento CARD, se uso MUI material
           //onClick={() => navigate(`/projects/${project.id}`)} //Quitamos navigate para usar el modal
           onClick={() => setProyectoSeleccionado(project)}
 
@@ -961,15 +979,6 @@ useEffect(() => {
   </Box>
 </Drawer>
 
-
-
-
-
-
-
-
-
-
       {/*Modal para Proyectos
             <ProjectModal proyecto={proyectoSeleccionado} onClose={() => setProyectoSeleccionado(null)} />
 
@@ -980,7 +989,7 @@ useEffect(() => {
   <ProjectModal
     proyecto={proyectoSeleccionado}
     onClose={() => setProyectoSeleccionado(null)}
-    proyectosDisponibles={projectsDb} // Este sí es el array completo de proyectos
+    proyectosDisponibles={projectsDb} // array de proyectos
     pos={ postulaciones[proyectoSeleccionado.id] ? true : false }
     />
   </>
@@ -988,7 +997,7 @@ useEffect(() => {
     </Box>
   );
 };
-     //Desde ACA TERMINA TODA EL elemento CARD, no es posible realizar algo similar desde un CSS
+     //Desde ACA TERMINA TODA EL elemento CARD, se uso mui materials
 
 
 export default Projects;

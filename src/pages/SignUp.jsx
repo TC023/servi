@@ -13,10 +13,13 @@ const SignUp = () => {
     <div className="signup-page-centered">
       <div className="signup-card-wide">
         {/* Agente pixelado a la izquierda */}
-        <div className="signup-card-left">
-  <img src="/sslogo_black.png" alt="Logo Servicio Social" className="signup-logo-left" />
-  <PixelCharacter userType={userType} hoveredType={hoveredType} />
+       <div className="signup-card-left">
+  <div className="signup-card-left-inner">
+    <img src="/sslogo_black.png" alt="Logo Servicio Social" className="signup-logo-left" />
+    <PixelCharacter userType={userType} hoveredType={hoveredType} />
+  </div>
 </div>
+
 
 
         {/* Formulario a la derecha */}
@@ -26,6 +29,7 @@ const SignUp = () => {
     <h2>Registro</h2>
     <p>¿Quién eres?</p>
     <div className="signup-toggle-buttons">
+      {/*
       <button
         className="glass-button"
         onMouseEnter={() => setHoveredType("alumno")}
@@ -34,6 +38,30 @@ const SignUp = () => {
       >
         Alumno
       </button>
+*/}
+
+
+<button
+  className="glass-button"
+  onMouseEnter={() => setHoveredType("alumno")}
+  onMouseLeave={() => setHoveredType("")}
+  onClick={() => {
+    setUserType("alumno");
+
+    //Enfocar automáticamente el primer campo
+    setTimeout(() => {
+      const firstInput = document.querySelector(
+        ".signup-card-right input, .signup-card-right select"
+      );
+      firstInput?.focus();
+    }, 100); // esperar a que el formulario se renderice
+  }}
+>
+  Alumno
+</button>
+
+
+
 
       <button
         className="glass-button"
