@@ -1,5 +1,13 @@
 import React, { createContext, useState, useEffect } from "react";
 
+/**
+ * Provides the session context to its children components.
+ * It manages session type, ID, and name state.
+ * Fetches session details from the specified API endpoint.
+ * @param {object} props - The component's props.
+ * @param {React.ReactNode} props.children - The child components.
+ * @returns {JSX.Element} The context provider component.
+ */
 export const SessionContext = createContext();
 
 export const SessionProvider = ({ children }) => {
