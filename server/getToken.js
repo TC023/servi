@@ -7,11 +7,25 @@ const CREDENTIALS_PATH = '../env/client_secret_195575088614-lsu4amvphautte6ul6k6
 const TOKEN_PATH = '../env/token.json';
 const SCOPES = ['https://www.googleapis.com/auth/gmail.send'];
 
+/**
+ * Generates an authentication URL for user consent.
+ * @returns {string} The URL to visit for authentication.
+ */
 const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH));
 const { client_secret, client_id, redirect_uris } = credentials.web;
 const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+/**
+ * Prompts the user to enter the authorization code received.
+ * @param {string} query The message to display to the user.
+ * @param {function} callback Function to call with the entered code.
+ */
 
 const authUrl = oAuth2Client.generateAuthUrl({
+/**
+ * Exchanges the code for an access token and writes it to a file.
+ * @param {string} code The authorization code received from the server.
+ * @param {function} callback Callback function to handle the token or any errors.
+ */
   access_type: 'offline',
   scope: SCOPES,
 });
