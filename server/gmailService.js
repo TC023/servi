@@ -24,17 +24,19 @@ async function authorize() {
   return oAuth2Client;
 }
 
-async function sendWelcomeEmail(to, name) {
+async function sendEmail(to, name, subject, content) {
   const auth = await authorize();
   const gmail = google.gmail({ version: 'v1', auth });
 
   const emailLines = [
     `To: ${to}`,
-    'Subject: ¡Bienvenido a la plataforma!',
+    'Subject: =?UTF-8?B?' + Buffer.from(subject).toString('base64') + '?=',
     'Content-Type: text/plain; charset="UTF-8"',
+    'Content-Transfer-Encoding: 7bit',
     '',
-    `Hola ${name},\n\n¡Bienvenido! Tu registro fue exitoso.\n\nSaludos,\nEquipo de Soporte`
+    content
   ];
+
 
   const email = emailLines.join('\n');
   const encodedMessage = Buffer.from(email).toString('base64').replace(/\+/g, '-').replace(/\//g, '_');
@@ -47,4 +49,4 @@ async function sendWelcomeEmail(to, name) {
   });
 }
 
-module.exports = { sendWelcomeEmail };
+module.exports = { sendEmail };

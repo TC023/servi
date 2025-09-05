@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useContext } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import "./ProjectModal.css";
 import {
   FiClock,
@@ -16,8 +16,8 @@ import {
   FiInfo,
   FiHelpCircle,
   FiFlag
-
 } from "react-icons/fi";
+
 
 import {
   Select,
@@ -27,16 +27,13 @@ import {
   ListItemText,
   Checkbox,
 } from "@mui/material";
+
 import { TextField } from '@mui/material';
+
 
 import { useNavigate } from "react-router-dom";
 
 import { FiBox, FiActivity, FiUser } from "react-icons/fi";
-
-import { SessionContext } from "../Contexts/SessionContext";
-import { UserIdContext } from "../Contexts/UserIdContext";
-
-import FormsOSF from "../components/FormsOsf";
 
 import Box from '@mui/material/Box';
 
@@ -50,72 +47,79 @@ const cleanIframeHtml = (html) => {
 
 
 
-
-const ProjectModal = ({ proyecto, onClose, proyectosDisponibles, pos = false }) => {
-  const carouselRef = useRef(null);
-  const [selectedImage, setSelectedImage] = useState(0);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedModalidad, setEditedModalidad] = useState(proyecto.modalidad);
-  const [showPreview, setShowPreview] = useState(false);
-  const navigate = useNavigate();
-  const { sessionType } = useContext(SessionContext)
-  const { userId } = useContext(UserIdContext)
-  const [postulacion, setPostulacion] = useState(pos)
-  const [toggleEditOsf, setToggleEditOsf] = useState(false)
-  const [osf, setOsf] = useState("")
-
-      const [showAllPhotos, setShowAllPhotos] = useState(false); 
-    const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
+const ProjectModal = ({ proyecto, onClose, proyectosDisponibles }) => {
 
 
+
+  //Animacion de guardado 
   const [isSaving, setIsSaving] = useState(false);
 
-    //Editables con dropdowns (2 opcioens)
-    const [editedZona, setEditedZona] = useState(proyecto.zona);
+  //Editables con dropdowns (2 opcioens)
+  const [editedZona, setEditedZona] = useState(proyecto.zona);
 
-    //Editar enlace maps
-    const [editedEnlaceMaps, setEditedEnlaceMaps] = useState(proyecto.enlace_maps);
-
-
-    
+  //Editar enlace maps
+  const [editedEnlaceMaps, setEditedEnlaceMaps] = useState(proyecto.enlace_maps);
 
 
-  // const [editedCarreras, setEditedCarreras] = useState(proyecto.carreras.join(", "));
-  const [editedVulnerabilidad, setEditedVulnerabilidad] = useState(proyecto.tipo_vulnerabilidad);
-  //const [editedZona, setEditedZona] = useState(proyecto.zona);
-  const [editedBeneficiarios, setEditedBeneficiarios] = useState(proyecto.numero_beneficiarios);
-  const [editedProducto, setEditedProducto] = useState(proyecto.producto_a_entregar);
-  const [editedImpacto, setEditedImpacto] = useState(proyecto.medida_impacto_social);
-  const [editedCompetencias, setEditedCompetencias] = useState(proyecto.competencias);
-  const [editedDireccion, setEditedDireccion] = useState(proyecto.direccion);
-
-  const [editedCupo, setEditedCupo] = useState(proyecto.cupo);
-  console.log("hola edited", proyecto.cupo)
+  
 
 
+ // const [editedCarreras, setEditedCarreras] = useState(proyecto.carreras.join(", "));
+const [editedVulnerabilidad, setEditedVulnerabilidad] = useState(proyecto.tipo_vulnerabilidad);
+//const [editedZona, setEditedZona] = useState(proyecto.zona);
+const [editedBeneficiarios, setEditedBeneficiarios] = useState(proyecto.numero_beneficiarios);
+const [editedProducto, setEditedProducto] = useState(proyecto.producto_a_entregar);
+const [editedImpacto, setEditedImpacto] = useState(proyecto.medida_impacto_social);
+const [editedCompetencias, setEditedCompetencias] = useState(proyecto.competencias);
+const [editedDireccion, setEditedDireccion] = useState(proyecto.direccion);
 
-  //carreras edit
-  const [editedCarreras, setEditedCarreras] = useState(proyecto.carreras);
-  const [todasCarreras, setTodasCarreras] = useState([]);
-
-
-  //Restantes que faltaban
-  // ESTADOS AÑADIDOS EN COMPONENTE
-  const [editedProblemaSocial, setEditedProblemaSocial] = useState(proyecto.problema_social || "");
-  const [editedValorPromueve, setEditedValorPromueve] = useState(proyecto.valor_promueve || "");
-  const [editedRangoEdad, setEditedRangoEdad] = useState(proyecto.rango_edad || "");
-  const [editedActividadesAlumno, setEditedActividadesAlumno] = useState(proyecto.lista_actividades_alumno || "");
-  const [editedModalidadDesc, setEditedModalidadDesc] = useState(proyecto.modalidad_desc || "");
-  const [editedObjetivoGeneral, setEditedObjetivoGeneral] = useState(proyecto.objetivo_general || "");
-  const [editedEstado, setEditedEstado] = useState(proyecto.estado_proyecto || "Activo");
+const [editedCupo, setEditedCupo] = useState(proyecto.cantidad);
+console.log("hola edited", proyecto.cantidad)
 
 
-    //const [proyectoSeleccionado, setProyectoSeleccionado] = useState(null); //Lo llamamos desde Project, no desde aca
+
+//carreras edit
+const [editedCarreras, setEditedCarreras] = useState(proyecto.carreras);
+const [todasCarreras, setTodasCarreras] = useState([]);
+
+
+//Restantes que faltaban
+// ✅ 1. ESTADOS AÑADIDOS EN COMPONENTE
+const [editedProblemaSocial, setEditedProblemaSocial] = useState(proyecto.problema_social || "");
+const [editedValorPromueve, setEditedValorPromueve] = useState(proyecto.valor_promueve || "");
+const [editedRangoEdad, setEditedRangoEdad] = useState(proyecto.rango_edad || "");
+const [editedActividadesAlumno, setEditedActividadesAlumno] = useState(proyecto.lista_actividades_alumno || "");
+const [editedModalidadDesc, setEditedModalidadDesc] = useState(proyecto.modalidad_desc || "");
+const [editedPreguntaDescarte, setEditedPreguntaDescarte] = useState(proyecto.pregunta_descarte || "");
+const [editedObjetivoGeneral, setEditedObjetivoGeneral] = useState(proyecto.objetivo_general || "");
+const [editedEstado, setEditedEstado] = useState(proyecto.estado || "Activo");
+
+
+
+
 useEffect(() => {
   fetch("http://localhost:8000/carreras")
     .then((res) => res.json())
     .then((data) => setTodasCarreras(data.map(c => c.nombre)));
 }, []);
+
+  
+  
+  
+  
+  
+  const carouselRef = useRef(null);
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedModalidad, setEditedModalidad] = useState(proyecto.modalidad);
+  const [horas, setHoras] = useState(proyecto.horas);
+  const [showPreview, setShowPreview] = useState(false);
+    const navigate = useNavigate();
+
+      const [showAllPhotos, setShowAllPhotos] = useState(false); 
+    const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
+
+    //const [proyectoSeleccionado, setProyectoSeleccionado] = useState(null); //Lo llamamos desde Project, no desde aca
 
 
     //Al dar click postular abra formulario
@@ -124,7 +128,8 @@ useEffect(() => {
   const [postulacionForm, setPostulacionForm] = useState({
     confirmacion_lectura: '',
     respuesta_habilidades: '',
-    respuesta_descarte: null
+    respuesta_descarte: null,
+    id_pregunta: null
   })
 
 
@@ -162,17 +167,11 @@ useEffect(() => {
 
   function handleSubmit(){
       const formInf = new FormData();
-      // console.log(postulacionForm)
-      // console.log(proyecto)
       Object.entries(postulacionForm).forEach(([key, value]) => {
             formInf.append(key, value);
         });
       formInf.append("id_proyecto", proyecto.id)
-      if (proyecto.pregunta_id) {
-        formInf.append("id_pregunta", proyecto.pregunta_id);
-      } else {
-        formInf.append("id_pregunta", null);
-      }
+      proyecto.pregunta_id ? formInf.append("id_pregunta", proyecto.pregunta_id) : null
 
       fetch('http://localhost:8000/postulaciones/newPostulacion', {
           method: 'POST',
@@ -182,7 +181,7 @@ useEffect(() => {
       .then((res) => {
           if (res.ok) {
               alert("Te postulaste a este proyecto! redirigiendo...")
-              window.location.reload();
+              navigate("/");
 
           } else {
               res.json().then((error) => {
@@ -218,20 +217,49 @@ console.log(" Proyectos relacionados encontrados:", relatedProjects);
   }, []);
 
   useEffect(() => {
-    if (proyecto.osf_id) {
-      fetch("http://localhost:8000/osf_institucional/" + proyecto.osf_id)
-      .then(res => res.json())
-      .then(data => {setOsf(data)
-        console.log(data)
-      })
-      .catch(err => setOsf(""));
-    }
-  },[])
-  
-  useEffect(() => {
     setEditedModalidad(proyecto.modalidad);
+    setHoras(proyecto.horas);
   }, [proyecto]);
 
+
+  /*
+  const handleSave = async () => {
+    const modalidadesValidas = ["presencial", "en linea", "mixto"];
+    if (!modalidadesValidas.includes(editedModalidad.toLowerCase())) {
+      alert("Modalidad no valida. Usa: presencial, en linea o mixto.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8000/proyectos/${proyecto.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        //body: JSON.stringify({ modalidad: editedModalidad, horas }),
+        body: JSON.stringify({
+  modalidad: editedModalidad,
+  horas,
+  tipo_vulnerabilidad: editedVulnerabilidad,
+  zona: editedZona,
+  numero_beneficiarios: editedBeneficiarios,
+  producto_a_entregar: editedProducto,
+  medida_impacto_social: editedImpacto,
+  competencias: editedCompetencias,
+  direccion: editedDireccion,
+  carreras: editedCarreras
+}),
+
+      });
+
+      if (response.ok) {
+        setIsEditing(false);
+      } else {
+        alert("Error al actualizar el proyecto");
+      }
+    } catch (error) {
+      alert("Error de conexión con el servidor");
+    }
+  };
+  */
 const handleSave = async () => {
   const modalidadesValidas = ["presencial", "en linea", "mixto"];
   if (!modalidadesValidas.includes(editedModalidad.toLowerCase())) {
@@ -240,7 +268,7 @@ const handleSave = async () => {
   }
 
   try {
-    setIsSaving(true); // Mostrar spinner
+    setIsSaving(true); // 👈 Mostrar spinner
 
     const proyectoId = proyecto.id;
 
@@ -249,7 +277,6 @@ const handleSave = async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ modalidad: editedModalidad }),
     });
-    console.log(res1)
     if (!res1.ok) throw new Error("Error al actualizar modalidad");
 
     const res2 = await fetch(`http://localhost:8000/api/proyectos/${proyectoId}/detalles`, {
@@ -270,6 +297,7 @@ const handleSave = async () => {
         rango_edad: Number(editedRangoEdad),
         lista_actividades_alumno: editedActividadesAlumno,
         modalidad_desc: editedModalidadDesc,
+        pregunta_descarte: editedPreguntaDescarte,
         objetivo_general: editedObjetivoGeneral,
         estado: editedEstado,
         cantidad: editedCupo,
@@ -293,21 +321,29 @@ const handleSave = async () => {
       rango_edad: Number(editedRangoEdad),
       lista_actividades_alumno: editedActividadesAlumno,
       modalidad_desc: editedModalidadDesc,
+      pregunta_descarte: editedPreguntaDescarte,
       objetivo_general: editedObjetivoGeneral,
       estado: editedEstado,
       modalidad: editedModalidad,
       cupo: editedCupo,
     });
 
+    setProyectoSeleccionado({ ...proyecto });
     setIsEditing(false);
     alert("¡Proyecto actualizado!");
   } catch (error) {
-    console.error("Error en handleSave:", error);
+    console.error("❌ Error en handleSave:", error);
     alert("Error al actualizar el proyecto");
   } finally {
     setIsSaving(false); 
   }
 };
+
+
+
+
+
+
 
 
   /*
@@ -325,6 +361,7 @@ const handleSave = async () => {
 
   const handleCancel = () => {
     setEditedModalidad(proyecto.modalidad);
+    setHoras(proyecto.horas);
     setIsEditing(false);
   };
 
@@ -337,6 +374,7 @@ const handleSave = async () => {
       <button className="close-button" onClick={onClose}><FiX /></button>
       <h1 className="modal-title">{proyecto.title}</h1>
 
+      
 {isSaving && (
   <div className="saving-overlay">
     <div className="spinner"></div>
@@ -345,26 +383,41 @@ const handleSave = async () => {
 )}
 
 
+          <div className="carousel-section">
+            <img src={proyecto.images[selectedImage]} alt="Principal" className="main-image" />
+            <div className="thumbnail-row" ref={carouselRef}>
+              {proyecto.images.map((img, i) => (
+                <img
+                  key={i}
+                  src={img}
+                  alt={`Mini ${i}`}
+                  className={`thumb ${selectedImage === i ? "active" : ""}`}
+                  onClick={() => {
+                    setSelectedImage(i);
+                    setShowPreview(true);
+                  }}
+                />
+              ))}
+            </div>
+          </div>
 
-          { sessionType == "ss" && (<button className="apply-button" onClick={() => setToggleEditOsf(!toggleEditOsf)}>Editar información de osf</button>)}
-              
-          {toggleEditOsf && (
-            <FormsOSF osf={osf}/>
-          )}
+   
 
+         
           <div className="chips">
-            <span><FiClock /> {proyecto.horas} hrs</span>
+            <span><FiClock /> {horas} hrs</span>
             <span><FiUsers /> {proyecto.carreras.join(", ")}</span>
-            <span><FiKey /> WA1058</span>
-            <span><FiCalendar /> {proyecto.rango_edad || "Edad no definida"}</span>
+            <span><FiKey /> {proyecto.modalidad}</span>
             <span><FiStar /> {proyecto.valor_promueve || "Sin valor"}</span>
           </div>
+
+
 
 
     
 
 
-{/*cards chiquitas */}
+{/* Tarjetas compactas estilo Zillow */}
 <div
   style={{
     display: "flex",
@@ -481,7 +534,7 @@ const handleSave = async () => {
 */}
 
 
-{sessionType === "alumno" && !postulacion && proyecto.estado_proyecto !== 'lleno' && (
+
 <div className="apply-box-top">
   <button
     className="apply-button"
@@ -534,60 +587,11 @@ Coméntanos con tus propias palabras: ¿Qué buscamos? ¿Qué es lo que crees qu
       <button className="enviar-button" onClick={handleSubmit}>Enviar postulación</button>
     </div>
   )}
-  
-</div>
-)}
-
-{postulacion && (
-    <button
-    className="apply-button-fail"
-  >
-    {"Ya te postulaste a este proyecto"}
-  </button>
-)}
-
-
-{proyecto.estado_proyecto === "lleno" && (
-    <button
-    className="apply-button-fail"
-  >
-    {"Este proyecto está lleno"}
-  </button>
-)}
-
-
-<div className="seccion-actividades">
-  <div className="act-title">Actividades del Alumno</div>
-  <ul className="act-list">
-    {(editedActividadesAlumno || "")
-      .split(/\n|;/) // salto de linea para mejor estructuracion
-      .map((act, i) => act.trim() && <li key={i}>{act.trim()}</li>)
-    }
-  </ul>
-</div>
-
-<div className="seccion-modalidad-glass">
-  <div className="modalidad-header">
-
-    <span>Descripción de la Modalidad</span>
-  </div>
-  <div className="modalidad-content">
-    {(editedModalidadDesc || "")
-      .split(/\n/)
-      .map((linea, i) =>
-        <div key={i} className="modalidad-line">
-          {linea.trim()}
-        </div>
-      )
-    }
-  </div>
-  <div className="modalidad-separador" />
 </div>
 
 
 
-
-{/* === Periodos de Ejecucion === */}
+{/* === Periodos de Ejecución === */}
 <section style={{ textAlign: "center", margin: "3rem 0" }}>
   <h3 style={{
     fontSize: "1.6rem",
@@ -602,7 +606,7 @@ Coméntanos con tus propias palabras: ¿Qué buscamos? ¿Qué es lo que crees qu
   </h3>
 
   <img
-    src="/src/assets/periodos.png"
+    src="/periodos.jpeg"
     alt="Periodos de ejecución Febrero - Junio 2025"
     style={{
       maxWidth: "100%",
@@ -625,11 +629,9 @@ Coméntanos con tus propias palabras: ¿Qué buscamos? ¿Qué es lo que crees qu
         </button>
       )}
       <h3 className="info-group-title"><FiMapPin /> Mapa</h3>
-      {sessionType == 'ss' && (
-        <button className="edit-button" onClick={isEditing ? handleSave : () => setIsEditing(true)}>
+      <button className="edit-button" onClick={isEditing ? handleSave : () => setIsEditing(true)}>
         <FiEdit3 /> {isEditing ? "Guardar" : "Editar"}
       </button>
-      )}
     </div>
 
     <div className="info-grid-modern">
@@ -670,6 +672,17 @@ Coméntanos con tus propias palabras: ¿Qué buscamos? ¿Qué es lo que crees qu
   </div>
 </section>
 
+
+
+
+
+
+
+
+
+
+
+
 {/* Informacion del proyecto contenedor */}
           <section className="info-structured-section">
             <div className="info-container">
@@ -680,11 +693,9 @@ Coméntanos con tus propias palabras: ¿Qué buscamos? ¿Qué es lo que crees qu
                   </button>
                 )}
                 <h2 className="info-title">Información del Proyecto</h2>
-                {sessionType == "ss" && (
-                  <button className="edit-button" onClick={isEditing ? handleSave : () => setIsEditing(true)}>
+                <button className="edit-button" onClick={isEditing ? handleSave : () => setIsEditing(true)}>
                   <FiEdit3 /> {isEditing ? "Guardar" : "Editar"}
                 </button>
-                )}
               </div>
 
 
@@ -939,8 +950,10 @@ Coméntanos con tus propias palabras: ¿Qué buscamos? ¿Qué es lo que crees qu
     <FiClock className="info-icon" />
     <div>
       <h4>Horas requeridas</h4>
-      {isEditing ? null : (
-        <p>{proyecto.horas} hrs</p>
+      {isEditing ? (
+        <input type="number" value={horas} onChange={(e) => setHoras(e.target.value)} className="edit-input" />
+      ) : (
+        <p>{horas} hrs</p>
       )}
     </div>
   </div>
@@ -1060,7 +1073,22 @@ Coméntanos con tus propias palabras: ¿Qué buscamos? ¿Qué es lo que crees qu
     </div>
   </div>
 
-
+  <div className="info-card full">
+    <FiHelpCircle className="info-icon" />
+    <div>
+      <h4>Pregunta de Descarte</h4>
+      {isEditing ? (
+        <input
+          type="text"
+          value={editedPreguntaDescarte}
+          onChange={(e) => setEditedPreguntaDescarte(e.target.value)}
+          className="edit-input"
+        />
+      ) : (
+        <p>{editedPreguntaDescarte}</p>
+      )}
+    </div>
+  </div>
 
   <div className="info-card full">
     <FiTarget className="info-icon" />
@@ -1096,9 +1124,8 @@ Coméntanos con tus propias palabras: ¿Qué buscamos? ¿Qué es lo que crees qu
           onChange={(e) => setEditedEstado(e.target.value)}
           className="edit-select"
         >
-          <option value="visible">Visible</option>
-          <option value="pendiente">Pendiente</option>
-          <option value="lleno">Lleno</option>
+          <option value="Activo">Activo</option>
+          <option value="Inactivo">Inactivo</option>
         </select>
       ) : (
         <p>{editedEstado}</p>

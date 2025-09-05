@@ -19,9 +19,9 @@
   }
 }
 .lupi-speech {
-  opacity: 0;
-  transform: scale(0.8);
-  animation: fadeInPop 0.3s forwards;
+  opacity: 1;          /* SIEMPRE visible si existe el div */
+  transform: scale(1); /* SIEMPRE tamaño normal */
+  animation: fadeInPop 0.3s;
   background: white;
   color: #1e293b;
   border-radius: 10px;
@@ -34,6 +34,7 @@
   position: absolute;
   z-index: 1000;
 }
+
 
 @keyframes fadeInPop {
   0% {

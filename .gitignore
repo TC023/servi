@@ -4,3 +4,4 @@ server/node_modules/
 server/emailService.js
 server/package.json
 server/package-lock.json
+package-lock.json
