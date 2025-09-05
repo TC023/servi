@@ -34,6 +34,10 @@ const upload = multer({storage: storage});
 
 /* CONEXIÓN A LA DB */
 const pgp = require('pg-promise')();
+/**
+ * Middleware to authenticate user session.
+ * If session exists, proceed to next middleware, otherwise send 401 status.
+ */
 const cn = {
     host: 'localhost',
     port: 5432,
@@ -76,6 +80,7 @@ app.get('/session/detail', authenticateSession, (req, res) => {
   res.json({ message: 'TEST DE SESIÓN :D, SI VES ESTO HAY UNA SESIÓN ACTIVA, LA SESIÓN EXPIRARÁ EN '+req.session.cookie.expires.getHours()+" HORAS",
     tipo: req.session.tipo,
     correo: req.session.correo,
+// Endpoint to fetch all projects.
     user_id: req.session.user_id,
     expires: req.session.cookie.expires,
     info: req.session.info
@@ -106,6 +111,7 @@ SELECT
       AND pos.estado <> 'DECLINADX'
   ) AS num,
   periodo.nombre AS periodo_nombre,
+// Endpoint to fetch projects for a specific student by ID.
   m.momento
 FROM proyecto p
 LEFT JOIN proyecto_carrera pc ON p.proyecto_id = pc.proyecto_id
@@ -132,6 +138,7 @@ ORDER BY
 app.get('/proyectos/alumnos/:alumno_id', (req, res) => {
   const { alumno_id } = req.params
   console.log(alumno_id)
+// Endpoint to fetch projects pending review.
     db.any(`
 SELECT 
   p.*, 
@@ -158,6 +165,7 @@ SELECT
       AND infos.id_alumno = $1
     LIMIT 1
   ) AS estado_postulacion
+// Endpoint to fetch projects by OSF ID.
 FROM proyecto p
 LEFT JOIN proyecto_carrera pc ON p.proyecto_id = pc.proyecto_id
 LEFT JOIN carrera c ON pc.carrera_id = c.carrera_id
@@ -186,6 +194,7 @@ ORDER BY
     .then((data) => res.json(data))
     .catch((error) => console.log('ERROR:', error));
 })
+// Endpoint to fetch a specific project by ID.
 
 app.get('/proyectos/revisar', (req, res) => {
   const { osf_id } = req.params
@@ -205,6 +214,7 @@ SELECT
     FROM postulacion pos 
     WHERE pos.id_proyecto = p.proyecto_id 
       AND pos.estado <> 'RECHAZADX' 
+// Endpoint to fetch all careers.
       AND pos.estado <> 'DECLINADX'
   ) AS num,
   periodo.nombre AS periodo_nombre,
@@ -216,6 +226,7 @@ LEFT JOIN momentos_periodo m ON p.momento_id = m.momento_id
 LEFT JOIN osf ON osf.osf_id = p.osf_id
 LEFT JOIN osf_institucional osf_i ON osf_i.osf_id = osf.osf_id
 LEFT JOIN pregunta q ON q.id_proyecto = p.proyecto_id
+// Endpoint to fetch institutional OSF data by ID.
 LEFT JOIN periodo_academico periodo ON m.periodo_id = periodo.periodo_id
 WHERE (p.estado = 'pendiente') 
 GROUP BY p.proyecto_id, m.horas, osf.tipo, osf_i.logo, q.id_pregunta, q.pregunta, periodo.nombre, m.momento
@@ -289,6 +300,7 @@ app.get('/proyectos/:id', (req, res) => {
       console.log('ERROR:', error);
       res.status(500).json({ error: 'Error en la base de datos' });
     });
+// Endpoint to update institutional OSF and its related data.
 });
 
 
@@ -451,6 +463,7 @@ app.patch('/osf_institucional/:osf_id', fileFields, async (req, res) => {
 });
 
 
+// Endpoint to fetch sustainable development objectives.
 // fetch de las carreras asociadas con un proyecto :$
 
 
@@ -458,6 +471,7 @@ app.patch('/osf_institucional/:osf_id', fileFields, async (req, res) => {
 app.get('/ods', (req, res) => {
   db.any('SELECT * FROM objetivos_desarrollo_sostenible')
   .then((data) => res.json(data))
+// Endpoint to fetch upcoming periods.
   .catch((error ) => console.log('ERROR:', error))
 })
 
@@ -467,6 +481,7 @@ app.get('/periodos', (req, res) => {
 SELECT 
   a.*, 
   p.nombre,
+// Endpoint to handle user login.
   p.img,
   p.tipo 
 FROM 
@@ -552,6 +567,7 @@ app.post('/login', upload.none(), async (req, res, next) => {
 //       ])
 //       .then(() => res.status(200).send('Postulación creada!'))
 //       .catch((error) => {
+// Endpoint to create a new postulation.
 //         res.status(400).send(error)
 //         console.log(error)
 //     })  }
@@ -598,6 +614,7 @@ app.post('/postulaciones/newPostulacion', upload.none(), async (req, res) => {
 
 
 app.get('/postulaciones', upload.none(), (req, res) => {
+// Endpoint to fetch all postulations.
   db.any(`
     SELECT 
     p.*, 
@@ -613,6 +630,7 @@ app.get('/postulaciones', upload.none(), (req, res) => {
     FROM postulacion p
     LEFT JOIN alumno a ON a.alumno_id=p.id_alumno
     LEFT JOIN carrera c ON a.carrera_id=c.carrera_id
+// Endpoint to fetch postulations by student ID.
     LEFT JOIN proyecto pr ON p.id_proyecto=pr.proyecto_id
     LEFT JOIN respuesta r ON p.id_postulacion=r.id_postulacion
     LEFT JOIN pregunta pre ON pre.id_proyecto=p.id_proyecto
@@ -622,6 +640,7 @@ app.get('/postulaciones', upload.none(), (req, res) => {
     `)
     .then((data) => res.json(data))
     .catch((error) => console.log('ERROR', error))
+// Endpoint to fetch postulations by OSF ID.
 })
 
 app.get('/postulaciones/alumno/:alumno_id', upload.none(), (req, res) => {
@@ -638,6 +657,7 @@ app.get('/postulaciones/:osf_id', upload.none(), (req, res) => {
   db.any(`
     SELECT 
     p.*, 
+// Endpoint to update postulations and related details.
     a.*,
     c.nombre AS carrera,
     pr.nombre_proyecto AS proyecto,
@@ -748,6 +768,7 @@ WHERE a.alumno_id = $2
       FROM postulacion pos
       JOIN proyecto p ON pos.id_proyecto = p.proyecto_id
       WHERE pos.id_postulacion = $1`,
+// Endpoint to create a new project.
       [toChange.id_postulacion]
     );
 
@@ -830,6 +851,7 @@ app.post('/projects/newProject', upload.none(), async (req, res) => {
     const inserts = Object.values(proyecto.momentos).map(e => {
       const cupo = Number(e.num);
       return db.none(`
+// Endpoint to test backend functionality.
         CALL insertar_proyecto(
           $1, $2::TEXT, $3::TEXT, $4::TEXT, $5::TEXT, $6::TEXT, $7::int4range, $8::TEXT, $9,
           $10::TEXT, $11, $12::TEXT, $13::TEXT, $14::TEXT, $15::TEXT, $16::TEXT,
@@ -861,6 +883,7 @@ app.post('/projects/newProject', upload.none(), async (req, res) => {
         proyecto.enlace_maps,
         proyecto.valor_promueve,
         proyecto.surgio_unidad_de_formacion,
+// Endpoint to check if a student ID exists.
         proyecto.pregunta_descarte,
         Boolean(proyecto.notificaciones),
         e.momento_id
@@ -872,6 +895,7 @@ app.post('/projects/newProject', upload.none(), async (req, res) => {
     console.error('Error en insert:', error);
     res.status(500).send('Error al insertar');
   }
+// Endpoint to create new OSF user.
 })
 
 app.get('/test', upload.none(), (req, res) => {
@@ -933,6 +957,7 @@ app.post('/users/osfNuevo', fileFields, function (req, res) {
       correo_encargado, ineFileName
     ])
         .then(() => res.status(200).send('Usuario OSF creado'))
+// Endpoint to log out user and destroy session.
         .catch(error => {
             console.log('ERROR: ', error);
             res.status(500).send('Error al registrar el OSF.');
@@ -940,6 +965,7 @@ app.post('/users/osfNuevo', fileFields, function (req, res) {
 });
 
 // logout
+// Start server and listen on specified port.
 app.get('/logout', (req, res) => {
   req.session.destroy(err => {
       if (err) {
@@ -947,6 +973,7 @@ app.get('/logout', (req, res) => {
       }
       res.send('Session destroyed');
   });
+// Endpoint to update project details.
 });
 
 
@@ -991,6 +1018,7 @@ app.put('/api/proyectos/:id/detalles', async (req, res) => {
           lista_actividades_alumno = $12,
           modalidad_desc = $13,
           objetivo_general = $14,
+// Endpoint to update project modality.
           estado = $15,
           cantidad = $16
         WHERE proyecto_id = $17
@@ -1015,6 +1043,7 @@ app.put('/api/proyectos/:id/detalles', async (req, res) => {
           SELECT $1, carrera_id FROM carrera WHERE nombre = $2
         `, [proyectoId, nombre])
       );
+// Endpoint to fetch student data by user ID.
 
       await t.batch(inserts);
       console.log("Carreras insertadas");
@@ -1032,6 +1061,7 @@ app.put('/api/proyectos/:id/detalles', async (req, res) => {
 
 
 
+// Endpoint to export projects to a Google Sheets in Nacional format.
 
 
 // ÚNICO endpoint válido
@@ -1227,6 +1257,7 @@ app.post('/sheets/export', async (req, res) => {
         nombre_proyecto: project.nombre_proyecto,
         osf_nombre: project.osf_nombre,
         modalidad: project.modalidad,
+// Endpoint to export project data to Google Sheets in Programación format.
         cantidad: project.cantidad,
         periodo: project.periodo_nombre,
         zona: project.zona
