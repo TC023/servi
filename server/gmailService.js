@@ -9,6 +9,12 @@ const TOKEN_PATH = path.join(__dirname, '../env/token.json'); // Save token afte
 
 const SCOPES = ['https://www.googleapis.com/auth/gmail.send'];
 
+/**
+ * Authorizes the application using OAuth2 credentials.
+ * Reads credentials and token files to set up OAuth2 client.
+ * Throws an error if token is not found and authorization is necessary.
+ * @returns {Promise<OAuth2Client>} The authorized OAuth2 client.
+ */
 async function authorize() {
   const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH));
   const { client_secret, client_id, redirect_uris } = credentials.web;
@@ -24,6 +30,14 @@ async function authorize() {
   return oAuth2Client;
 }
 
+/**
+ * Sends an email using the Gmail API.
+ * Authorizes the client, constructs the email, and sends it.
+ * @param {string} to - The recipient email address.
+ * @param {string} name - The recipient name.
+ * @param {string} subject - The subject of the email.
+ * @param {string} content - The content of the email.
+ */
 async function sendEmail(to, name, subject, content) {
   const auth = await authorize();
   const gmail = google.gmail({ version: 'v1', auth });
