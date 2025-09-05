@@ -80,6 +80,7 @@ import Faq from './pages/Faq.jsx';
 
 //         {/* Páginas */}
 //         <div style={{ position: "relative", height: "100px", zIndex: -1 }} />
+/**\n * Main application component that sets up the routes and provides necessary context providers.\n * @returns {JSX.Element} App component\n */
 //         <div style={{ position: "relative", zIndex: 1 }}>
 //           <Routes>
 //             {/* Protegidas */}
