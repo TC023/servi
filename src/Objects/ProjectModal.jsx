@@ -5,6 +5,12 @@ import {
   FiUsers,
   FiCalendar,
   FiKey,
+/**
+ * Sanitizes iframe HTML to adjust width and height to 100% and remove inline styles.
+ * 
+ * @param {string} html - The raw iframe HTML.
+ * @returns {string} - The sanitized HTML.
+ */
   FiMapPin,
   FiList,
   FiX,
@@ -15,6 +21,15 @@ import {
   FiClipboard,
   FiInfo,
   FiHelpCircle,
+/**
+ * ProjectModal component displays a modal for a project with detailed information.
+ * 
+ * @param {object} props - The component properties.
+ * @param {object} props.proyecto - The project data.
+ * @param {function} props.onClose - Handler to close the modal.
+ * @param {array} props.proyectosDisponibles - List of available projects for showing related projects.
+ * @returns {JSX.Element|null} - The ProjectModal component.
+ */
   FiFlag
 } from "react-icons/fi";
 
@@ -126,32 +141,41 @@ useEffect(() => {
     const [mostrarFormularioPostulacion, setMostrarFormularioPostulacion] = useState(false);
 
   const [postulacionForm, setPostulacionForm] = useState({
+// Scrolls the carousel to the left by the width of a single carousel item.
     confirmacion_lectura: '',
     respuesta_habilidades: '',
     respuesta_descarte: null,
     id_pregunta: null
   })
+// Scrolls the carousel to the right by the width of a single carousel item.
 
 
   const scrollLeft = () => {
     if (carouselRef.current) {
       carouselRef.current.scrollBy({ left: -carouselRef.current.offsetWidth, behavior: "smooth" });
     }
+// Handles scrolling left for the project detail carousel.
   };
 
   const scrollRight = () => {
     if (carouselRef.current) {
       carouselRef.current.scrollBy({ left: carouselRef.current.offsetWidth, behavior: "smooth" });
+// Handles scrolling right for the project detail carousel.
     }
   };
 
    //Handle scrolls de ProjectDetail para proyectos relacionados 
 
+// Handles form input changes for the postulation form and updates the state.
    const handleScrollLeft = () => {
     if (carouselRef.current) {
       carouselRef.current.scrollBy({ left: -carouselRef.current.offsetWidth, behavior: "smooth" });
     }
   };
+/**
+ * Handles submission of the postulation form, constructing form data and sending it to the server.
+ * Alerts the user on success or logs an error on failure.
+ */
 
   const handleScrollRight = () => {
     if (carouselRef.current) {
@@ -273,6 +297,12 @@ const handleSave = async () => {
     const proyectoId = proyecto.id;
 
     const res1 = await fetch(`http://localhost:8000/api/proyectos/${proyectoId}`, {
+/**
+ * Validates and saves the edited project details to the server.
+ * Updates the project state upon successful save.
+ * 
+ * @throws Will alert the user if there is an error during the save process.
+ */
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ modalidad: editedModalidad }),
@@ -387,6 +417,7 @@ const handleSave = async () => {
             <img src={proyecto.images[selectedImage]} alt="Principal" className="main-image" />
             <div className="thumbnail-row" ref={carouselRef}>
               {proyecto.images.map((img, i) => (
+// Resets edited fields to original project data and exits editing mode.
                 <img
                   key={i}
                   src={img}
@@ -936,6 +967,15 @@ Coméntanos con tus propias palabras: ¿Qué buscamos? ¿Qué es lo que crees qu
 ) : (
   <p>{editedDireccion}</p>
 )}
+/**
+ * A modal component for previewing a list of images with navigation controls.
+ * 
+ * @param {object} props - The component properties.
+ * @param {array} props.images - List of image URLs for preview.
+ * @param {number} props.selected - Index of the initially selected image.
+ * @param {function} props.onClose - Handler to close the image preview modal.
+ * @returns {JSX.Element} - The ImagePreviewModal component.
+ */
 
     </div>
   </div>
